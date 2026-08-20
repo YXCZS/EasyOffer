@@ -1,11 +1,35 @@
 page {
-  background: #f6f8fb;
-  color: #182230;
+  --ink: #172033;
+  --muted: #657085;
+  --subtle: #98a3b5;
+  --line: #e4e9f0;
+  --surface: #f7f9fc;
+  --surface-blue: #edf3ff;
+  --brand: #315fdd;
+  --brand-deep: #2449b8;
+  --violet: #7657e8;
+  --mint: #0d9b7a;
+  --mint-soft: #e8f8f3;
+  --amber: #d78313;
+  --amber-soft: #fff4df;
+  --coral: #e65368;
+  --coral-soft: #fff0f2;
+  background: #f5f7fb;
+  color: var(--ink);
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
-view, text, button, textarea {
-  box-sizing: border-box;
-}
-
+view, text, button, textarea { box-sizing: border-box; }
 button::after { border: 0; }
+
+.icon-button,
+.history-button,
+.chevron-icon,
+.back-icon,
+.history-icon { display: flex; align-items: center; justify-content: center; }
+
+.back-icon { width: 18px; height: 18px; border-left: 3px solid currentColor; border-bottom: 3px solid currentColor; transform: rotate(45deg); }
+.chevron-icon { width: 13px; height: 13px; margin-left: 8px; border-top: 2px solid currentColor; border-right: 2px solid currentColor; transform: rotate(45deg); }
+.history-icon { position: relative; width: 25px; height: 25px; border: 2px solid currentColor; border-radius: 50%; }
+.history-icon::before { content: ''; position: absolute; width: 2px; height: 8px; top: 4px; left: 11px; background: currentColor; }
+.history-icon::after { content: ''; position: absolute; width: 7px; height: 2px; top: 11px; left: 11px; background: currentColor; transform: rotate(25deg); transform-origin: left center; }

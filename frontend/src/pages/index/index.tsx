@@ -1,4 +1,4 @@
-import { Button, Text, Textarea, View } from '@tarojs/components'
+import { Button, Icon, Text, Textarea, View } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState } from 'react'
 import { generateQuiz } from '../../services/api'
@@ -30,7 +30,7 @@ export default function Index() {
 
   return <View className='page-shell'>
     <View className='status-row'><Text>09:41</Text><Text>5G 92%</Text></View>
-    <View className='app-bar brand-bar'><View className='brand'><Text className='brand-mark'>EO</Text><Text>EasyOffer</Text></View><Text className='history'>◷</Text></View>
+    <View className='app-bar brand-bar'><View className='brand'><Text className='brand-mark'>EO</Text><Text>EasyOffer</Text></View><View className='history-button' aria-label='练习记录'><View className='history-icon' /></View></View>
     <View className='screen-content'>
       <Text className='eyebrow'>AI TECH INTERVIEW</Text>
       <Text className='screen-title'>今天想攻克哪个{`\n`}面试知识点？</Text>
@@ -42,7 +42,7 @@ export default function Index() {
       <View className='control-row'><View className='field-label'><Text>目标岗位</Text></View><View className='segmented'>{roleOptions.map(([value, label]) => <Button key={value} className={`segment ${role === value ? 'active' : ''}`} onClick={() => setRole(value)}>{label}</Button>)}</View></View>
       <View className='control-row'><View className='field-label'><Text>练习难度</Text></View><View className='segmented'>{difficultyOptions.map(([value, label]) => <Button key={value} className={`segment ${difficulty === value ? 'active' : ''}`} onClick={() => setDifficulty(value)}>{label}</Button>)}</View></View>
       {error && <Text className='error-text'>{error}</Text>}
-      <Button className={`primary-button ${loading ? 'loading' : ''}`} disabled={loading} onClick={handleGenerate}>{loading ? '◌ 正在生成题组…' : '✦ AI 生成 6 道题'}</Button>
+      <Button className={`primary-button ${loading ? 'loading' : ''}`} disabled={loading} onClick={handleGenerate}>{loading ? <><Icon type='waiting' size={18} color='#ffffff' /> <Text>正在生成题组</Text></> : <><Text className='ai-mark'>AI</Text><Text>生成 6 道题</Text></>}</Button>
       <Text className='helper-line'>{loading ? '正在组织题目与讲解，完成后自动进入第 1 题' : '通常需要 10-20 秒，本轮记录仅保存在当前设备'}</Text>
     </View>
   </View>
