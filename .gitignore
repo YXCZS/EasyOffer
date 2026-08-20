@@ -9,7 +9,14 @@ backend/.pytest_cache/
 backend/.coverage
 backend/htmlcov/
 backend/*.egg-info/
+backend/.env
+backend/runtime-logs/
+frontend/runtime-logs/
 frontend/.swc/
+project.config.json
+project.private.config.json
+frontend/project.config.json
+frontend/project.private.config.json
 __pycache__/
 *.py[cod]
 
