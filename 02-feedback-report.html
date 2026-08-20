@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EasyOffer 原型 02 - 反馈与报告</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="prototype.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <header class="prototype-header">
+    <div>
+      <p class="prototype-kicker">EasyOffer / Feedback & report</p>
+      <h1>不只告诉你对错，还要解释错在哪里</h1>
+      <p class="prototype-note">即时反馈保持聚焦，最终报告只根据本轮实际答题结果分析。</p>
+    </div>
+    <nav class="prototype-nav" aria-label="原型分组">
+      <a href="01-core-flow.html">01</a>
+      <a href="02-feedback-report.html" aria-current="page">02</a>
+      <a href="03-exception-recovery.html">03</a>
+    </nav>
+  </header>
+
+  <main class="prototype-grid">
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>即时反馈 / 回答正确</strong><span class="frame-index">02-A</span></div>
+      <article class="phone" aria-label="答对反馈原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:44</span><span class="status-icons"><span>5G</span><span>91%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="退出本轮" title="退出本轮"><i data-lucide="x"></i></button>
+            <div class="app-bar-title"><span class="quiz-counter">03 / 06</span></div>
+            <span class="timer">02:31</span>
+          </header>
+          <div class="result-banner success">
+            <span class="result-icon"><i data-lucide="check"></i></span>
+            <div><h2>回答正确</h2><p>你的答案：C</p></div>
+          </div>
+          <div class="screen-content">
+            <p class="answer-key"><strong>核心结论：</strong>AOF everysec 在性能与数据安全之间更均衡，结合 RDB 便于快速恢复。</p>
+            <section class="answer-section">
+              <h3>为什么是 C？</h3>
+              <p><code class="code-token">everysec</code> 通常最多丢失约 1 秒数据，比 <code class="code-token">always</code> 的写入开销更可控。RDB 则能缩短大数据集的恢复时间。</p>
+            </section>
+            <section class="answer-section">
+              <h3>面试回答重点</h3>
+              <ul>
+                <li>先说明业务对 RPO 和吞吐量的要求。</li>
+                <li>AOF 与 RDB 解决的是不同侧重点，不是简单二选一。</li>
+                <li>仍需结合主从复制和故障转移，持久化本身不等于高可用。</li>
+              </ul>
+            </section>
+            <section class="answer-section">
+              <button class="accordion-toggle" data-accordion aria-expanded="false" aria-controls="correct-detail"><span>展开详细讲解</span><i data-lucide="chevron-down"></i></button>
+              <div class="accordion-panel" id="correct-detail" hidden>
+                <p>B 虽然数据安全性最高，但每次写操作都同步刷盘，通常会显著降低吞吐量；A 和 D 都无法满足尽量减少数据丢失的要求。</p>
+              </div>
+            </section>
+          </div>
+          <div class="sticky-action"><button class="button button-primary button-block" data-toast-message="进入第 4 题：边界条件">下一题 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>即时反馈 / 回答错误</strong><span class="frame-index">02-B</span></div>
+      <article class="phone" aria-label="答错反馈原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:44</span><span class="status-icons"><span>5G</span><span>91%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="退出本轮" title="退出本轮"><i data-lucide="x"></i></button>
+            <div class="app-bar-title"><span class="quiz-counter">03 / 06</span></div>
+            <span class="timer">02:31</span>
+          </header>
+          <div class="result-banner danger">
+            <span class="result-icon"><i data-lucide="x"></i></span>
+            <div><h2>这道题答错了</h2><p>你的答案：B · 正确答案：C</p></div>
+          </div>
+          <div class="screen-content">
+            <p class="answer-key wrong"><strong>高风险误区：</strong><code class="code-token">appendfsync always</code> 并非生产环境的默认最优解，可靠性需要和吞吐量一起权衡。</p>
+            <section class="answer-section">
+              <h3>正确思路</h3>
+              <p>题目同时给出了“写入压力较高”和“尽可能减少丢失”两个约束。C 兼顾吞吐量、秒级 RPO 和恢复效率。</p>
+            </section>
+            <section class="answer-section">
+              <h3>选项逐项拆解</h3>
+              <ul>
+                <li><strong>A：</strong>快照间隔内的数据可能全部丢失。</li>
+                <li><strong>B：</strong>刷盘最及时，但高写入压力下代价过高。</li>
+                <li><strong>D：</strong>复制不能替代持久化，错误操作也可能被同步。</li>
+              </ul>
+            </section>
+            <section class="answer-section">
+              <button class="accordion-toggle" data-accordion aria-expanded="false" aria-controls="wrong-detail"><span>展开详细讲解</span><i data-lucide="chevron-down"></i></button>
+              <div class="accordion-panel" id="wrong-detail" hidden>
+                <p>面试中遇到“最合适”类问题，应先提取性能、可靠性和恢复目标，再做方案权衡，不要仅凭某个参数更安全就直接选择。</p>
+              </div>
+            </section>
+          </div>
+          <div class="sticky-action"><button class="button button-primary button-block" data-toast-message="进入第 4 题：边界条件">记住了，下一题 <i data-lucide="arrow-right"></i></button></div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>本轮报告 / 作答分析</strong><span class="frame-index">02-C</span></div>
+      <article class="phone" aria-label="复盘报告原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:52</span><span class="status-icons"><span>5G</span><span>89%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="返回首页" title="返回首页"><i data-lucide="chevron-left"></i></button>
+            <div class="app-bar-title">本轮复盘</div>
+            <button class="icon-button" aria-label="分享报告" title="分享报告" data-toast-message="分享海报将在增强版本开放"><i data-lucide="share-2"></i></button>
+          </header>
+          <section class="report-hero">
+            <div class="report-heading">
+              <div class="score"><strong>4</strong><span>/ 6</span></div>
+              <div class="score-copy"><strong>基础已掌握</strong>重点修正持久化选型误区</div>
+            </div>
+            <div class="result-stats" aria-label="本轮答题结果">
+              <div class="result-stat correct"><span>回答正确</span><strong>4</strong><small>定义、原理、恢复、综合</small></div>
+              <div class="result-stat review"><span>待巩固</span><strong>2</strong><small>刷盘策略、高可用边界</small></div>
+            </div>
+          </section>
+          <div class="screen-content compact">
+            <section class="report-section">
+              <h3>知识点表现</h3>
+              <div class="knowledge-row"><span>RDB 触发与恢复</span><span class="mini-bar"><span style="width:92%"></span></span><b>92</b></div>
+              <div class="knowledge-row"><span>AOF 刷盘策略</span><span class="mini-bar"><span style="width:58%;background:var(--offer)"></span></span><b>58</b></div>
+              <div class="knowledge-row"><span>混合持久化</span><span class="mini-bar"><span style="width:76%"></span></span><b>76</b></div>
+              <div class="knowledge-row"><span>高可用边界</span><span class="mini-bar"><span style="width:42%;background:var(--danger)"></span></span><b>42</b></div>
+            </section>
+            <section class="report-section">
+              <h3>三句知识总结</h3>
+              <ol>
+                <li>RDB 恢复快，但两次快照之间可能丢失较多数据。</li>
+                <li>AOF 可靠性取决于刷盘策略，everysec 是常见平衡点。</li>
+                <li>持久化解决数据恢复，不等同于复制和高可用。</li>
+              </ol>
+            </section>
+            <section class="report-section">
+              <h3>下一步建议</h3>
+              <p>先复习 AOF 重写与刷盘时机，再用一个“写多读少”业务场景重新做方案选择。</p>
+            </section>
+            <p class="report-limit">本报告只代表本轮 6 道题的表现，不能完整证明真实面试能力。</p>
+            <div class="button-row primary-action">
+              <button class="button button-secondary" data-toast-message="分享功能将在增强版本开放"><i data-lucide="share-2"></i>分享</button>
+              <button class="button button-primary" data-toast-message="将使用同一主题生成新题组"><i data-lucide="refresh-cw"></i>再练一轮</button>
+            </div>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

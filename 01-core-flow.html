@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EasyOffer 原型 01 - 核心流程</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="prototype.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <header class="prototype-header">
+    <div>
+      <p class="prototype-kicker">EasyOffer / Core flow</p>
+      <h1>从一个知识点，到一组可评估的面试题</h1>
+      <p class="prototype-note">首页输入、按钮内生成状态和逐题作答；桌面并列展示，移动端自动变为单列。</p>
+    </div>
+    <nav class="prototype-nav" aria-label="原型分组">
+      <a href="01-core-flow.html" aria-current="page">01</a>
+      <a href="02-feedback-report.html">02</a>
+      <a href="03-exception-recovery.html">03</a>
+    </nav>
+  </header>
+
+  <main class="prototype-grid prototype-grid-two">
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>首页 / 输入主题</strong><span class="frame-index">01-A</span></div>
+      <article class="phone" aria-label="EasyOffer 首页原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:41</span><span class="status-icons"><span>5G</span><span>92%</span></span></div>
+          <header class="app-bar brand-bar">
+            <div class="brand-lockup"><span class="brand-mark">EO</span>EasyOffer</div>
+            <button class="history-button" title="练习记录" aria-label="练习记录" data-toast-message="首版暂不开放练习记录"><i data-lucide="history"></i></button>
+          </header>
+          <div class="screen-content">
+            <p class="eyebrow">AI TECH INTERVIEW</p>
+            <h2 class="screen-title">今天想攻克哪个<br>面试知识点？</h2>
+            <p class="screen-subtitle">输入一个技术主题，生成一组由浅入深的 6 道题。</p>
+
+            <div class="field-block">
+              <label class="field-label" for="topic-input">练习主题 <span>2–2000 字</span></label>
+              <textarea class="topic-input" id="topic-input" placeholder="例如：Redis 持久化机制，重点考察 RDB 与 AOF 的区别"></textarea>
+              <div class="suggestions" aria-label="示例主题">
+                <button class="suggestion" data-suggestion="Java 线程池核心参数与拒绝策略">Java 线程池</button>
+                <button class="suggestion" data-suggestion="浏览器从输入 URL 到页面渲染的完整过程">浏览器渲染</button>
+                <button class="suggestion" data-suggestion="MySQL 索引失效的常见场景">MySQL 索引</button>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <p class="field-label">目标岗位</p>
+              <div class="segmented" data-segment-group>
+                <button class="segment active">通用基础</button>
+                <button class="segment">Java 后端</button>
+                <button class="segment">前端</button>
+              </div>
+            </div>
+
+            <div class="control-row">
+              <p class="field-label">练习难度</p>
+              <div class="segmented" data-segment-group>
+                <button class="segment">基础</button>
+                <button class="segment active">中等</button>
+                <button class="segment">进阶</button>
+              </div>
+            </div>
+
+            <button class="button button-primary button-block primary-action" data-generate-quiz>
+              <i data-lucide="sparkles"></i>AI 生成 6 道题
+            </button>
+            <p class="helper-line" data-generate-helper>通常需要 10–20 秒，本轮记录仅保存在当前设备</p>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>闯关页 / 选择答案</strong><span class="frame-index">01-B</span></div>
+      <article class="phone" aria-label="逐题答题原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:43</span><span class="status-icons"><span>5G</span><span>91%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="退出本轮" title="退出本轮"><i data-lucide="x"></i></button>
+            <div class="app-bar-title"><span class="quiz-counter">03 / 06</span></div>
+            <span class="timer">02:18</span>
+          </header>
+          <div class="screen-content compact">
+            <div class="question-meta"><span class="tag tag-blue">Redis</span><span class="tag tag-orange">中等</span><span class="tag">单选题</span></div>
+            <p class="question-type">Q03 · 应用场景</p>
+            <h2 class="question-title">写入压力较高，同时希望尽可能减少数据丢失时，以下哪种持久化配置更合适？</h2>
+
+            <div class="options" data-option-group>
+              <button class="option"><span class="option-letter">A</span><span>只开启 RDB，每 15 分钟生成一次快照</span></button>
+              <button class="option"><span class="option-letter">B</span><span>只开启 AOF，并设置 <code class="code-token">appendfsync always</code></span></button>
+              <button class="option"><span class="option-letter">C</span><span>开启 AOF，使用 <code class="code-token">everysec</code>，并结合 RDB</span></button>
+              <button class="option"><span class="option-letter">D</span><span>关闭持久化，只依赖主从复制</span></button>
+            </div>
+          </div>
+          <div class="sticky-action">
+            <button class="button button-primary button-block" data-submit-answer disabled data-toast-message="已提交，将展示即时讲解">提交答案</button>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

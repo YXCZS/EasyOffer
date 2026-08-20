@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EasyOffer 原型 03 - 异常与恢复</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="prototype.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <header class="prototype-header">
+    <div>
+      <p class="prototype-kicker">EasyOffer / Recovery states</p>
+      <h1>失败状态必须告诉用户：发生了什么，下一步做什么</h1>
+      <p class="prototype-note">非技术输入、生成失败和未完成题组恢复，不使用含糊提示。</p>
+    </div>
+    <nav class="prototype-nav" aria-label="原型分组">
+      <a href="01-core-flow.html">01</a>
+      <a href="02-feedback-report.html">02</a>
+      <a href="03-exception-recovery.html" aria-current="page">03</a>
+    </nav>
+  </header>
+
+  <main class="prototype-grid">
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>边界提示 / 非技术输入</strong><span class="frame-index">03-A</span></div>
+      <article class="phone" aria-label="非技术输入提示原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:42</span><span class="status-icons"><span>5G</span><span>92%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="返回修改" title="返回修改"><i data-lucide="chevron-left"></i></button>
+            <div class="app-bar-title">检查练习主题</div>
+            <span></span>
+          </header>
+          <div class="state-screen">
+            <div class="state-icon info"><i data-lucide="scan-search"></i></div>
+            <h2>这个主题暂时无法生成<br>技术面试题</h2>
+            <p>“如何准备明天的旅游行程”不属于程序员技术面试范围，请换成具体技术知识点。</p>
+            <div class="scope-list">
+              <strong>可以尝试这些方向</strong>
+              <ul>
+                <li>计算机网络、操作系统、数据库</li>
+                <li>Java 后端或前端开发知识</li>
+                <li>算法、系统设计和工程实践</li>
+              </ul>
+            </div>
+            <div class="state-actions">
+              <button class="button button-primary button-block" data-toast-message="返回首页并保留原输入"><i data-lucide="pencil-line"></i>修改练习主题</button>
+            </div>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>服务异常 / 可恢复失败</strong><span class="frame-index">03-B</span></div>
+      <article class="phone" aria-label="AI 生成失败提示原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>09:42</span><span class="status-icons"><span>5G</span><span>92%</span></span></div>
+          <header class="app-bar">
+            <button class="icon-button" aria-label="返回修改" title="返回修改"><i data-lucide="chevron-left"></i></button>
+            <div class="app-bar-title">生成题组</div>
+            <span></span>
+          </header>
+          <div class="state-screen">
+            <div class="state-icon error"><i data-lucide="cloud-off"></i></div>
+            <h2>题组没有生成完成</h2>
+            <p>AI 服务暂时没有返回完整的 6 道题。你的主题和选项已经保留，可以直接重试。</p>
+            <div class="resume-summary">
+              <div class="summary-meta"><span class="tag tag-blue">Java 后端</span><span class="tag">中等</span></div>
+              <h3 class="resume-title" style="margin-top:12px">Redis 持久化机制</h3>
+              <span class="resume-meta">已保留输入 · 未创建答题记录</span>
+            </div>
+            <div class="error-code">错误编号：QUIZ_GENERATION_INCOMPLETE</div>
+            <div class="state-actions">
+              <button class="button button-primary button-block" data-toast-message="正在重新生成题组"><i data-lucide="refresh-cw"></i>重新生成</button>
+              <button class="button button-secondary button-block" data-toast-message="返回首页修改主题">返回修改主题</button>
+            </div>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+
+    <section class="prototype-frame">
+      <div class="frame-caption"><strong>本地恢复 / 未完成题组</strong><span class="frame-index">03-C</span></div>
+      <article class="phone" aria-label="恢复未完成练习原型">
+        <div class="phone-scroll">
+          <div class="app-status"><span>18:26</span><span class="status-icons"><span>5G</span><span>76%</span></span></div>
+          <header class="app-bar brand-bar">
+            <div class="brand-lockup"><span class="brand-mark">EO</span>EasyOffer</div>
+            <button class="history-button" aria-label="练习记录" title="练习记录"><i data-lucide="history"></i></button>
+          </header>
+          <div class="state-screen">
+            <div class="state-icon resume"><i data-lucide="bookmark-check"></i></div>
+            <h2>继续上次的练习？</h2>
+            <p>这组题保存在当前设备中，你可以从第 4 题继续。</p>
+            <div class="resume-summary">
+              <div class="summary-meta"><span class="tag tag-blue">Java 后端</span><span class="tag">中等</span></div>
+              <h3 class="resume-title" style="margin-top:12px">Redis 持久化机制</h3>
+              <span class="resume-meta">今天 09:43 开始</span>
+              <div class="resume-progress"><span></span></div>
+              <div class="resume-stats"><span>已完成 3 / 6</span><span>用时 04:12</span></div>
+            </div>
+            <div class="state-actions">
+              <button class="button button-primary button-block" data-toast-message="将从第 4 题继续"><i data-lucide="play"></i>继续练习</button>
+              <button class="button button-danger button-block" data-toast-message="此操作会要求再次确认"><i data-lucide="trash-2"></i>放弃本轮</button>
+            </div>
+          </div>
+        </div>
+        <div class="toast" role="status"></div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

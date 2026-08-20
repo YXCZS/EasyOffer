@@ -1,0 +1,7 @@
+# Local research and browser automation artifacts
+.firecrawl/
+.playwright-mcp/
+
+# Generated research and prototype screenshots
+easyoffer-research-*.png
+easyoffer-prototype-*.png
