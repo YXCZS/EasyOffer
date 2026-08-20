@@ -1,0 +1,11 @@
+page {
+  background: #f6f8fb;
+  color: #182230;
+  font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+view, text, button, textarea {
+  box-sizing: border-box;
+}
+
+button::after { border: 0; }
