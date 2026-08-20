@@ -1,7 +1,9 @@
 import Taro from '@tarojs/taro'
 import { AnswerRecord, Difficulty, Quiz, Report, Role } from '../types/domain'
 
-const API_BASE_URL = process.env.TARO_APP_API_BASE_URL || 'http://127.0.0.1:8000/api/v1'
+// Keep this as a compile-time constant: WeChat mini-programs do not expose Node's
+// `process` global at runtime. Change it to the deployed HTTPS API before release.
+const API_BASE_URL = 'http://127.0.0.1:8000/api/v1'
 
 interface ApiResponse<T> { code: number; message: string; data: T }
 
