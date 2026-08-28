@@ -1,0 +1,25 @@
+runtime_root: ../data/public-corpus
+review_root: reviews
+pilot_technologies:
+  - Redis
+  - MySQL
+  - RAG
+  - Milvus
+parent_min_chars: 120
+parent_max_chars: 1800
+child_chunk_size: 850
+child_chunk_overlap: 100
+max_chunks_per_document: 5000
+structure_confidence_threshold: 0.55
+near_duplicate_hamming_distance: 3
+duplicate_content_ratio_threshold: 0.50
+boundary_classifier_enabled: false
+gates:
+  hit_at_5: {operator: min, value: 0.85}
+  mrr_at_5: {operator: min, value: 0.70}
+  ndcg_at_5: {operator: min, value: 0.75}
+  role_contamination_rate: {operator: max, value: 0.05}
+  duplicate_result_rate: {operator: max, value: 0.10}
+  parent_recovery_rate: {operator: min, value: 1.0}
+  source_traceability_rate: {operator: min, value: 1.0}
+  answer_integrity_rate: {operator: min, value: 1.0}

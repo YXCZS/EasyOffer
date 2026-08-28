@@ -1,0 +1,44 @@
+schema: spec-driven
+
+context: |
+  项目：EasyOffer，面向中国大陆中文用户的技术面试刷题微信小程序。
+  前端：Taro 4.2.1、React、TypeScript，目标平台为微信小程序。
+  后端：Python、FastAPI、MySQL；AI 题目和报告生成使用 DeepSeek。
+  核心流程：用户输入面试知识点 -> AI 判断是否属于程序员面试内容并生成题目 -> 用户答题 -> AI 生成分析报告。
+  现有底部导航为“答题”和“我的”。扩展功能应保持现有导航、题目生成、答题和报告流程可用。
+  产品要求：界面使用中文，优先遵循现有 UI 原型和代码风格，不进行无关的大范围重构。
+  验证要求：后端使用 pytest；前端执行 typecheck 和微信小程序构建，并在微信开发者工具中验证关键流程。
+
+rules:
+  proposal:
+    - 先写清楚目标、范围和不做什么，避免把小功能扩大成重构。
+    - 明确是否影响现有“答题”和“我的”底部导航，以及核心答题流程。
+  specs:
+    - 用可验证的用户场景描述正常流程、失败流程和边界情况。
+  design:
+    - 优先复用现有 Taro、FastAPI、MySQL 和 DeepSeek 实现，不引入没有必要的新框架。
+    - 涉及数据库时说明迁移、回滚和数据兼容策略。
+  tasks:
+    - 任务按前端、后端、测试和微信开发者工具验证拆分。
+    - 每项任务应能独立检查完成情况。
+
+operations:
+  apply:
+    guidance:
+      - 修改前先阅读相关现有代码，保持现有核心流程不回归。
+      - 完成后运行后端 pytest、前端 typecheck 和微信小程序构建。
+  archive:
+    guidance:
+      - 只有实现和测试都通过后才归档变更。
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing

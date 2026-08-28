@@ -1,25 +1,75 @@
-# Local research and browser automation artifacts
+# Secrets and machine-local environment files
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+secrets/
+**/secrets/
+
+# Local research, agent and browser automation artifacts
+.agents/
 .firecrawl/
 .playwright-mcp/
 
 # Local build and test outputs
 frontend/node_modules/
 frontend/dist/
+frontend/h5-dist/
+frontend/test-artifacts/
 backend/.pytest_cache/
 backend/.coverage
 backend/htmlcov/
 backend/*.egg-info/
-backend/.env
 backend/runtime-logs/
 frontend/runtime-logs/
 frontend/.swc/
+backend/.venv/
+.venv/
+venv/
+
+# Runtime databases, vector stores and generated corpus data
+data/
+backend/data/
+backend/corpus/data/
+*.sqlite
+*.sqlite3
+*.db
+
+# User-generated and uploaded content
+uploads/
+backend/uploads/
+知识库/
+
+# WeChat DevTools machine-local configuration
 project.config.json
 project.private.config.json
 frontend/project.config.json
 frontend/project.private.config.json
+
+# Logs and local diagnostic output
+*.log
+*.log.*
+*.out
+*.err
+
+# Python, editor and operating-system caches
 __pycache__/
 *.py[cod]
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
 
 # Generated research and prototype screenshots
 easyoffer-research-*.png
 easyoffer-prototype-*.png
+wechat-*.png
+frontend/screenshot-*.png

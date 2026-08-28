@@ -1,0 +1,23 @@
+review_version: pilot-v1
+corpus_version: pilot-v1
+reviewer: ''
+reviewed_at: ''
+sampling_strategy:
+  - high-score
+  - low-score
+  - boundary
+  - conflict
+samples:
+  - query_id: ''
+    chunk_id: ''
+    parent_id: ''
+    relevance: 0
+    technical_correctness: 0
+    interview_value: 0
+    version_fitness: 0
+    source_quality: 0
+    issue_codes: []
+    notes: ''
+decision: pending
+decision_reason: ''
+

@@ -1,0 +1,302 @@
+benchmark_version: full-authorized-v1
+embedding_model: text-embedding-v4
+top_k: 5
+queries:
+  - &ai
+    query_id: ai-01
+    topic: AI 大模型
+    query: 大模型应用如何实现长短期记忆机制
+    role: ai
+    difficulty: medium
+    expected_technologies: [AI 大模型]
+    relevance: {f438ffcba76ef410579ec7640bf001e5998d8b3e70a38aa793964c921b5401b3: 2}
+    expected_knowledge_points: [上下文窗口, 向量数据库, 外部存储]
+  - <<: *ai
+    query_id: ai-02
+    query: 大模型微调 LoRA 的原理和优势是什么
+    difficulty: hard
+    relevance: {3016927d029e27ce6eadc11ec0e7d08fead61a8935b4a299e1637f58394045d5: 2}
+    expected_knowledge_points: [LoRA, 参数高效微调]
+
+  - &es
+    query_id: es-01
+    topic: Elasticsearch
+    query: Elasticsearch 倒排索引的原理是什么
+    role: backend
+    difficulty: medium
+    expected_technologies: [Elasticsearch]
+    relevance: {6a97e1d7bed7fcbf19e5db712f93d35e46d38a76719d7b349b6ab653990102aa: 2}
+    expected_knowledge_points: [倒排索引, 分词]
+  - <<: *es
+    query_id: es-02
+    query: Elasticsearch 深分页为什么慢，应该如何优化
+    difficulty: hard
+    relevance: {b5464c5c602bc59bfc682d929ec12e70b272cdec6e4ea15c295a968e7b0a0ec3: 2}
+    expected_knowledge_points: [深分页, search_after]
+
+  - &java
+    query_id: java-01
+    topic: Java 基础
+    query: Java 方法重载和方法重写有什么区别
+    role: java-backend
+    difficulty: easy
+    expected_technologies: [Java 基础, Java 综合]
+    relevance: {dda86ceb5e5aaa3c76978bff5e9a689289bb68679f1a60193f148bdab39bed10: 2}
+    expected_knowledge_points: [重载, 重写, 多态]
+  - <<: *java
+    query_id: java-02
+    query: Java checked exception 和 runtime exception 有什么区别
+    difficulty: medium
+    relevance: {5eec56e6ed8229a6f03b387035f32e779942cb06ed444966b49bd04ec79289b3: 2}
+    expected_knowledge_points: [异常, 编译期, 运行时]
+
+  - &concurrency
+    query_id: concurrency-01
+    topic: Java 并发
+    query: synchronized 和 ReentrantLock 有什么区别
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [Java 并发]
+    relevance: {3df4948bdad940c3a740a498afa946966b782e836e6401171bc46cb03db086ec: 2}
+    expected_knowledge_points: [synchronized, ReentrantLock]
+  - <<: *concurrency
+    query_id: concurrency-02
+    query: Java volatile 如何保证可见性，为什么不保证原子性
+    difficulty: hard
+    relevance: {cb019d0f4713dbf1128bd9802c11b16f2f2163ac24a00691b445c73d2df6cba4: 2}
+    expected_knowledge_points: [volatile, 可见性, 原子性]
+
+  - &jvm
+    query_id: jvm-01
+    topic: JVM
+    query: JVM G1 垃圾收集器的回收流程是什么
+    role: java-backend
+    difficulty: hard
+    expected_technologies: [JVM]
+    relevance: {41cdcc2dacac1be2ecd689e628a03dcd3c319458641665b2454e9c9d7ad3af88: 2}
+    expected_knowledge_points: [G1, Region, Mixed GC]
+  - <<: *jvm
+    query_id: jvm-02
+    query: JVM 什么时候会触发 Full GC
+    relevance: {4121305171a9e4e15881d8399a937fd43813faa145e5e8f3b95e38a9237d01e4: 2}
+    expected_knowledge_points: [Full GC, 老年代, 元空间]
+
+  - &collections
+    query_id: collections-01
+    topic: Java 集合
+    query: HashMap 在 Java 8 中的底层结构是什么
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [Java 集合]
+    relevance: {5d5eb3aa213eaa0a96e8b4f9eb3aa1abd9aec332720ac1d7d1049f5c705b8c81: 2}
+    expected_knowledge_points: [HashMap, 数组, 红黑树]
+  - <<: *collections
+    query_id: collections-02
+    query: ConcurrentHashMap 如何保证线程安全
+    difficulty: hard
+    relevance: {9ae2e0cdd21169862f0009be40a0a61bf11d97a8bfa1ec94fb2643997e4e07d7: 2, 2ebe0b4a33775e4c0c32606634bb9032b43bf9d4ce5f92323d8d2b6321f80ae4: 1}
+    expected_knowledge_points: [ConcurrentHashMap, CAS, synchronized]
+
+  - &mybatis
+    query_id: mybatis-01
+    topic: MyBatis
+    query: MyBatis 一级缓存和二级缓存有什么区别
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [MyBatis]
+    relevance: {1b1cd36b66c1a45cf5e7e027f21a1ed0ec1db24fbf505cb3274fb16d40559cb2: 2, 79bcd6473823889cd15bec7a6fccf5c9c0e07f7c9d1a281ff32353fb34bad392: 1}
+    expected_knowledge_points: [一级缓存, 二级缓存, SqlSession]
+  - <<: *mybatis
+    query_id: mybatis-02
+    query: 'MyBatis 中 #{} 和 ${} 有什么区别'
+    relevance: {af27f28c9a1c41ec02db8885927b10f5f04f0d5b0548007896a300decca1251e: 2}
+    expected_knowledge_points: ['#{}', '${}', SQL 注入]
+
+  - &mysql
+    query_id: mysql-01
+    topic: MySQL
+    query: MySQL 聚簇索引和二级索引有什么区别
+    role: backend
+    difficulty: medium
+    expected_technologies: [MySQL]
+    relevance: {b350ffa711cc1efaf9c33fa3b0b8e58aaa5ed4401523cb81a3ea908637a673f1: 2}
+    expected_knowledge_points: [聚簇索引, 二级索引, 回表]
+  - <<: *mysql
+    query_id: mysql-02
+    query: MySQL MVCC 如何实现可重复读
+    difficulty: hard
+    relevance: {ad750baf49c2dc465658a8af4ebd5e01f609dd32d82503fc2d351dc58a54f21e: 2}
+    expected_knowledge_points: [MVCC, ReadView, undo log]
+
+  - &nginx
+    query_id: nginx-01
+    topic: Nginx
+    query: Nginx 的 master worker 进程模型是什么
+    role: backend
+    difficulty: medium
+    expected_technologies: [Nginx]
+    relevance: {389d6f9acc87e78f708e116f3c262115d0da084220ab2adc408b1b7b9cc4176f: 2}
+    expected_knowledge_points: [master, worker, 事件驱动]
+  - <<: *nginx
+    query_id: nginx-02
+    query: Nginx 如何实现反向代理和负载均衡
+    relevance: {b58c1cac69179a04907f1659b49f927d0f6e430807939eed7b86d6f581399ea3: 2}
+    expected_knowledge_points: [反向代理, 负载均衡, upstream]
+
+  - &rabbitmq
+    query_id: rabbitmq-01
+    topic: RabbitMQ
+    query: RabbitMQ 如何保证消息可靠投递
+    role: backend
+    difficulty: hard
+    expected_technologies: [RabbitMQ]
+    relevance: {6263dfb987fc66bcc78ada2009596d2129820555bbd78f046188a053891d871c: 2, 761814ee6b462207c25075c2af1eff79146205d61caea6289b104c1d92c3353f: 1, ab0a4d8f112a48cb9840e2d4a40d9d2b75ddf83102f49833c191435f67d30e53: 1}
+    expected_knowledge_points: [confirm, 持久化, ack]
+  - <<: *rabbitmq
+    query_id: rabbitmq-02
+    query: RabbitMQ 死信队列在什么情况下产生
+    difficulty: medium
+    relevance: {b886963a6f2b303ba453bfd8f4f70515ebbc07b48e58fc013db2892f30aa4973: 2, 8cc04ae3923157d310116ca644cc1beb57ac439f8100b403d9002999c5c95766: 1, e6878456a706e6c3604501a9001059bace067d2edae24f2ec9087c6aa8102525: 1}
+    expected_knowledge_points: [死信队列, TTL, 拒绝]
+
+  - &redis
+    query_id: redis-01
+    topic: Redis
+    query: Redis RDB 和 AOF 持久化有什么区别
+    role: backend
+    difficulty: medium
+    expected_technologies: [Redis]
+    relevance: {ac74e4131fab356a1a54711bfb16f0c6496eb55045131c3b46c015cc2272e21b: 2}
+    expected_knowledge_points: [RDB, AOF, 持久化]
+  - <<: *redis
+    query_id: redis-02
+    query: Redis 缓存雪崩击穿和穿透有什么区别
+    difficulty: hard
+    relevance: {ebdcda56cc56e904299fe533b156981f4c099a5e9bd6eb46227f3cd39a3dcd7c: 2}
+    expected_knowledge_points: [缓存雪崩, 缓存击穿, 缓存穿透]
+
+  - &spring
+    query_id: spring-01
+    topic: Spring
+    query: Spring IOC 和 AOP 的原理是什么
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [Spring]
+    relevance: {0ab8dfba032f9a59bb2054fcec0042d7d3212dde4b8fc593b5ca24456ee6a1c3: 2, bd00aeba9da818e0250cf711cc422c76250a8d1b89a93baa1311f12609f04809: 1}
+    expected_knowledge_points: [IOC, AOP, 动态代理]
+  - <<: *spring
+    query_id: spring-02
+    query: Spring 事务失效的常见场景有哪些
+    difficulty: hard
+    relevance: {e6f0f541ffda539750742879614e278e391ce0587c0a088762d42b3a053d992e: 2}
+    expected_knowledge_points: [事务, 代理, self-invocation]
+
+  - &boot
+    query_id: boot-01
+    topic: Spring Boot
+    query: Spring Boot 自动配置原理是什么
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [Spring Boot]
+    relevance: {85f1e0d3d5ed64c0741c53ec95581fff2a14d49f986a4ab2a0f3774028c2c22f: 2}
+    expected_knowledge_points: [自动配置, 条件注解, starter]
+  - <<: *boot
+    query_id: boot-02
+    query: Spring Boot 启动流程包含哪些阶段
+    relevance: {579a2dd3e5d01e2fb013187901b42ffb0d309ed4625374cbdcf7357e8c305247: 2}
+    expected_knowledge_points: [启动流程, ApplicationContext]
+
+  - &cloud
+    query_id: cloud-01
+    topic: Spring Cloud
+    query: Spring Cloud 常见组件分别解决什么问题
+    role: java-backend
+    difficulty: medium
+    expected_technologies: [Spring Cloud]
+    relevance: {a9dc57929d90c8e94b71f985b4fcb7f8162bcc2ff9bc9b41b38aaa220b24da1e: 2, 61563cc64f51d30abcb77c025a49e3e69faf1efbc049a08799a01fb1b7cf0323: 1}
+    expected_knowledge_points: [注册中心, 配置中心, 网关]
+  - <<: *cloud
+    query_id: cloud-02
+    query: 微服务熔断降级和限流有什么区别
+    difficulty: hard
+    relevance: {889a73f61d6e10deba6bbebaf9e43950eb159288bef12038ba38f9690274ee3b: 2, 2e618fc83976f270f6924326f78530314d68698b3fff457307d0f3eaeb572c1c: 1, 1c687d31c82cac8f33cf122c4b7c9715d9c6fae5a152e9249d1d545e315d67eb: 1, fac3526a374a52598db35d5ea06b13004d7fd528dbbf11f87285863f99b15d8f: 1}
+    expected_knowledge_points: [熔断, 降级, 限流]
+
+  - &zk
+    query_id: zk-01
+    topic: ZooKeeper
+    query: ZooKeeper 的 ZAB 协议如何保证一致性
+    role: backend
+    difficulty: hard
+    expected_technologies: [ZooKeeper]
+    relevance: {9aed9b40a404b0f6ffc5f1a6b3a3486c751eec71eb0e4ab089d4e29a879fa0ef: 2, 9010dcf0567cb5dc53ef827fb4a9e2d433b25736c803cd4cf2ad96f23d038e2b: 1}
+    expected_knowledge_points: [ZAB, 崩溃恢复, 原子广播]
+  - <<: *zk
+    query_id: zk-02
+    query: ZooKeeper 临时节点和永久节点有什么区别
+    difficulty: medium
+    relevance: {4631f63e4a583bed24855da36ae6e7a3895b04865900bdc404fe0f609dc04179: 2}
+    expected_knowledge_points: [临时节点, 永久节点, session]
+
+  - &os
+    query_id: os-01
+    topic: 操作系统
+    query: 进程和线程有什么区别
+    role: backend
+    difficulty: easy
+    expected_technologies: [操作系统]
+    relevance: {cd7e9888ca50dce150a08f0b1297a63813aa4abf16bfb097b1d8429a64a1f767: 2}
+    expected_knowledge_points: [进程, 线程, 资源]
+  - <<: *os
+    query_id: os-02
+    query: 操作系统为什么需要虚拟内存
+    difficulty: medium
+    relevance: {341404e91e8bf84163041baa0b1a0a68b5a7674e1f660415acbc212fd04a24ef: 2}
+    expected_knowledge_points: [虚拟内存, 地址空间, 物理内存]
+
+  - &mq
+    query_id: mq-01
+    topic: 消息队列
+    query: 为什么使用消息队列，它解决了哪些问题
+    role: backend
+    difficulty: easy
+    expected_technologies: [消息队列]
+    relevance: {d27fe00c6b8818b7a7fdcaaff3398618d6203a28f20dcf5b0eac8c8387fca67e: 2}
+    expected_knowledge_points: [异步, 解耦, 削峰]
+  - <<: *mq
+    query_id: mq-02
+    query: 消息队列如何处理重复消费和消息丢失
+    difficulty: hard
+    relevance: {b6511416e46de0c5ddda02e92b9b16b9d75d41132656074a5796efc89867f55b: 2, ab20ede462e446f11f572e82b878f1adc2100e9606ff54db426b0add547071bf: 1, 13e3b284e0e924a6950281ba53aec25f498d2cd3d9104422744b407f202d88f4: 1}
+    expected_knowledge_points: [幂等, 重试, 可靠性]
+
+  - &network
+    query_id: network-01
+    topic: 计算机网络
+    query: TCP 三次握手和四次挥手的过程是什么
+    role: backend
+    difficulty: medium
+    expected_technologies: [计算机网络]
+    relevance: {d044e9eb9f860d09d6e04535dd8a8fcf2f5fe97638f90f193d6ef707125a9740: 2, 8f96ffebbef62b2b74882b480cdfefbab9a77b282ed623c7e7f3ce6241f23947: 1}
+    expected_knowledge_points: [TCP, 三次握手, 四次挥手]
+  - <<: *network
+    query_id: network-02
+    query: HTTP 和 HTTPS 有什么区别，TLS 握手如何工作
+    difficulty: hard
+    relevance: {0c3e7b964d92c26a736126337f137017183daa05565f8bcb8c4c67e6339d246a: 2}
+    expected_knowledge_points: [HTTP, HTTPS, TLS]
+
+  - &pattern
+    query_id: pattern-01
+    topic: 设计模式
+    query: 单例模式有哪些实现方式，如何保证线程安全
+    role: backend
+    difficulty: medium
+    expected_technologies: [设计模式]
+    relevance: {f369ffc76668eda2090079458b746c81ae05f7039518064c61a199131585f8d4: 2, 0a257813d776c1c1209d3f9ede7687580e7b503f00b502917311f171b1e5a985: 1}
+    expected_knowledge_points: [单例模式, 双重检查, 线程安全]
+  - <<: *pattern
+    query_id: pattern-02
+    query: 策略模式适合什么场景
+    relevance: {0334400ed74d6e04c6bb5a9a6e61e0f095e85849bc2bb55532ae01b9f27faa2b: 2}
+    expected_knowledge_points: [策略模式, 算法替换]

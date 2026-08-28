@@ -1,0 +1,21 @@
+{
+  "setting": {
+    "es6": true,
+    "postcss": true,
+    "minified": true,
+    "enhance": true,
+    "urlCheck": false,
+    "compileHotReLoad": false,
+    "minifyWXSS": true,
+    "minifyWXML": true
+  },
+  "compileType": "miniprogram",
+  "miniprogramRoot": "dist/",
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "appid": "touristappid",
+  "editorSetting": {},
+  "libVersion": "3.17.1"
+}

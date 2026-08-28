@@ -1,0 +1,55 @@
+.user-page { min-height: 100vh; box-sizing: border-box; padding: 32px 24px calc(112px + env(safe-area-inset-bottom)); background: var(--surface); color: var(--ink); }
+.user-header { display: flex; align-items: flex-start; gap: 14px; padding: 16px 0 24px; }
+.avatar-trigger { width: 60px; height: 60px; flex: 0 0 auto; overflow: visible; background: transparent; transition: transform var(--motion-press) var(--ease-standard); }
+.avatar-trigger:active { transform: scale(.96); }
+.avatar { position: relative; width: 60px; height: 60px; border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--brand-soft); color: var(--brand); box-shadow: var(--shadow-card); font-size: 25px; font-weight: 700; overflow: hidden; }
+.avatar-image { width: 100%; height: 100%; }
+.avatar-edit-mark { position: absolute; width: 22px; height: 22px; right: -2px; bottom: -2px; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; border-radius: 50%; color: #fff; background: var(--brand); font-size: 16px; line-height: 1; }
+.user-intro { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 7px; padding-top: 2px; }
+.user-name-row { min-width: 0; display: flex; align-items: flex-start; gap: 8px; }
+.user-name { min-width: 0; color: var(--ink); font-size: 22px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.stat-label { color: var(--muted); font-size: 15px; }
+.user-xp { display: block; color: var(--amber); font-size: 18px; font-weight: 700; }
+.user-xp Text { font-size: 13px; }
+.user-error { display: block; color: var(--coral); margin-bottom: 12px; font-size: 15px; animation: eo-status-enter var(--motion-state) var(--ease-standard) both; }
+.edit-button { min-width: 44px; min-height: 36px; flex: 0 0 auto; padding: 0 8px; border: 1px solid #cdd9f5; border-radius: var(--radius-sm); background: #f4f7ff; color: var(--brand); font-size: 14px; line-height: 36px; }
+.nickname-editor { min-width: 0; display: flex; flex-direction: column; gap: 8px; animation: eo-status-enter var(--motion-state) var(--ease-standard) both; }
+.nickname-input { width: 100%; height: 40px; padding: 0 10px; background: #fff; border: 1px solid var(--line-strong); border-radius: var(--radius-sm); font-size: 16px; }
+.nickname-actions { display: flex; gap: 8px; }
+.nickname-cancel, .nickname-save { min-width: 64px; min-height: 38px; padding: 0 12px; border-radius: 8px; font-size: 14px; line-height: 38px; }
+.nickname-cancel { border: 1px solid var(--line-strong); color: var(--ink-soft); background: #fff; }
+.nickname-save { color: #fff; background: var(--brand); }
+.nickname-cancel[disabled], .nickname-save[disabled] { opacity: .55; }
+.login-panel { display: flex; flex-direction: column; gap: 14px; padding: 18px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); color: var(--muted); box-shadow: var(--shadow-card); font-size: 16px; line-height: 1.6; }
+.login-panel .primary-button { width: 100%; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0 18px; }
+.stat-card { padding: 16px 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: 0 5px 16px rgba(23, 32, 51, .04); text-align: center; transition: border-color var(--motion-state) var(--ease-standard), box-shadow var(--motion-state) var(--ease-standard); }
+.stat-value { display: block; margin-bottom: 5px; color: var(--ink); font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.user-menu { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow: hidden; }
+.menu-item { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 56px; padding: 0 18px; border-radius: 0; border-bottom: 1px solid #edf0f4; background: #fff; color: var(--ink); text-align: left; font-size: 17px; }
+.menu-item:last-child { border-bottom: 0; }
+.menu-arrow { color: var(--subtle); }
+.danger-item { color: var(--coral); }
+.avatar-editor { position: fixed; z-index: 20; left: 0; top: 0; right: 0; bottom: 0; padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom); background: #111827; color: #fff; }
+.editor-enter { animation: eo-editor-enter var(--motion-content) var(--ease-standard) both; }
+.editor-header { height: 64px; display: flex; align-items: center; justify-content: space-between; }
+.editor-title { font-size: 18px; font-weight: 700; }
+.editor-cancel, .editor-save { min-width: 56px; min-height: 40px; color: #dbe4f5; background: transparent; font-size: 16px; line-height: 40px; }
+.editor-save { color: #91b4ff; font-weight: 700; }
+.editor-save[disabled] { color: #667085; }
+.editor-tip { display: block; margin-top: 16px; color: #aab6c9; text-align: center; font-size: 15px; }
+.crop-stage { position: relative; width: 280px; height: 280px; margin: 34px auto 0; overflow: hidden; background: #263247; touch-action: none; }
+.crop-image { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.crop-frame { position: absolute; z-index: 2; left: 20px; top: 20px; width: 240px; height: 240px; border: 2px solid #fff; border-radius: 50%; box-shadow: 0 0 0 999px #0b1220a6; pointer-events: none; }
+.crop-grid { position: absolute; left: 33.333%; top: 0; width: 33.333%; height: 100%; border-left: 1px solid #ffffff4d; border-right: 1px solid #ffffff4d; }
+.crop-grid::after { content: ''; position: absolute; left: -100%; top: 33.333%; width: 300%; height: 33.333%; border-top: 1px solid #ffffff4d; border-bottom: 1px solid #ffffff4d; }
+.zoom-control { display: flex; align-items: center; gap: 10px; width: 280px; margin: 22px auto 0; }
+.zoom-mark { width: 20px; color: #dbe4f5; font-size: 22px; line-height: 1; text-align: center; }
+.zoom-slider { flex: 1; margin: 0; }
+.reset-crop { display: block; width: 120px; min-height: 42px; margin: 30px auto 0; border: 1px solid #52617a; border-radius: 9px; color: #dbe4f5; background: #263247; font-size: 15px; line-height: 42px; }
+.crop-canvas { position: fixed; left: -1000px; top: -1000px; width: 240px; height: 240px; opacity: 0; }
+
+@keyframes eo-editor-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}

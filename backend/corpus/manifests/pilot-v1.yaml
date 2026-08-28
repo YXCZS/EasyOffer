@@ -1,0 +1,89 @@
+manifest_version: pilot-official-v1
+sources:
+  - document_id: easyoffer-redis-official-notes
+    path: ../sources/redis-interview.md
+    source_name: EasyOffer Redis 官方文档面试笔记
+    source_url: https://redis.io/docs/latest/
+    technology: Redis
+    role_tags: [backend, java-backend, general]
+    document_version: 2026-08-v1
+    language: zh-CN
+    content_type: markdown
+    license_status: approved
+    target_corpus_version: pilot-official-v1
+    retrieved_at: '2026-08-27'
+    references:
+      - url: https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/
+        title: Redis persistence
+        content_version: Redis OSS latest documentation 2026-08
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+      - url: https://redis.io/docs/latest/operate/oss_and_stack/management/replication/
+        title: Redis replication
+        content_version: Redis OSS latest documentation 2026-08
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+      - url: https://redis.io/docs/latest/operate/oss_and_stack/reference/cluster-spec/
+        title: Redis Cluster specification
+        content_version: Redis OSS latest documentation 2026-08
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+    authority_priority: 10
+  - document_id: easyoffer-mysql-official-notes
+    path: ../sources/mysql-interview.md
+    source_name: EasyOffer MySQL 官方文档面试笔记
+    source_url: https://dev.mysql.com/doc/refman/8.4/en/
+    technology: MySQL
+    role_tags: [backend, java-backend, data-algorithm, general]
+    document_version: 2026-08-v1
+    language: zh-CN
+    content_type: markdown
+    license_status: approved
+    target_corpus_version: pilot-official-v1
+    retrieved_at: '2026-08-27'
+    references:
+      - url: https://dev.mysql.com/doc/refman/8.4/en/innodb-index-types.html
+        title: Clustered and Secondary Indexes
+        content_version: MySQL 8.4 Reference Manual
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+      - url: https://dev.mysql.com/doc/refman/8.4/en/innodb-transaction-isolation-levels.html
+        title: InnoDB Transaction Isolation Levels
+        content_version: MySQL 8.4 Reference Manual
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+      - url: https://dev.mysql.com/doc/refman/8.4/en/using-explain.html
+        title: Optimizing Queries with EXPLAIN
+        content_version: MySQL 8.4 Reference Manual
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+    authority_priority: 10
+  - document_id: easyoffer-rag-milvus-notes
+    path: ../sources/rag-milvus-interview.md
+    source_name: EasyOffer RAG 与 Milvus 面试知识笔记
+    source_url: https://milvus.io/docs
+    technology: RAG/Milvus
+    role_tags: [ai, backend, general]
+    document_version: 2026-08-v1
+    language: zh-CN
+    content_type: markdown
+    license_status: approved
+    target_corpus_version: pilot-official-v1
+    retrieved_at: '2026-08-27'
+    references:
+      - url: https://milvus.io/docs
+        title: Milvus Documentation
+        content_version: Milvus 2.6 documentation
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用技术事实和链接；正文为 EasyOffer 自有整理内容
+      - url: https://github.com/milvus-io/pymilvus
+        title: PyMilvus SDK
+        content_version: PyMilvus 2.6 documentation
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用 API 行为和链接；不复制第三方完整正文
+      - url: https://docs.langchain.com/oss/python/integrations/splitters/recursive_text_splitter
+        title: LangChain RecursiveCharacterTextSplitter
+        content_version: LangChain OSS Python documentation 2026-08
+        retrieved_at: '2026-08-27'
+        license_decision: 仅引用切分策略和链接；正文为 EasyOffer 自有整理内容
+    authority_priority: 10

@@ -1,0 +1,58 @@
+review_version: full-authorized-v1
+corpus_version: full-authorized-v1
+reviewer: codex-assisted-review
+reviewed_at: '2026-08-27T14:10:00+08:00'
+sampling_strategy:
+  - high-score
+  - low-score
+  - boundary
+  - conflict
+samples:
+  - query_id: es-01
+    sample_type: high-score
+    chunk_id: 7976e3ccfe87c1f68a775ba099aa69e8baa67f4f262fd05c96826f679f1d8ecf
+    parent_id: 6a97e1d7bed7fcbf19e5db712f93d35e46d38a76719d7b349b6ab653990102aa
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: Elasticsearch 倒排索引问题以高相似度命中对应完整问答，技术概念和面试价值正确。
+  - query_id: collections-01
+    sample_type: low-score
+    chunk_id: c76e315b4479b01f48ad8a35314772ff4a1e7a4174ae1c32d7d0dcc1ef903bf8
+    parent_id: 5d5eb3aa213eaa0a96e8b4f9eb3aa1abd9aec332720ac1d7d1049f5c705b8c81
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes:
+      - exact-parent-ranked-third
+    notes: HashMap Java 8 底层结构的精确父单元排名第三，前两条仍是同一主题的正确补充，Top-5 证据可用。
+  - query_id: ai-01
+    sample_type: boundary
+    chunk_id: c762eb7ebf68f791ff3bf299d3942b25677f1bc7d3ddd4abf5b601758c58cd84
+    parent_id: f438ffcba76ef410579ec7640bf001e5998d8b3e70a38aa793964c921b5401b3
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: 长答案跨页恢复后包含完整问题、上下文窗口、向量检索和外部存储说明，没有只返回标题或半段答案。
+  - query_id: mybatis-02
+    sample_type: conflict
+    chunk_id: b9d47351aed6697d850bd13b4987530c7ed4cdfc09a30ba7957fb5239239defa
+    parent_id: af27f28c9a1c41ec02db8885927b10f5f04f0d5b0548007896a300decca1251e
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes:
+      - aggregate-source-outranks-specialized-source
+    notes: Java 综合题库的同义问答排名第一，MyBatis 专项父单元排名第二且分差仅 0.0034；两者内容均正确，已保留专项来源优先级作为后续排序优化信号。
+decision: approved
+decision_reason: 38 条精确父单元基准全部在 Top-5 命中，来源追溯、父块恢复和答案完整性均为 100%；四类人工辅助抽样未发现阻断发布的技术错误。

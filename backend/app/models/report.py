@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import Field, model_validator
 
 from app.models.common import StrictModel
@@ -35,6 +37,20 @@ class ReportDraft(StrictModel):
     limitations: str = Field(min_length=1, max_length=300)
 
 
+class QuestionResult(StrictModel):
+    question_id: str
+    question_number: int = Field(ge=1)
+    stem: str
+    knowledge_point: str
+    status: Literal["correct", "incorrect", "unanswered"]
+    selected_answers: list[str] = Field(default_factory=list, max_length=4)
+    selected_answer_texts: list[str] = Field(default_factory=list, max_length=4)
+    correct_answers: list[str] = Field(min_length=1, max_length=4)
+    correct_answer_texts: list[str] = Field(min_length=1, max_length=4)
+    duration_ms: int = Field(default=0, ge=0, le=3600000)
+    explanation: str
+
+
 class Report(StrictModel):
     quiz_id: str
     topic: str
@@ -46,3 +62,4 @@ class Report(StrictModel):
     summary: list[str] = Field(min_length=3, max_length=3)
     advice: list[str] = Field(min_length=1)
     limitations: str
+    question_results: list[QuestionResult] = Field(default_factory=list)

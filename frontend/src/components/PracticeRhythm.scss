@@ -1,0 +1,27 @@
+.practice-rhythm { width: 100%; color: var(--muted); }
+.rhythm-summary { display: block; margin-bottom: 12px; color: var(--ink-soft); font-size: 14px; font-weight: 600; }
+.rhythm-track { display: flex; width: 100%; }
+.rhythm-step { position: relative; min-width: 0; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.rhythm-step::after { content: ''; position: absolute; z-index: 0; top: 6px; left: 50%; width: 100%; height: 2px; background: var(--line-strong); transition: background-color var(--motion-stage) var(--ease-standard); }
+.rhythm-step:last-child::after { display: none; }
+.rhythm-node { position: relative; z-index: 1; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--line-strong); border-radius: 50%; background: #fff; transition: transform var(--motion-state) var(--ease-standard), border-color var(--motion-state) var(--ease-standard), box-shadow var(--motion-state) var(--ease-standard), background-color var(--motion-state) var(--ease-standard); }
+.rhythm-node-core { width: 4px; height: 4px; border-radius: 50%; background: transparent; transition: background-color var(--motion-state) var(--ease-standard), transform var(--motion-state) var(--ease-standard); }
+.rhythm-label { max-width: 96px; color: var(--subtle); font-size: 12px; line-height: 1.35; transition: color var(--motion-state) var(--ease-standard), font-weight var(--motion-state) var(--ease-standard); }
+.rhythm-step.done::after { background: var(--mint); }
+.rhythm-step.done .rhythm-node { border-color: var(--mint); background: var(--mint); }
+.rhythm-step.done .rhythm-node-core { background: #fff; }
+.rhythm-step.done .rhythm-label { color: #08755b; }
+.rhythm-step.active .rhythm-node { transform: scale(1.15); border-color: var(--brand); box-shadow: 0 0 0 5px rgba(49, 95, 221, .12); }
+.rhythm-step.active .rhythm-node-core { transform: scale(1.2); background: var(--brand); }
+.rhythm-step.active .rhythm-label { color: var(--brand-deep); font-weight: 700; }
+.practice-rhythm.completed .rhythm-step::after { background: var(--mint); }
+.practice-rhythm.indeterminate .rhythm-step.active .rhythm-node { animation: rhythm-pulse 1.8s ease-in-out infinite; }
+.practice-rhythm.compact .rhythm-step { gap: 0; }
+.practice-rhythm.compact .rhythm-node { width: 10px; height: 10px; border-width: 1px; }
+.practice-rhythm.compact .rhythm-step::after { top: 4px; height: 2px; }
+.practice-rhythm.compact .rhythm-node-core { width: 3px; height: 3px; }
+
+@keyframes rhythm-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(49, 95, 221, .08); }
+  50% { box-shadow: 0 0 0 7px rgba(49, 95, 221, .16); }
+}

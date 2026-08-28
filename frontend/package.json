@@ -5,6 +5,10 @@
   "scripts": {
     "dev:weapp": "taro build --type weapp --watch",
     "build:weapp": "taro build --type weapp",
+    "build:h5": "taro build --type h5",
+    "test:quiz-navigation": "node --no-warnings --experimental-strip-types --test tests/quiz-navigation.test.ts",
+    "test:motion": "node --no-warnings --experimental-strip-types --test tests/motion.test.ts",
+    "test:frontend": "node --no-warnings --experimental-strip-types --test tests/*.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -20,11 +24,13 @@
     "@babel/preset-react": "7.27.1",
     "@tarojs/cli": "4.2.1",
     "@tarojs/plugin-framework-react": "4.2.1",
+    "@tarojs/plugin-platform-h5": "^4.2.1",
     "@tarojs/plugin-platform-weapp": "^4.2.1",
     "@tarojs/webpack5-runner": "4.2.1",
     "@types/react": "18.3.12",
     "@types/react-dom": "18.3.1",
     "babel-preset-taro": "4.2.1",
+    "miniprogram-automator": "^0.12.1",
     "typescript": "5.6.3"
   }
 }

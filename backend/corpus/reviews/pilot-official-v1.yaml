@@ -1,0 +1,52 @@
+review_version: pilot-official-v1
+corpus_version: pilot-official-v1
+reviewer: codex-assisted-review
+reviewed_at: '2026-08-27T11:50:00+08:00'
+sampling_strategy:
+  - high-score
+  - low-score
+  - boundary
+  - conflict
+samples:
+  - query_id: redis-01
+    chunk_id: a219b737b80d2e55b9c7893cfb63c6293fe096c7cb74fb53e2569232113bf1fc
+    parent_id: 5236b52f715cb3c0c2a5cbf7fd113c7d6c033648f04bc268054c73e2018b1def
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: RDB/AOF 对比完整，命中自有整理的 Redis 官方文档笔记。
+  - query_id: mysql-09
+    chunk_id: fd89567563cf16583f7610ce13232638e4d42f2c2c500e9ef9fbc70d9d87f48a
+    parent_id: 853724dd293ab6eb27b68b893e299a68fea6cb0194bae9fb7438691b5d08b355
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: 最低首位分数样本仍正确命中 EXPLAIN 字段与排障说明。
+  - query_id: rag-03
+    chunk_id: e02760442050ded395c10a544f07be65284904397a4e7760f05dbb9e1fb635f3
+    parent_id: 74e869ff59d577bb1171d9d24e258b497fb1f17193cebdd24ee2a26d67ccfb78
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: 父子分块边界样本已精确恢复同源完整问答。
+  - query_id: rag-10
+    chunk_id: 1c679924686a1583d4e4b36915d7793a4943bc8a010e957b17b23bf00afd87e5
+    parent_id: ab11f28865eb43ebd873ab66bd67bc6f8e743516f0699281c8d2a13657b5b4b7
+    relevance: 2
+    technical_correctness: 2
+    interview_value: 2
+    version_fitness: 2
+    source_quality: 2
+    issue_codes: []
+    notes: 公共知识库与联网搜索协作边界正确，无个人库或游客权限污染。
+decision: approved
+decision_reason: 30 条基准全部通过自动门禁，四类人工辅助抽样均技术正确、答案完整且来源可追溯。

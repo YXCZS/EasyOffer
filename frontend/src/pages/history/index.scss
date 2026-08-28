@@ -1,0 +1,15 @@
+.history-page { min-height: 100vh; box-sizing: border-box; padding: 24px 24px calc(28px + env(safe-area-inset-bottom)); background: var(--surface); color: var(--ink); }
+.history-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; }
+.eyebrow { display: block; color: var(--brand); font-size: 13px; letter-spacing: 1px; }
+.page-title { display: block; margin-top: 3px; font-size: 25px; font-weight: 700; }
+.history-error { display: block; color: var(--coral); margin-bottom: 12px; font-size: 13px; }
+.empty-state { display: flex; flex-direction: column; gap: 12px; padding: 40px 20px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); color: var(--muted); box-shadow: var(--shadow-card); text-align: center; font-size: 16px; line-height: 1.6; }
+.empty-state .primary-button { width: 100%; }
+.empty-title { color: var(--ink); font-size: 20px; font-weight: 700; }
+.history-list { display: flex; flex-direction: column; gap: 10px; }
+.history-item { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 76px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-md); box-shadow: 0 5px 16px rgba(23, 32, 51, .04); text-align: left; animation: eo-content-enter var(--motion-content) var(--ease-standard) both; }
+.history-item-main { display: flex; flex-direction: column; gap: 6px; min-width: 0; flex: 1; }
+.history-title { overflow: hidden; color: var(--ink); font-size: 17px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.history-meta { color: var(--muted); font-size: 14px; }
+.history-score { margin-left: 12px; color: var(--mint); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.history-arrow { margin-left: 12px; color: var(--subtle); }

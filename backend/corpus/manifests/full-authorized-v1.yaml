@@ -1,0 +1,262 @@
+manifest_version: full-authorized-v1
+sources:
+  - document_id: mianshiya-ai-large-model
+    path: ../../../知识库/AI大模型原理和应用面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: AI 大模型原理和应用面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: AI 大模型
+    role_tags: [ai, backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-elasticsearch
+    path: ../../../知识库/ElasticSearch 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Elasticsearch 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Elasticsearch
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-java-basics
+    path: ../../../知识库/Java 基础面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Java 基础面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Java 基础
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-java-concurrency
+    path: ../../../知识库/Java 并发面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Java 并发面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Java 并发
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-java-top-200
+    path: ../../../知识库/Java 热门面试题 200 道速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Java 热门面试题 200 道速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Java 综合
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 100
+  - document_id: mianshiya-jvm
+    path: ../../../知识库/Java 虚拟机面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Java 虚拟机面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: JVM
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-java-collections
+    path: ../../../知识库/Java 集合面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Java 集合面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Java 集合
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-mybatis
+    path: ../../../知识库/MyBatis 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: MyBatis 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: MyBatis
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-mysql
+    path: ../../../知识库/MySQL 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: MySQL 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: MySQL
+    role_tags: [backend, java-backend, data-algorithm, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-nginx
+    path: ../../../知识库/Nginx 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Nginx 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Nginx
+    role_tags: [backend, frontend, devops, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-rabbitmq
+    path: ../../../知识库/RabbitMQ 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: RabbitMQ 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: RabbitMQ
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-redis
+    path: ../../../知识库/Redis 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Redis 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Redis
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-spring
+    path: ../../../知识库/Spring 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Spring 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Spring
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-spring-boot
+    path: ../../../知识库/SpringBoot 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Spring Boot 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Spring Boot
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-spring-cloud
+    path: ../../../知识库/SpringCloud 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: Spring Cloud 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: Spring Cloud
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-zookeeper
+    path: ../../../知识库/Zookeeper 面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: ZooKeeper 面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: ZooKeeper
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-operating-system
+    path: ../../../知识库/操作系统面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: 操作系统面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: 操作系统
+    role_tags: [backend, frontend, ai, data-algorithm, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-message-queue
+    path: ../../../知识库/消息队列面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: 消息队列面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: 消息队列
+    role_tags: [backend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 50
+  - document_id: mianshiya-computer-network
+    path: ../../../知识库/计算机网络面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: 计算机网络面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: 计算机网络
+    role_tags: [backend, frontend, ai, data-algorithm, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20
+  - document_id: mianshiya-design-patterns
+    path: ../../../知识库/设计模式面试题速记通关版 _ 面试刷题 mianshiya.com.pdf
+    source_name: 设计模式面试题速记通关版
+    source_url: https://www.mianshiya.com/
+    technology: 设计模式
+    role_tags: [backend, frontend, java-backend, general]
+    document_version: authorized-2026-08-v1
+    language: zh-CN
+    content_type: pdf
+    license_status: approved
+    target_corpus_version: full-authorized-v1
+    retrieved_at: '2026-08-26'
+    authority_priority: 20

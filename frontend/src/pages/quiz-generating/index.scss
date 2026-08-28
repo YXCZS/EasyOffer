@@ -1,0 +1,37 @@
+.quiz-generating-page { min-height: 100vh; background: #f6f8fb; color: var(--ink); }
+.generating-topbar { min-height: 96px; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; background: #fff; border-bottom: 1px solid var(--line); font-size: 27px; font-weight: 800; }
+.generating-brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark { width: 46px; height: 46px; border-radius: 13px 13px 13px 5px; display: flex; align-items: center; justify-content: center; color: #fff; background: var(--brand); box-shadow: 0 6px 14px #315fdd33; font: 700 20px monospace; }
+.topbar-label { color: var(--muted); font-size: 16px; font-weight: 600; }
+.generating-main { min-height: calc(100vh - 96px); padding: 72px 24px 120px; display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+.orbital-logo { position: relative; width: 116px; height: 116px; display: flex; align-items: center; justify-content: center; }
+.orbital-core { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; border-radius: 22px 22px 22px 8px; color: #fff; background: var(--brand); box-shadow: 0 12px 24px rgba(49, 95, 221, .24); font: 700 21px monospace; z-index: 2; }
+.orbital-ring { position: absolute; border: 1px solid #b8c8f7; border-radius: 50%; }
+.ring-one { width: 94px; height: 94px; border-top-color: var(--violet); animation: spin 4.2s linear infinite; }
+.ring-two { width: 116px; height: 116px; border-right-color: var(--brand); opacity: .5; animation: spin-reverse 6s linear infinite; }
+.orbital-logo.complete .orbital-core { background: linear-gradient(145deg, #0d9b7a, #1cb992); box-shadow: 0 12px 24px #0d9b7a3d; }
+.orbital-logo.complete .ring-one { border-color: #9bdacb; border-top-color: #0d9b7a; animation: none; }
+.orbital-logo.complete .ring-two { border-color: #b7e9df; border-right-color: #0d9b7a; animation: none; }
+.generating-title { display: block; margin-top: 26px; color: var(--ink); font-size: 26px; font-weight: 800; }
+.generating-copy { display: block; max-width: 520px; margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.65; }
+.topic-chip { width: 100%; max-width: 510px; margin-top: 28px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border: 1px solid #dce5f6; border-radius: 10px; background: #fff; text-align: left; }
+.topic-chip-label { flex: 0 0 auto; color: var(--brand); font-size: 15px; font-weight: 700; }
+.topic-chip-value { overflow: hidden; color: #475467; font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.generating-rhythm { width: 100%; max-width: 520px; margin-top: 28px; padding: 18px 18px 16px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow-card); }
+.progress-track { width: 100%; max-width: 510px; height: 6px; margin-top: 18px; overflow: hidden; border-radius: 6px; background: #e1e7f1; }
+.progress-fill { height: 100%; border-radius: inherit; background: var(--brand); transition: width var(--motion-stage) var(--ease-standard); }
+.progress-0 { width: 20%; animation: loading-slide 1.7s ease-in-out infinite; }
+.progress-1 { width: 58%; animation: loading-slide 1.7s ease-in-out infinite; }
+.progress-2 { width: 78%; background: linear-gradient(90deg, #315fdd, #7657e8); }
+.progress-3 { width: 100%; background: #0d9b7a; }
+.generating-hint { display: block; margin-top: 12px; color: var(--subtle); font-size: 16px; }
+.generating-source { display: block; margin-top: 10px; color: var(--brand); font-size: 14px; }
+.generating-error { width: 100%; max-width: 510px; display: flex; flex-direction: column; align-items: center; }
+.error-symbol { width: 66px; height: 66px; display: flex; align-items: center; justify-content: center; border-radius: 22px; color: #e65368; background: #fff0f2; font-size: 32px; font-weight: 800; }
+.generating-error .generating-title { margin-top: 22px; }
+.generating-primary, .generating-secondary { width: 100%; min-height: 58px; font-size: 18px; line-height: 58px; }
+.generating-primary { margin-top: 30px; }
+.generating-secondary { margin-top: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin-reverse { to { transform: rotate(-360deg); } }
+@keyframes loading-slide { 0% { transform: translateX(-35%); } 50% { transform: translateX(35%); } 100% { transform: translateX(180%); } }

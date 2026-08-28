@@ -1,0 +1,18 @@
+.report-generating-page { min-height: 100vh; background: #f6f8fb; color: var(--ink); }
+.generating-header { min-height: 92px; padding: 0 24px; display: flex; align-items: center; gap: 12px; background: #fff; border-bottom: 1px solid var(--line); font-size: 24px; font-weight: 800; }
+.brand-mark { width: 44px; height: 44px; border-radius: 13px 13px 13px 5px; display: flex; align-items: center; justify-content: center; color: #fff; background: var(--brand); box-shadow: 0 6px 14px rgba(49, 95, 221, .2); font: 700 18px monospace; }
+.generating-content { min-height: calc(100vh - 92px); padding: 92px 24px 140px; display: flex; flex-direction: column; align-items: center; text-align: center; box-sizing: border-box; }
+.state-icon { width: 68px; height: 68px; display: flex; align-items: center; justify-content: center; border-radius: 22px 22px 22px 8px; background: var(--brand-soft); animation: pulse 2.2s ease-in-out infinite; }
+.state-icon.error { background: var(--coral-soft); animation: none; }
+.state-title { display: block; margin-top: 24px; color: var(--ink); font-size: 25px; font-weight: 800; }
+.state-copy { display: block; max-width: 520px; margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.65; }
+.source-hint { display: block; margin-top: 12px; color: var(--brand); font-size: 13px; }
+.report-rhythm { width: 100%; max-width: 480px; margin-top: 30px; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius-lg); background: #fff; box-shadow: var(--shadow-card); }
+.progress-track { width: 100%; max-width: 460px; height: 6px; margin-top: 18px; overflow: hidden; border-radius: 6px; background: #e3e9f3; }
+.progress-fill { width: 34%; height: 100%; border-radius: inherit; background: var(--brand); animation: progress 2.2s var(--ease-standard) infinite; }
+.state-hint { display: block; margin-top: 12px; color: var(--subtle); font-size: 14px; }
+.report-retry-button, .report-return-button { width: 100%; max-width: 460px; }
+.report-retry-button { margin-top: 32px; }
+.report-return-button { margin-top: 12px; }
+@keyframes progress { 0% { transform: translateX(-120%); } 100% { transform: translateX(320%); } }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: .86; } 50% { transform: scale(1.04); opacity: 1; } }
