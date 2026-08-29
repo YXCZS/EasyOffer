@@ -189,7 +189,7 @@ def _evaluate_personal_evidence(topic: str, items: list[EvidenceItem]) -> tuple[
 def _select_document_chunks(rows: list[tuple[object, float | None]], max_chars: int) -> list[tuple[object, float | None]]:
     """Keep an ordered, representative slice of a document within the prompt budget.
 
-    Chroma does not promise source order for ``collection.get``. Sort by the
+    Milvus retrieval does not promise source order. Sort by the
     persisted chunk index first, then sample evenly when a document is larger
     than the evidence budget so the model sees its beginning, middle and end.
     """
@@ -241,7 +241,7 @@ async def build_evidence_context(
     started = time.perf_counter()
     # Guests are deliberately base-model only.  Return a complete empty
     # context so callers can keep the same evidence contract without ever
-    # constructing a Tavily or Chroma provider.
+    # constructing a Tavily or Milvus provider.
     if user_id is None:
         return EvidenceContext(
             route="none",
@@ -249,9 +249,8 @@ async def build_evidence_context(
             fallback_reason="guest_base_model_only",
             elapsed_ms=round((time.perf_counter() - started) * 1000),
         )
-    # Use the explicit LangGraph retrieval loop when Milvus is enabled. The
-    # legacy Tavily/Chroma path remains available as a feature-flagged rollback
-    # while deployments migrate their collections.
+    # Use the explicit LangGraph retrieval loop when enabled. The deterministic
+    # fallback path remains available when the graph is disabled or unavailable.
     settings = get_settings()
     if settings.agentic_rag_graph_enabled and settings.milvus_enabled and user_id is not None:
         try:
@@ -442,7 +441,7 @@ def page_content(value) -> str:
 
 
 def personal_kb_search_tool(user_id: int):
-    """Build the user-scoped Chroma tool exposed to a retrieval agent."""
+    """Build the user-scoped Milvus tool exposed to a retrieval agent."""
     from langchain_core.tools import StructuredTool
 
     def search(query: str, k: int = 5) -> list[dict[str, object]]:

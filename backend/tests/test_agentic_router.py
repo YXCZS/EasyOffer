@@ -1,7 +1,10 @@
 import pytest
+import asyncio
+from types import SimpleNamespace
 
 from app.core.guest import hash_guest_token
 from app.research.agentic_router import (
+    AgenticRAGRouter,
     RouteDecision,
     build_policy,
     deterministic_route,
@@ -40,6 +43,52 @@ def test_authenticated_ordinary_policy_requires_public_research():
     decision = deterministic_route(policy)
     assert decision.route == "web_search"
     assert decision.tools[:2] == ["query_expansion", "tavily_search"]
+
+
+def test_autonomous_router_can_choose_tavily_before_public_kb(monkeypatch):
+    policy = build_policy("Harness Engineering", "ai", "hard", user_id=7)
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "deepseek_api_key", "test-key")
+
+    class FakeModel:
+        async def ainvoke(self, _messages):
+            return SimpleNamespace(content='{"next_tool":"tavily_search","reason":"new concept needs current web evidence","query":"Harness Engineering software engineering"}')
+
+    monkeypatch.setattr("app.llm.deepseek._chat_model", lambda *args, **kwargs: FakeModel())
+    decision, fallback = asyncio.run(
+        AgenticRAGRouter().choose_next_tool(
+            policy,
+            {
+                "query": "Harness Engineering",
+                "expanded_queries": ["Harness Engineering"],
+                "tool_calls": [],
+                "tool_call_count": 0,
+                "evidence": [],
+            },
+        )
+    )
+    assert fallback is None
+    assert decision.next_tool == "tavily_search"
+
+
+def test_autonomous_router_rejects_extract_without_url_and_falls_back(monkeypatch):
+    policy = build_policy("Redis persistence", "backend", "medium", user_id=7)
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "deepseek_api_key", "test-key")
+
+    class FakeModel:
+        async def ainvoke(self, _messages):
+            return SimpleNamespace(content='{"next_tool":"tavily_extract","reason":"extract it","query":"Redis persistence"}')
+
+    monkeypatch.setattr("app.llm.deepseek._chat_model", lambda *args, **kwargs: FakeModel())
+    decision, fallback = asyncio.run(
+        AgenticRAGRouter().choose_next_tool(
+            policy,
+            {"query": "Redis persistence", "tool_calls": [], "tool_call_count": 0, "evidence": []},
+        )
+    )
+    assert decision.next_tool == "public_milvus_search"
+    assert fallback and "agent_next_tool_fallback" in fallback
 
 
 def test_guest_url_is_still_base_model_only():

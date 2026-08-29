@@ -16,7 +16,12 @@ from langgraph.prebuilt import ToolNode
 from langchain_core.tools import StructuredTool
 
 from app.core.config import get_settings
-from app.research.agentic_router import PolicyEnvelope, build_policy
+from app.research.agentic_router import (
+    AgenticRAGRouter,
+    PolicyEnvelope,
+    build_policy,
+    deterministic_next_tool,
+)
 
 
 class AgenticRAGState(TypedDict, total=False):
@@ -160,27 +165,47 @@ def _tool_defs() -> list[StructuredTool]:
     ]
 
 
-def _route_controller(state: AgenticRAGState) -> dict[str, Any]:
+async def _route_controller(state: AgenticRAGState) -> dict[str, Any]:
     policy: PolicyEnvelope = state["policy"]
     if not policy.allowed_tools:
         return {"next_tool": None, "done": True, "route": "base_model", "route_reason": "base_model_only"}
     if state.get("round", 0) >= get_settings().agentic_rag_max_rounds:
         return {"next_tool": None, "done": True, "fallback_reason": "max_rounds"}
-    allowed = set(policy.allowed_tools)
-    current_calls = set(state.get("tool_calls", []))
-    # Hard policy routing. The model may assist with planning in future, but
-    # it can never widen this set or bypass URL/personal-only constraints.
-    if (policy.document_id or policy.knowledge_only) and "personal_kb_search" in allowed and "personal_milvus_search" not in current_calls:
-        return {"next_tool": "personal_milvus_search", "route": "personal_kb", "route_reason": "personal_only_policy"}
-    if policy.is_url and "tavily_extract" in allowed and "tavily_extract" not in current_calls:
-        return {"next_tool": "tavily_extract", "route": "web_extract", "route_reason": "url_requires_extract"}
-    if "public_milvus_search" in allowed and "public_milvus_search" not in current_calls:
-        return {"next_tool": "public_milvus_search", "route": "public_kb", "route_reason": "public_kb_first"}
-    if "tavily_search" in allowed and "tavily_search" not in current_calls:
-        return {"next_tool": "tavily_search", "route": "web_search", "route_reason": "public_kb_insufficient"}
-    if "tavily_extract" in allowed and "tavily_extract" not in current_calls:
-        return {"next_tool": "tavily_extract", "route": "web_extract", "route_reason": "deeper_evidence"}
-    return {"next_tool": None, "done": True, "fallback_reason": "tool_budget_exhausted"}
+    # The model chooses the next action for ordinary authenticated users. The
+    # chooser is policy-aware, and falls back to a deterministic route when
+    # the model is unavailable. Tool execution itself remains in this graph
+    # node so timeouts, authorization and audit fields stay centralized.
+    decision, fallback = await AgenticRAGRouter().choose_next_tool(policy, state)
+    if decision.next_tool == "finish":
+        # A model must not terminate an empty retrieval run while an allowed
+        # tool is still available. This preserves grounding even if the model
+        # returns an over-eager finish decision.
+        if not state.get("evidence"):
+            fallback_decision = deterministic_next_tool(policy, state)
+            if fallback_decision.next_tool != "finish":
+                decision = fallback_decision
+                fallback = fallback or "agent_finish_without_evidence"
+        if decision.next_tool == "finish":
+            return {
+                "next_tool": None,
+                "done": True,
+                "route": state.get("route") or "base_model",
+                "route_reason": decision.reason or "agent_finished",
+                "fallback_reason": fallback,
+            }
+    route_map = {
+        "public_milvus_search": "public_kb",
+        "personal_milvus_search": "personal_kb",
+        "tavily_search": "web_search",
+        "tavily_extract": "web_extract",
+    }
+    return {
+        "next_tool": decision.next_tool,
+        "query": (decision.query or state.get("query") or policy.topic)[:500],
+        "route": route_map.get(decision.next_tool, state.get("route") or "web_search"),
+        "route_reason": decision.reason or "agent_selected_tool",
+        "fallback_reason": fallback,
+    }
 
 
 async def _retrieve(state: AgenticRAGState) -> dict[str, Any]:

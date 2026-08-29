@@ -187,7 +187,7 @@ POST /quiz/generation-tasks
 
 个人向量记录包含 `user_id` 和 `document_id`。检索时同时使用 Milvus 标量过滤和应用层二次校验，避免跨用户、跨文档返回内容。文档删除时同时删除向量记录和本地文件。
 
-`KNOWLEDGE_VECTOR_BACKEND=milvus` 使用生产向量库；`chroma` 保留为本地兼容后端。公共知识库只使用 Milvus。
+项目统一使用 Milvus 作为个人与公共知识库的向量存储。公共知识库和个人知识库使用独立集合并通过元数据过滤隔离。
 
 ### 公共面试知识库
 
@@ -286,7 +286,7 @@ wx.login 获取 code
 | Agent | LangGraph | 保存检索状态、执行工具、控制循环和结束条件 |
 | 搜索 | langchain-tavily | 关键词搜索和指定 URL 全文抽取 |
 | 向量检索 | Milvus、langchain-milvus、PyMilvus | 公共/个人知识片段的向量检索和标量过滤 |
-| 本地向量库 | Chroma | 个人知识库本地兼容模式 |
+| 向量数据库 | Milvus | 个人与公共知识库检索 |
 | Embedding | DashScope `text-embedding-v4` | 文档块和查询向量化 |
 | 文档解析 | pypdf、docx2txt | PDF、DOCX 文本抽取 |
 | 图片 | DashScope、Pillow、腾讯云 COS SDK | 生图、文件校验和对象存储 |
@@ -342,7 +342,7 @@ easyoffer/
 | `knowledge_documents` | 个人文档元数据、处理状态和片段数 |
 | `quiz_visual_assets` | 生图任务、COS 地址、尺寸和错误信息 |
 
-表结构由 `backend/app/db/models.py` 映射，由 Alembic 迁移维护。向量正文存放在 Milvus/Chroma，图片文件存放在 COS，不写入 MySQL BLOB。
+表结构由 `backend/app/db/models.py` 映射，由 Alembic 迁移维护。向量正文存放在 Milvus，图片文件存放在 COS，不写入 MySQL BLOB。
 
 ## API
 
@@ -451,7 +451,6 @@ TAVILY_API_KEY=your-tavily-key
 Milvus 和 Embedding：
 
 ```dotenv
-KNOWLEDGE_VECTOR_BACKEND=milvus
 MILVUS_ENABLED=true
 MILVUS_URI=http://127.0.0.1:19530
 MILVUS_PUBLIC_COLLECTION=easyoffer_public_chunks

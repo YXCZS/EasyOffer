@@ -165,78 +165,6 @@ class EmbeddingProvider:
         return self._get().embed_query(text)
 
 
-class ChromaVectorStore:
-    def __init__(self, user_id: int):
-        self.user_id = user_id
-        self._store = None
-
-    def _get(self):
-        if self._store is None:
-            from langchain_chroma import Chroma
-            settings = get_settings()
-            self._store = Chroma(collection_name=f"easyoffer_user_{self.user_id}", embedding_function=EmbeddingProvider(), persist_directory=settings.chroma_persist_dir)
-        return self._store
-
-    def upsert_document(self, document_id: str, source_name: str, chunks: list[dict[str, Any]]) -> None:
-        store = self._get()
-        try:
-            store.delete(where={"document_id": document_id})
-        except Exception:
-            pass
-        from langchain_core.documents import Document
-        docs = [Document(page_content=item["text"], metadata={"document_id": document_id, "chunk_index": item["chunk_index"], "source_name": source_name, "content_hash": item["content_hash"]}) for item in chunks]
-        store.add_documents(docs, ids=[item["chunk_id"] for item in chunks])
-
-    def delete_document(self, document_id: str) -> None:
-        self._get().delete(where={"document_id": document_id})
-
-    def search(self, query: str, k: int, document_id: str | None = None) -> list[Any]:
-        kwargs: dict[str, Any] = {"k": k}
-        if document_id:
-            kwargs["filter"] = {"document_id": document_id}
-        rows = self._get().similarity_search_with_relevance_scores(query, **kwargs)
-        if not document_id:
-            return rows
-        return [
-            (doc, score)
-            for doc, score in rows
-            if str((getattr(doc, "metadata", None) or {}).get("document_id", "")) == document_id
-        ]
-
-    def get_document_chunks(self, document_id: str, limit: int | None = None) -> list[Any]:
-        """Return the selected document's chunks in source order.
-
-        A document-only quiz must not use the display filename as an embedding
-        query. Chroma's collection ``get`` is an exact metadata lookup, so it
-        gives us deterministic, document-scoped grounding instead of the
-        top-k chunks that happen to be nearest to a filename.
-        """
-        from langchain_core.documents import Document
-
-        collection = getattr(self._get(), "_collection", None)
-        if collection is None:
-            raise RuntimeError("Chroma collection is unavailable")
-        kwargs: dict[str, Any] = {
-            "where": {"document_id": document_id},
-            "include": ["documents", "metadatas"],
-        }
-        if limit is not None:
-            kwargs["limit"] = max(1, limit)
-        payload = collection.get(**kwargs) or {}
-        documents = payload.get("documents") or []
-        metadatas = payload.get("metadatas") or []
-        chunks: list[Document] = []
-        for index, text in enumerate(documents):
-            if not text:
-                continue
-            metadata = dict(metadatas[index] or {}) if index < len(metadatas) else {}
-            if str(metadata.get("document_id", "")) != document_id:
-                continue
-            chunks.append(Document(page_content=str(text), metadata=metadata))
-        chunks.sort(key=lambda item: int((item.metadata or {}).get("chunk_index", 0)))
-        return chunks
-
-
 class MilvusVectorStore:
     """Milvus-backed store shared by private user and public corpora.
 
@@ -588,11 +516,14 @@ class MilvusVectorStore:
         return sorted(docs, key=lambda item: int(self._metadata(item).get("chunk_index", 0)))
 
 
-def get_vector_store(user_id: int) -> ChromaVectorStore | MilvusVectorStore:
-    settings = get_settings()
-    if settings.milvus_enabled and settings.knowledge_vector_backend.lower() == "milvus":
-        return MilvusVectorStore(user_id)
-    return ChromaVectorStore(user_id)
+def get_vector_store(user_id: int) -> MilvusVectorStore:
+    """Return the user-scoped Milvus store.
+
+    Milvus is the only supported vector backend.  Availability is checked
+    lazily when the store is first used so importing the app remains cheap and
+    unit tests can replace the adapter with a fake.
+    """
+    return MilvusVectorStore(user_id)
 
 
 def get_public_vector_store() -> MilvusVectorStore:
@@ -602,6 +533,6 @@ def get_public_vector_store() -> MilvusVectorStore:
     callers can then use their configured web or base-model fallback.
     """
     settings = get_settings()
-    if not settings.milvus_enabled or settings.knowledge_vector_backend.lower() != "milvus":
+    if not settings.milvus_enabled:
         raise RuntimeError("public Milvus knowledge base is disabled")
     return MilvusVectorStore(public=True)

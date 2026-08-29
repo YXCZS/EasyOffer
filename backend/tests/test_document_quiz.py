@@ -133,7 +133,7 @@ def test_document_evidence_reads_ordered_chunks_instead_of_filename_search(monke
     class Store:
         def get_document_chunks(self, document_id):
             assert document_id == "doc-a"
-            # Chroma may return internal-id order; the evidence layer must
+            # Vector stores may return arbitrary order; the evidence layer must
             # restore the source chunk order before building the prompt.
             return [
                 Doc(2, "中间章节：向量数据库通过相似度检索召回证据。"),

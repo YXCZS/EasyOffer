@@ -1,25 +1,53 @@
-"""Offline Chroma/Milvus shadow retrieval comparison."""
+"""Offline retrieval comparison helper for Milvus deployments."""
 from __future__ import annotations
 
 import time
 from typing import Any
 
 
-def compare_retrieval(chroma_store: Any, milvus_store: Any, queries: list[str], *, k: int = 5) -> dict[str, Any]:
+def compare_retrieval(primary_store: Any, secondary_store: Any, queries: list[str], *, k: int = 5) -> dict[str, Any]:
+    """Compare two retrieval implementations without coupling to a backend name.
+
+    This is useful when validating a Milvus index or embedding change. Both
+    stores must expose ``search(query, k)`` and return ``(Document, score)``
+    rows with ``content_hash`` or ``document_id`` metadata.
+    """
     rows = []
-    agreements = 0
+    agreements = 0.0
     for query in queries:
         started = time.perf_counter()
-        chroma = chroma_store.search(query, k)
-        chroma_ids = {str((getattr(doc, "metadata", None) or {}).get("content_hash") or (getattr(doc, "metadata", None) or {}).get("document_id")) for doc, _ in chroma}
-        chroma_ms = round((time.perf_counter() - started) * 1000, 2)
+        primary = primary_store.search(query, k)
+        primary_ids = {
+            str((getattr(doc, "metadata", None) or {}).get("content_hash")
+                or (getattr(doc, "metadata", None) or {}).get("document_id"))
+            for doc, _ in primary
+        }
+        primary_ms = round((time.perf_counter() - started) * 1000, 2)
         started = time.perf_counter()
-        milvus = milvus_store.search(query, k)
-        milvus_ids = {str((getattr(doc, "metadata", None) or {}).get("content_hash") or (getattr(doc, "metadata", None) or {}).get("document_id")) for doc, _ in milvus}
-        milvus_ms = round((time.perf_counter() - started) * 1000, 2)
-        intersection = len(chroma_ids & milvus_ids)
-        union = len(chroma_ids | milvus_ids)
+        secondary = secondary_store.search(query, k)
+        secondary_ids = {
+            str((getattr(doc, "metadata", None) or {}).get("content_hash")
+                or (getattr(doc, "metadata", None) or {}).get("document_id"))
+            for doc, _ in secondary
+        }
+        secondary_ms = round((time.perf_counter() - started) * 1000, 2)
+        intersection = len(primary_ids & secondary_ids)
+        union = len(primary_ids | secondary_ids)
         agreement = intersection / union if union else 1.0
         agreements += agreement
-        rows.append({"query": query, "chroma_count": len(chroma), "milvus_count": len(milvus), "agreement": round(agreement, 4), "chroma_latency_ms": chroma_ms, "milvus_latency_ms": milvus_ms, "metadata_mismatch": sorted(chroma_ids ^ milvus_ids)})
-    return {"queries": rows, "recall_agreement": round(agreements / max(1, len(queries)), 4), "cutover_threshold": 0.9, "cutover_ready": bool(rows) and agreements / len(rows) >= 0.9}
+        rows.append({
+            "query": query,
+            "primary_count": len(primary),
+            "secondary_count": len(secondary),
+            "agreement": round(agreement, 4),
+            "primary_latency_ms": primary_ms,
+            "secondary_latency_ms": secondary_ms,
+            "metadata_mismatch": sorted(primary_ids ^ secondary_ids),
+        })
+    average = agreements / max(1, len(queries))
+    return {
+        "queries": rows,
+        "recall_agreement": round(average, 4),
+        "validation_threshold": 0.9,
+        "validation_ready": bool(rows) and average >= 0.9,
+    }

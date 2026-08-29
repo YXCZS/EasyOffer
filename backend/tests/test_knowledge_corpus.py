@@ -42,4 +42,4 @@ def test_shadow_compare_reports_agreement_and_latency():
             return [(Doc(), 0.8)]
     result = compare_retrieval(Store(), Store(), ["RAG"])
     assert result["recall_agreement"] == 1.0
-    assert result["cutover_ready"] is True
+    assert result["validation_ready"] is True

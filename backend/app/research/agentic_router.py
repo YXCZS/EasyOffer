@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 ToolName = Literal["base_model", "personal_kb_search", "public_milvus_search", "query_expansion", "tavily_search", "tavily_extract"]
 RouteName = Literal["base_model", "personal_kb", "web_search", "web_extract", "hybrid"]
+NextToolName = Literal["public_milvus_search", "personal_milvus_search", "tavily_search", "tavily_extract", "finish"]
 
 
 class PolicyEnvelope(BaseModel):
@@ -42,6 +43,19 @@ class RouteDecision(BaseModel):
         return list(dict.fromkeys(value))
 
 
+class NextToolDecision(BaseModel):
+    """One-step tool decision returned by the routing model.
+
+    The model selects only the next action. It never receives executable tool
+    access here; the graph validates the decision against the policy before
+    invoking the real adapter.
+    """
+
+    next_tool: NextToolName
+    reason: str = ""
+    query: str = ""
+
+
 def _is_url(topic: str) -> bool:
     parsed = urlparse(topic.strip())
     return parsed.scheme.lower() in {"http", "https"} and bool(parsed.netloc)
@@ -59,7 +73,7 @@ def build_policy(topic: str, role: str, difficulty: str, user_id: int | None = N
         max_calls = 1
     elif not authenticated:
         # Guests intentionally use the deterministic base-model path.  The
-        # guest experience must not spend quota on Chroma or public research.
+        # guest experience must not spend quota on Milvus or public research.
         allowed = ["base_model"]
         max_calls = 0
     elif is_url:
@@ -108,6 +122,33 @@ def deterministic_route(policy: PolicyEnvelope) -> RouteDecision:
             allow_public_web=True,
         )
     return RouteDecision(route="base_model", reason="safe_base_model_fallback", query=policy.topic, tools=[], max_tool_calls=0, allow_public_web=False)
+
+
+def deterministic_next_tool(policy: PolicyEnvelope, state: dict[str, Any]) -> NextToolDecision:
+    """Safe one-step fallback used when autonomous routing is unavailable."""
+    called = set(str(item) for item in state.get("tool_calls", []))
+    if policy.document_id or policy.knowledge_only:
+        if policy.authenticated and "personal_milvus_search" not in called:
+            return NextToolDecision(next_tool="personal_milvus_search", reason="personal_only_policy", query=state.get("query") or policy.topic)
+        return NextToolDecision(next_tool="finish", reason="personal_tool_completed")
+    if policy.is_url:
+        if "tavily_extract" not in called:
+            return NextToolDecision(next_tool="tavily_extract", reason="url_requires_extract", query=policy.topic)
+        return NextToolDecision(next_tool="finish", reason="url_extract_completed")
+    # Ordinary authenticated users use a conservative fallback order. The
+    # model-driven path below can choose a different order when available.
+    if not policy.authenticated:
+        return NextToolDecision(next_tool="finish", reason="guest_base_model_only")
+    if "public_milvus_search" in policy.allowed_tools and "public_milvus_search" not in called:
+        return NextToolDecision(next_tool="public_milvus_search", reason="fallback_public_kb_first", query=state.get("query") or policy.topic)
+    if "tavily_search" in policy.allowed_tools and "tavily_search" not in called:
+        return NextToolDecision(next_tool="tavily_search", reason="fallback_web_search", query=state.get("query") or policy.topic)
+    if "tavily_extract" in policy.allowed_tools and "tavily_extract" not in called:
+        for item in state.get("evidence", []):
+            citation = str(item.get("citation") or "")
+            if citation.startswith(("http://", "https://")):
+                return NextToolDecision(next_tool="tavily_extract", reason="fallback_deeper_source", query=citation)
+    return NextToolDecision(next_tool="finish", reason="fallback_tool_budget_exhausted")
 
 
 def validate_decision(decision: RouteDecision, policy: PolicyEnvelope) -> RouteDecision:
@@ -172,10 +213,6 @@ class AgenticRAGRouter:
         settings = get_settings()
         if not settings.agentic_rag_enabled or not settings.deepseek_api_key:
             return fallback, "agent_disabled_or_missing_model"
-        # Deterministic policy is cheaper and unambiguous for short topics;
-        # reserve an LLM routing turn for multi-part or high-difficulty input.
-        if policy.difficulty != "hard" and len(policy.topic) < 60 and len(policy.topic.split()) <= 4:
-            return fallback, "policy_route_unambiguous"
         try:
             agent = self._build_agent(policy)
             result = await asyncio.wait_for(
@@ -184,7 +221,88 @@ class AgenticRAGRouter:
             )
             raw = result.get("structured_response") if isinstance(result, dict) else None
             decision = validate_decision(RouteDecision.model_validate(raw), policy)
+            if (
+                policy.authenticated
+                and not policy.is_url
+                and not policy.document_id
+                and decision.route == "base_model"
+            ):
+                # Ordinary authenticated topics are required to attempt fresh
+                # evidence. A model cannot silently bypass retrieval at the
+                # routing stage; the deterministic route remains the fallback.
+                raise ValueError("ordinary authenticated route must attempt retrieval")
             return decision, None
         except Exception as exc:
             logger.warning("agent_route_fallback", extra={"failure_type": type(exc).__name__})
             return fallback, f"agent_route_fallback:{type(exc).__name__}"
+
+    async def choose_next_tool(self, policy: PolicyEnvelope, state: dict[str, Any]) -> tuple[NextToolDecision, str | None]:
+        """Let the model choose the next retrieval action within policy bounds.
+
+        This is deliberately a one-step decision rather than a free-form
+        executor. The graph remains responsible for calling tools, enforcing
+        timeouts, and recording observations. That gives us ReAct-style
+        feedback while keeping permissions and cost limits deterministic.
+        """
+        fallback = deterministic_next_tool(policy, state)
+        settings = get_settings()
+        actual_tools = {
+            name for name in policy.allowed_tools
+            if name in {"public_milvus_search", "personal_milvus_search", "tavily_search", "tavily_extract"}
+        }
+        if not settings.agentic_rag_enabled or not settings.deepseek_api_key or not actual_tools:
+            return fallback, "agent_disabled_or_missing_model"
+        called = set(str(item) for item in state.get("tool_calls", []))
+        remaining = sorted(actual_tools - called)
+        if not remaining:
+            return NextToolDecision(next_tool="finish", reason="all_allowed_tools_completed"), None
+        evidence_preview = [
+            {
+                "source_type": item.get("source_type"),
+                "title": item.get("title"),
+                "citation": item.get("citation"),
+                "score": item.get("score"),
+                "text": str(item.get("text") or "")[:800],
+            }
+            for item in state.get("evidence", [])[-8:]
+        ]
+        prompt = (
+            "You are the next-step controller for a technical interview Agentic RAG system. "
+            "Choose exactly one next_tool from the allowed list or finish. "
+            "Choose finish only when the evidence is sufficient or no useful tool remains. "
+            "Use public_milvus_search for stable interview knowledge, tavily_search for current or missing facts, "
+            "and tavily_extract only for a concrete http(s) URL present in the topic or evidence. "
+            "Never choose a tool outside the allowed list. Return JSON only: "
+            "{next_tool, reason, query}. Do not include analysis or markdown.\n"
+            f"Topic: {policy.topic}\nRole: {policy.role}\nDifficulty: {policy.difficulty}\n"
+            f"Current query: {state.get('query') or policy.topic}\n"
+            f"Expanded queries: {state.get('expanded_queries', [])}\n"
+            f"Already called: {sorted(called)}\n"
+            f"Remaining tool budget: {max(0, policy.max_tool_calls - int(state.get('tool_call_count', 0)))}\n"
+            f"Allowed next tools: {remaining}\n"
+            f"Evidence preview: {evidence_preview}"
+        )
+        try:
+            from app.llm.deepseek import _chat_model, _message_json
+
+            message = await asyncio.wait_for(
+                _chat_model(0.0, json_mode=True, timeout=self.timeout_seconds, max_retries=0).ainvoke(
+                    [{"role": "system", "content": prompt}, {"role": "user", "content": policy.topic}]
+                ),
+                timeout=self.timeout_seconds,
+            )
+            decision = NextToolDecision.model_validate(_message_json(message))
+            if decision.next_tool != "finish" and decision.next_tool not in actual_tools:
+                raise ValueError("agent selected forbidden tool")
+            if decision.next_tool in called:
+                raise ValueError("agent selected an already-called tool")
+            if decision.next_tool == "tavily_extract":
+                query = decision.query.strip()
+                if not query.startswith(("http://", "https://")):
+                    raise ValueError("tavily_extract requires an http(s) URL")
+            if decision.next_tool != "finish" and not decision.query.strip():
+                decision.query = str(state.get("query") or policy.topic)[:500]
+            return decision, None
+        except Exception as exc:
+            logger.warning("agent_next_tool_fallback", extra={"failure_type": type(exc).__name__})
+            return fallback, f"agent_next_tool_fallback:{type(exc).__name__}"

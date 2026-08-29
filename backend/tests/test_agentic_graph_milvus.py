@@ -27,6 +27,46 @@ def test_graph_routes_to_public_milvus_and_records_tool(monkeypatch):
     assert state["route"] == "public_kb"
 
 
+def test_graph_uses_autonomous_tool_choice(monkeypatch):
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "milvus_enabled", True)
+    monkeypatch.setattr(settings, "agentic_rag_max_rounds", 1)
+    monkeypatch.setattr(settings, "agentic_rag_max_tool_calls", 1)
+    monkeypatch.setattr(
+        "app.research.agentic_router.AgenticRAGRouter.choose_next_tool",
+        lambda self, policy, state: asyncio.sleep(0, result=(
+            __import__("app.research.agentic_router", fromlist=["NextToolDecision"]).NextToolDecision(
+                next_tool="tavily_search",
+                reason="model selected web search",
+                query="Harness Engineering software engineering",
+            ),
+            None,
+        )),
+    )
+
+    class TavilyAgent:
+        async def _search_query(self, query, role, difficulty):
+            from app.research.tavily_agent import ResearchSource
+            from datetime import datetime, timezone
+
+            return [
+                ResearchSource(
+                    source_id="web-1",
+                    title="Harness Engineering",
+                    url="https://example.com/harness",
+                    excerpt="Harness Engineering is a software engineering workflow concept.",
+                    retrieved_at=datetime.now(timezone.utc).isoformat(),
+                    relevance_score=0.9,
+                )
+            ], None
+
+    monkeypatch.setattr("app.research.tavily_agent.TavilyResearchAgent", TavilyAgent)
+    monkeypatch.setattr("app.services.knowledge_service.get_public_vector_store", lambda: (_ for _ in ()).throw(AssertionError("model choice should skip public KB")))
+    state = asyncio.run(run_agentic_rag("Harness Engineering", "ai", "hard", user_id=7))
+    assert state["tool_calls"] == ["tavily_search"]
+    assert state["route"] == "web_search"
+
+
 def test_graph_keeps_exact_topic_as_first_public_query_when_expansion_broadens(monkeypatch):
     queries = []
 

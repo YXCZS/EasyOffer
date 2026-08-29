@@ -30,7 +30,7 @@ def test_personal_evidence_requires_explicit_document_id(monkeypatch):
 def test_web_evidence_is_used_when_personal_retrieval_fails(monkeypatch):
     class BrokenStore:
         def search(self, query, k):
-            raise RuntimeError("chroma unavailable")
+            raise RuntimeError("milvus unavailable")
 
     async def web(*args):
         return ResearchContext(status="success", sources=[ResearchSource(source_id="web-1", url="https://example.com", excerpt="current facts", retrieved_at="now")])

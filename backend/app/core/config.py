@@ -59,11 +59,9 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24 * 30
     upload_dir: str = "uploads"
     knowledge_upload_dir: str = "uploads/knowledge"
-    chroma_persist_dir: str = "data/chroma"
-    # Milvus is opt-in during migration; Chroma remains the compatibility
-    # backend until the Milvus shadow-read checks pass.
-    knowledge_vector_backend: str = "chroma"
-    milvus_enabled: bool = False
+    # Milvus is the sole vector store. The adapter connects lazily on first
+    # retrieval/write so application startup does not require a live server.
+    milvus_enabled: bool = True
     milvus_uri: str = "http://127.0.0.1:19530"
     milvus_token: str | None = None
     milvus_public_collection: str = "easyoffer_public_chunks"

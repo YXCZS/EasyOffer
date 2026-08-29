@@ -23,7 +23,7 @@ async def get_db_session(request):
 
 @lru_cache
 def get_quiz_service() -> QuizService:
-    # Evidence routing owns the single Tavily/Chroma retrieval path. Keeping the
+    # Evidence routing owns the single Tavily/Milvus retrieval path. Keeping the
     # provider out of the generator prevents duplicate web research per request.
     return QuizService(generator=DeepSeekQuizGenerator(research_provider=TavilyResearchAgent()))
 
