@@ -1,4 +1,4 @@
-"""Operational helpers for a Milvus Standalone deployment.
+"""Operational helpers for Milvus Lite and server deployments.
 
 The application keeps this module optional: importing it never connects to
 Milvus, which makes local development and the unit-test suite independent of

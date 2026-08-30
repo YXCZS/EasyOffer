@@ -9,7 +9,18 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validat
 
 
 LicenseStatus = Literal["approved", "local-evaluation-only", "rejected"]
-ContentType = Literal["pdf", "docx", "markdown", "webpage"]
+ContentType = Literal[
+    "pdf",
+    "docx",
+    "ppt",
+    "pptx",
+    "xls",
+    "xlsx",
+    "html",
+    "image",
+    "markdown",
+    "webpage",
+]
 
 
 class SourceReference(BaseModel):
@@ -86,6 +97,11 @@ class ParsedBlock:
     page_end: int | None = None
     section_path: list[str] = field(default_factory=list)
     start_index: int = 0
+    heading_level: int | None = None
+    bbox: list[float] | None = None
+    media_path: str = ""
+    mineru_node_path: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -96,6 +112,9 @@ class ParsedDocument:
     page_count: int | None = None
     warnings: list[str] = field(default_factory=list)
     rejected_blocks: list[dict[str, Any]] = field(default_factory=list)
+    parser_name: str = "local"
+    parser_schema: str = "text"
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -114,6 +133,11 @@ class ParentUnit:
     document_hash: str
     content_hash: str
     structure_confidence: float
+    heading_level: int | None = None
+    bbox: list[float] | None = None
+    media_path: str = ""
+    mineru_node_path: str = ""
+    structure_metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -148,6 +172,11 @@ class ChildChunk:
     published_at: str | None = None
     structure_confidence: float = 0.0
     duplicate_of: str | None = None
+    heading_level: int | None = None
+    bbox: list[float] | None = None
+    media_path: str = ""
+    mineru_node_path: str = ""
+    structure_metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_record(self) -> dict[str, Any]:
         value = asdict(self)

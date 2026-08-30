@@ -60,6 +60,7 @@ class CorpusPipeline:
 
     def _batch_id(self, manifest_path: Path, mode: str, sources: list[SourceEntry]) -> str:
         hasher = hashlib.sha256(manifest_path.read_bytes())
+        hasher.update(self.config.pipeline_revision.encode("utf-8"))
         for source in sources:
             hasher.update(source.document_id.encode("utf-8"))
         digest = hasher.hexdigest()[:16]
@@ -102,6 +103,9 @@ class CorpusPipeline:
                 "page_count": parsed.page_count,
                 "warnings": parsed.warnings,
                 "rejected_blocks": parsed.rejected_blocks,
+                "parser_name": parsed.parser_name,
+                "parser_schema": parsed.parser_schema,
+                "metadata": parsed.metadata,
             },
         )
 
@@ -114,6 +118,9 @@ class CorpusPipeline:
             page_count=payload.get("page_count"),
             warnings=list(payload.get("warnings") or []),
             rejected_blocks=list(payload.get("rejected_blocks") or []),
+            parser_name=str(payload.get("parser_name") or "local"),
+            parser_schema=str(payload.get("parser_schema") or "text"),
+            metadata=dict(payload.get("metadata") or {}),
         )
 
     def _process(self, manifest_path: str | Path, mode: str) -> tuple[BatchResult, list[dict[str, Any]]]:

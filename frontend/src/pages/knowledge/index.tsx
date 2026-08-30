@@ -52,7 +52,7 @@ export default function KnowledgePage() {
   async function chooseFile() {
     if (uploading) return
     try {
-      const result = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf', 'docx', 'md', 'markdown'] })
+      const result = await Taro.chooseMessageFile({ count: 1, type: 'file', extension: ['pdf', 'docx', 'ppt', 'pptx', 'xls', 'xlsx', 'html', 'md', 'markdown'] })
       const file = result.tempFiles?.[0]
       if (!file?.path) return
       if (file.size && file.size > MAX_FILE_BYTES) { setError('文件不能超过 20MB'); return }

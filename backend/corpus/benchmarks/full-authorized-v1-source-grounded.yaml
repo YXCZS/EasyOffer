@@ -1,0 +1,480 @@
+benchmark_version: full-authorized-v1
+embedding_model: text-embedding-v4
+top_k: 5
+queries:
+- query_id: ai-01
+  topic: AI 大模型
+  query: 大模型应用如何实现长短期记忆机制
+  role: ai
+  difficulty: medium
+  expected_technologies: &id001
+  - AI 大模型
+  relevance:
+    mianshiya-ai-large-model: 2
+  expected_knowledge_points:
+  - 上下文窗口
+  - 向量数据库
+  - 外部存储
+- query_id: ai-02
+  topic: AI 大模型
+  query: 大模型微调 LoRA 的原理和优势是什么
+  role: ai
+  difficulty: hard
+  expected_technologies: *id001
+  relevance:
+    mianshiya-ai-large-model: 2
+  expected_knowledge_points:
+  - LoRA
+  - 参数高效微调
+- query_id: es-01
+  topic: Elasticsearch
+  query: Elasticsearch 倒排索引的原理是什么
+  role: backend
+  difficulty: medium
+  expected_technologies: &id002
+  - Elasticsearch
+  relevance:
+    mianshiya-elasticsearch: 2
+  expected_knowledge_points:
+  - 倒排索引
+  - 分词
+- query_id: es-02
+  topic: Elasticsearch
+  query: Elasticsearch 深分页为什么慢，应该如何优化
+  role: backend
+  difficulty: hard
+  expected_technologies: *id002
+  relevance:
+    mianshiya-elasticsearch: 2
+  expected_knowledge_points:
+  - 深分页
+  - search_after
+- query_id: java-01
+  topic: Java 基础
+  query: Java 方法重载和方法重写有什么区别
+  role: java-backend
+  difficulty: easy
+  expected_technologies: &id003
+  - Java 基础
+  - Java 综合
+  relevance:
+    mianshiya-java-basics: 2
+  expected_knowledge_points:
+  - 重载
+  - 重写
+  - 多态
+- query_id: java-02
+  topic: Java 基础
+  query: Java checked exception 和 runtime exception 有什么区别
+  role: java-backend
+  difficulty: medium
+  expected_technologies: *id003
+  relevance:
+    mianshiya-java-basics: 2
+  expected_knowledge_points:
+  - 异常
+  - 编译期
+  - 运行时
+- query_id: concurrency-01
+  topic: Java 并发
+  query: synchronized 和 ReentrantLock 有什么区别
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id004
+  - Java 并发
+  relevance:
+    mianshiya-java-concurrency: 2
+  expected_knowledge_points:
+  - synchronized
+  - ReentrantLock
+- query_id: concurrency-02
+  topic: Java 并发
+  query: Java volatile 如何保证可见性，为什么不保证原子性
+  role: java-backend
+  difficulty: hard
+  expected_technologies: *id004
+  relevance:
+    mianshiya-java-concurrency: 2
+  expected_knowledge_points:
+  - volatile
+  - 可见性
+  - 原子性
+- query_id: jvm-01
+  topic: JVM
+  query: JVM G1 垃圾收集器的回收流程是什么
+  role: java-backend
+  difficulty: hard
+  expected_technologies: &id005
+  - JVM
+  relevance:
+    mianshiya-jvm: 2
+  expected_knowledge_points:
+  - G1
+  - Region
+  - Mixed GC
+- query_id: jvm-02
+  topic: JVM
+  query: JVM 什么时候会触发 Full GC
+  role: java-backend
+  difficulty: hard
+  expected_technologies: *id005
+  relevance:
+    mianshiya-jvm: 2
+  expected_knowledge_points:
+  - Full GC
+  - 老年代
+  - 元空间
+- query_id: collections-01
+  topic: Java 集合
+  query: HashMap 在 Java 8 中的底层结构是什么
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id006
+  - Java 集合
+  relevance:
+    mianshiya-java-collections: 2
+  expected_knowledge_points:
+  - HashMap
+  - 数组
+  - 红黑树
+- query_id: collections-02
+  topic: Java 集合
+  query: ConcurrentHashMap 如何保证线程安全
+  role: java-backend
+  difficulty: hard
+  expected_technologies: *id006
+  relevance:
+    mianshiya-java-collections: 2
+  expected_knowledge_points:
+  - ConcurrentHashMap
+  - CAS
+  - synchronized
+- query_id: mybatis-01
+  topic: MyBatis
+  query: MyBatis 一级缓存和二级缓存有什么区别
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id007
+  - MyBatis
+  relevance:
+    mianshiya-java-top-200: 2
+    mianshiya-mybatis: 1
+  expected_knowledge_points:
+  - 一级缓存
+  - 二级缓存
+  - SqlSession
+- query_id: mybatis-02
+  topic: MyBatis
+  query: 'MyBatis 中 #{} 和 ${} 有什么区别'
+  role: java-backend
+  difficulty: medium
+  expected_technologies: *id007
+  relevance:
+    mianshiya-mybatis: 2
+  expected_knowledge_points:
+  - '#{}'
+  - ${}
+  - SQL 注入
+- query_id: mysql-01
+  topic: MySQL
+  query: MySQL 聚簇索引和二级索引有什么区别
+  role: backend
+  difficulty: medium
+  expected_technologies: &id008
+  - MySQL
+  relevance:
+    mianshiya-mysql: 2
+  expected_knowledge_points:
+  - 聚簇索引
+  - 二级索引
+  - 回表
+- query_id: mysql-02
+  topic: MySQL
+  query: MySQL MVCC 如何实现可重复读
+  role: backend
+  difficulty: hard
+  expected_technologies: *id008
+  relevance:
+    mianshiya-mysql: 2
+  expected_knowledge_points:
+  - MVCC
+  - ReadView
+  - undo log
+- query_id: nginx-01
+  topic: Nginx
+  query: Nginx 的 master worker 进程模型是什么
+  role: backend
+  difficulty: medium
+  expected_technologies: &id009
+  - Nginx
+  relevance:
+    mianshiya-nginx: 2
+  expected_knowledge_points:
+  - master
+  - worker
+  - 事件驱动
+- query_id: nginx-02
+  topic: Nginx
+  query: Nginx 如何实现反向代理和负载均衡
+  role: backend
+  difficulty: medium
+  expected_technologies: *id009
+  relevance:
+    mianshiya-nginx: 2
+  expected_knowledge_points:
+  - 反向代理
+  - 负载均衡
+  - upstream
+- query_id: rabbitmq-01
+  topic: RabbitMQ
+  query: RabbitMQ 如何保证消息可靠投递
+  role: backend
+  difficulty: hard
+  expected_technologies: &id010
+  - RabbitMQ
+  relevance:
+    mianshiya-rabbitmq: 2
+    mianshiya-message-queue: 1
+  expected_knowledge_points:
+  - confirm
+  - 持久化
+  - ack
+- query_id: rabbitmq-02
+  topic: RabbitMQ
+  query: RabbitMQ 死信队列在什么情况下产生
+  role: backend
+  difficulty: medium
+  expected_technologies: *id010
+  relevance:
+    mianshiya-message-queue: 2
+    mianshiya-rabbitmq: 1
+    mianshiya-java-top-200: 1
+  expected_knowledge_points:
+  - 死信队列
+  - TTL
+  - 拒绝
+- query_id: redis-01
+  topic: Redis
+  query: Redis RDB 和 AOF 持久化有什么区别
+  role: backend
+  difficulty: medium
+  expected_technologies: &id011
+  - Redis
+  relevance:
+    mianshiya-redis: 2
+  expected_knowledge_points:
+  - RDB
+  - AOF
+  - 持久化
+- query_id: redis-02
+  topic: Redis
+  query: Redis 缓存雪崩击穿和穿透有什么区别
+  role: backend
+  difficulty: hard
+  expected_technologies: *id011
+  relevance:
+    mianshiya-redis: 2
+  expected_knowledge_points:
+  - 缓存雪崩
+  - 缓存击穿
+  - 缓存穿透
+- query_id: spring-01
+  topic: Spring
+  query: Spring IOC 和 AOP 的原理是什么
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id012
+  - Spring
+  relevance:
+    mianshiya-spring: 2
+  expected_knowledge_points:
+  - IOC
+  - AOP
+  - 动态代理
+- query_id: spring-02
+  topic: Spring
+  query: Spring 事务失效的常见场景有哪些
+  role: java-backend
+  difficulty: hard
+  expected_technologies: *id012
+  relevance:
+    mianshiya-spring: 2
+  expected_knowledge_points:
+  - 事务
+  - 代理
+  - self-invocation
+- query_id: boot-01
+  topic: Spring Boot
+  query: Spring Boot 自动配置原理是什么
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id013
+  - Spring Boot
+  relevance:
+    mianshiya-spring-boot: 2
+  expected_knowledge_points:
+  - 自动配置
+  - 条件注解
+  - starter
+- query_id: boot-02
+  topic: Spring Boot
+  query: Spring Boot 启动流程包含哪些阶段
+  role: java-backend
+  difficulty: medium
+  expected_technologies: *id013
+  relevance:
+    mianshiya-spring-boot: 2
+  expected_knowledge_points:
+  - 启动流程
+  - ApplicationContext
+- query_id: cloud-01
+  topic: Spring Cloud
+  query: Spring Cloud 常见组件分别解决什么问题
+  role: java-backend
+  difficulty: medium
+  expected_technologies: &id014
+  - Spring Cloud
+  relevance:
+    mianshiya-spring-cloud: 2
+  expected_knowledge_points:
+  - 注册中心
+  - 配置中心
+  - 网关
+- query_id: cloud-02
+  topic: Spring Cloud
+  query: 微服务熔断降级和限流有什么区别
+  role: java-backend
+  difficulty: hard
+  expected_technologies: *id014
+  relevance:
+    mianshiya-spring-cloud: 2
+  expected_knowledge_points:
+  - 熔断
+  - 降级
+  - 限流
+- query_id: zk-01
+  topic: ZooKeeper
+  query: ZooKeeper 的 ZAB 协议如何保证一致性
+  role: backend
+  difficulty: hard
+  expected_technologies: &id015
+  - ZooKeeper
+  relevance:
+    mianshiya-zookeeper: 2
+  expected_knowledge_points:
+  - ZAB
+  - 崩溃恢复
+  - 原子广播
+- query_id: zk-02
+  topic: ZooKeeper
+  query: ZooKeeper 临时节点和永久节点有什么区别
+  role: backend
+  difficulty: medium
+  expected_technologies: *id015
+  relevance:
+    mianshiya-zookeeper: 2
+  expected_knowledge_points:
+  - 临时节点
+  - 永久节点
+  - session
+- query_id: os-01
+  topic: 操作系统
+  query: 进程和线程有什么区别
+  role: backend
+  difficulty: easy
+  expected_technologies: &id016
+  - 操作系统
+  relevance:
+    mianshiya-operating-system: 2
+  expected_knowledge_points:
+  - 进程
+  - 线程
+  - 资源
+- query_id: os-02
+  topic: 操作系统
+  query: 操作系统为什么需要虚拟内存
+  role: backend
+  difficulty: medium
+  expected_technologies: *id016
+  relevance:
+    mianshiya-operating-system: 2
+  expected_knowledge_points:
+  - 虚拟内存
+  - 地址空间
+  - 物理内存
+- query_id: mq-01
+  topic: 消息队列
+  query: 为什么使用消息队列，它解决了哪些问题
+  role: backend
+  difficulty: easy
+  expected_technologies: &id017
+  - 消息队列
+  relevance:
+    mianshiya-message-queue: 2
+  expected_knowledge_points:
+  - 异步
+  - 解耦
+  - 削峰
+- query_id: mq-02
+  topic: 消息队列
+  query: 消息队列如何处理重复消费和消息丢失
+  role: backend
+  difficulty: hard
+  expected_technologies: *id017
+  relevance:
+    mianshiya-message-queue: 2
+    mianshiya-rabbitmq: 1
+  expected_knowledge_points:
+  - 幂等
+  - 重试
+  - 可靠性
+- query_id: network-01
+  topic: 计算机网络
+  query: TCP 三次握手和四次挥手的过程是什么
+  role: backend
+  difficulty: medium
+  expected_technologies: &id018
+  - 计算机网络
+  relevance:
+    mianshiya-computer-network: 2
+  expected_knowledge_points:
+  - TCP
+  - 三次握手
+  - 四次挥手
+- query_id: network-02
+  topic: 计算机网络
+  query: HTTP 和 HTTPS 有什么区别，TLS 握手如何工作
+  role: backend
+  difficulty: hard
+  expected_technologies: *id018
+  relevance:
+    mianshiya-computer-network: 2
+  expected_knowledge_points:
+  - HTTP
+  - HTTPS
+  - TLS
+- query_id: pattern-01
+  topic: 设计模式
+  query: 单例模式有哪些实现方式，如何保证线程安全
+  role: backend
+  difficulty: medium
+  expected_technologies: &id019
+  - 设计模式
+  relevance:
+    mianshiya-design-patterns: 2
+    mianshiya-java-top-200: 1
+  expected_knowledge_points:
+  - 单例模式
+  - 双重检查
+  - 线程安全
+- query_id: pattern-02
+  topic: 设计模式
+  query: 策略模式适合什么场景
+  role: backend
+  difficulty: medium
+  expected_technologies: *id019
+  relevance:
+    mianshiya-design-patterns: 2
+  expected_knowledge_points:
+  - 策略模式
+  - 算法替换

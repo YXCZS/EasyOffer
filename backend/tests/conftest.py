@@ -17,6 +17,7 @@ def isolate_external_vector_runtime(monkeypatch):
     """
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
     monkeypatch.setattr(settings, "milvus_enabled", False)
+    monkeypatch.setattr(settings, "mineru_enabled", False)
 
 
 @pytest.fixture

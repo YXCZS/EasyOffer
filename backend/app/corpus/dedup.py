@@ -24,6 +24,14 @@ def _canonical(text: str) -> str:
     return re.sub(r"[^0-9a-z\u4e00-\u9fff]+", "", text.lower())
 
 
+def _chunk_canonical(chunk: ChildChunk) -> str:
+    if chunk.knowledge_type in {"code", "formula", "table"}:
+        # Syntax and delimiters carry meaning for these node types. Removing
+        # punctuation would incorrectly merge expressions such as a+b and ab.
+        return re.sub(r"\s+", " ", chunk.evidence_text).strip()
+    return _canonical(chunk.evidence_text)
+
+
 def _simhash(text: str) -> int:
     canonical = _canonical(text)
     tokens = [canonical[index : index + 5] for index in range(max(1, len(canonical) - 4))]
@@ -50,9 +58,14 @@ def deduplicate_chunks(chunks: list[ChildChunk], near_distance: int = 3) -> Dedu
         chunks,
         key=lambda item: (item.authority_priority, item.document_id, item.child_index, item.chunk_id),
     ):
-        canonical_hash = hashlib.sha256(_canonical(chunk.evidence_text).encode("utf-8")).hexdigest()
+        canonical = _chunk_canonical(chunk)
+        canonical_hash = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
         if canonical_hash in exact:
             duplicates.append(DuplicateRecord(chunk.chunk_id, exact[canonical_hash].chunk_id, "exact"))
+            continue
+        if chunk.knowledge_type in {"code", "formula", "table"}:
+            exact[canonical_hash] = chunk
+            kept.append(chunk)
             continue
         fingerprint = _simhash(chunk.evidence_text)
         bucket = fingerprint >> 48

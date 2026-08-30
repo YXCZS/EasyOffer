@@ -21,6 +21,7 @@ DEFAULT_GATES = {
 class CorpusConfig:
     runtime_root: Path = Path("data/public-corpus")
     review_root: Path = Path("corpus/reviews")
+    pipeline_revision: str = "mineru-structured-v2"
     pilot_technologies: tuple[str, ...] = ("Redis", "MySQL", "RAG", "Milvus")
     parent_min_chars: int = 120
     parent_max_chars: int = 1800
@@ -44,6 +45,8 @@ class CorpusConfig:
             raise ValueError("parent_max_chars must be at least child_chunk_size")
         if not 0 <= self.duplicate_content_ratio_threshold <= 1:
             raise ValueError("duplicate_content_ratio_threshold must be between 0 and 1")
+        if not self.pipeline_revision.strip():
+            raise ValueError("pipeline_revision must not be empty")
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "CorpusConfig":

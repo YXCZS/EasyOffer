@@ -1,7 +1,7 @@
 import asyncio
 from types import SimpleNamespace
 
-from app.research.agentic_graph import _grade, run_agentic_rag
+from app.research.agentic_graph import _compound_queries, _grade, run_agentic_rag
 
 
 class Doc:
@@ -150,6 +150,53 @@ def test_evidence_filter_drops_broad_same_technology_results():
 
     assert graded["evidence"] == [exact]
     assert graded["coverage"] == 1.0
+
+
+def test_grade_prefers_hashmap_over_concurrent_hashmap_for_exact_entity():
+    graded = _grade(
+        {
+            "topic": "HashMap 在 Java 8 中的底层结构是什么",
+            "evidence": [
+                {"text": "ConcurrentHashMap 在 JDK8 中使用 Node 数组和红黑树", "score": 0.94, "title": "ConcurrentHashMap"},
+                {"text": "HashMap 在 Java 8 中由数组、链表和红黑树组成", "score": 0.82, "title": "HashMap"},
+            ],
+        }
+    )
+    assert graded["evidence"][0]["title"] == "HashMap"
+
+
+def test_grade_keeps_spring_boot_auto_configuration_evidence():
+    graded = _grade(
+        {
+            "topic": "Spring Boot 自动配置原理是什么",
+            "evidence": [
+                {"text": "Spring Interceptor 是请求拦截器", "score": 0.95, "title": "Spring"},
+                {"text": "Spring Boot 通过 AutoConfiguration.imports 和条件注解完成自动配置", "score": 0.78, "title": "Spring Boot"},
+            ],
+        }
+    )
+    assert graded["evidence"][0]["title"] == "Spring Boot"
+
+
+def test_grade_preserves_complementary_evidence_for_compound_question():
+    graded = _grade(
+        {
+            "topic": "消息队列如何处理重复消费和消息丢失",
+            "evidence": [
+                {"text": "通过幂等键和去重表处理重复消费", "score": 0.86},
+                {"text": "通过持久化、确认机制和重试处理消息丢失", "score": 0.80},
+            ],
+        }
+    )
+    assert len(graded["evidence"]) == 2
+    assert graded["coverage"] > 0.5
+
+
+def test_compound_queries_add_bounded_sub_intents():
+    queries = _compound_queries("消息队列如何处理重复消费和消息丢失", "消息队列如何处理重复消费和消息丢失")
+    assert len(queries) == 3
+    assert any("重复消费" in query for query in queries[1:])
+    assert any("消息丢失" in query for query in queries[1:])
 
 
 def test_graph_personal_mode_never_calls_public_or_web(monkeypatch):

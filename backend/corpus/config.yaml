@@ -1,5 +1,6 @@
 runtime_root: ../data/public-corpus
 review_root: reviews
+pipeline_revision: mineru-structured-v2
 pilot_technologies:
   - Redis
   - MySQL

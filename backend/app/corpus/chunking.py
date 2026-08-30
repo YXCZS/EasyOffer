@@ -21,6 +21,7 @@ QUESTION_CUES = (
     "场景", "哪些", "是否", "能否", "何时", "怎样", "请说明", "请解释", "谈谈",
 )
 ANSWER_RE = re.compile(r"^(?:A(?:nswer)?\s*\d*|答案|解析|解答|总结)\s*[:：]", re.IGNORECASE)
+STRUCTURAL_KINDS = {"table", "code", "formula", "image", "chart", "list", "reference"}
 
 
 def _is_question_line(line: str) -> bool:
@@ -152,6 +153,9 @@ def build_parent_units(
         if block.kind == "heading":
             parsed.rejected_blocks.append({"block_index": block_index, "reason": "heading_context_only", "start_index": block.start_index})
             continue
+        if block.kind in STRUCTURAL_KINDS:
+            candidates.append((block.text, block.kind, 0.99, block))
+            continue
         split_candidates = _split_block(block)
         if not split_candidates:
             parsed.rejected_blocks.append({"block_index": block_index, "reason": "empty_or_unrecognized", "start_index": block.start_index})
@@ -184,6 +188,11 @@ def build_parent_units(
                         page_end=block.page_end,
                         section_path=previous_block.section_path,
                         start_index=previous_block.start_index,
+                        heading_level=previous_block.heading_level,
+                        bbox=previous_block.bbox,
+                        media_path=previous_block.media_path,
+                        mineru_node_path=previous_block.mineru_node_path,
+                        metadata=previous_block.metadata,
                     ),
                 )
             else:
@@ -191,7 +200,8 @@ def build_parent_units(
     if not candidates and parsed.text:
         candidates.append((parsed.text, "paragraph", 0.25, ParsedBlock(parsed.text)))
 
-    if config.boundary_classifier_enabled and classifier is not None and candidates:
+    has_structural_blocks = any(block.kind in STRUCTURAL_KINDS for block in parsed.blocks)
+    if config.boundary_classifier_enabled and classifier is not None and candidates and not has_structural_blocks:
         if min(item[2] for item in candidates) < config.structure_confidence_threshold:
             try:
                 classified = classifier.classify(parsed.text)
@@ -217,6 +227,11 @@ def build_parent_units(
                                 page_end=template.page_end,
                                 section_path=template.section_path,
                                 start_index=item["start"],
+                                heading_level=template.heading_level,
+                                bbox=template.bbox,
+                                media_path=template.media_path,
+                                mineru_node_path=template.mineru_node_path,
+                                metadata=template.metadata,
                             ),
                         )
                     )
@@ -247,9 +262,91 @@ def build_parent_units(
                 document_hash=document_hash,
                 content_hash=content_hash,
                 structure_confidence=confidence,
+                heading_level=block.heading_level,
+                bbox=block.bbox,
+                media_path=block.media_path,
+                mineru_node_path=block.mineru_node_path,
+                structure_metadata=block.metadata,
             )
         )
     return parents
+
+
+def _line_aware_segments(text: str, chunk_size: int, overlap: int) -> list[tuple[str, int]]:
+    lines = text.splitlines(keepends=True)
+    if not lines:
+        return [(text, 0)]
+    output: list[tuple[str, int]] = []
+    start_line = 0
+    offsets: list[int] = []
+    cursor = 0
+    for line in lines:
+        offsets.append(cursor)
+        cursor += len(line)
+    while start_line < len(lines):
+        size = 0
+        end_line = start_line
+        while end_line < len(lines) and (size + len(lines[end_line]) <= chunk_size or end_line == start_line):
+            size += len(lines[end_line])
+            end_line += 1
+        segment = "".join(lines[start_line:end_line]).strip()
+        if segment:
+            output.append((segment, offsets[start_line]))
+        if end_line >= len(lines):
+            break
+        overlap_chars = 0
+        next_start = end_line
+        while next_start > start_line and overlap_chars < overlap:
+            next_start -= 1
+            overlap_chars += len(lines[next_start])
+        start_line = max(start_line + 1, next_start)
+    return output
+
+
+def _table_segments(text: str, chunk_size: int) -> list[tuple[str, int]]:
+    rows = re.findall(r"<tr\b[^>]*>.*?</tr>", text, flags=re.IGNORECASE | re.DOTALL)
+    if not rows:
+        return _line_aware_segments(text, chunk_size, 0)
+    prefix_match = re.search(r"<table\b[^>]*>", text, flags=re.IGNORECASE)
+    prefix = prefix_match.group(0) if prefix_match else "<table>"
+    header = rows[0] if re.search(r"<th\b", rows[0], flags=re.IGNORECASE) else ""
+    groups: list[list[str]] = []
+    current: list[str] = []
+    for row in rows:
+        candidate = prefix + header + "".join(current) + row + "</table>"
+        if current and len(candidate) > chunk_size:
+            groups.append(current)
+            current = [row]
+        else:
+            current.append(row)
+    if current:
+        groups.append(current)
+    output: list[tuple[str, int]] = []
+    cursor = 0
+    for group in groups:
+        body = "".join(group)
+        segment = prefix + (header if header and group[0] != header else "") + body + "</table>"
+        start = text.find(group[0], cursor)
+        output.append((segment, max(0, start)))
+        cursor = max(cursor, start + len(body))
+    return output
+
+
+def _segments_for_parent(parent: ParentUnit, config: CorpusConfig, splitter: Any) -> list[tuple[str, int]]:
+    if parent.parent_type in {"formula", "image", "chart"}:
+        return [(parent.text, 0)]
+    if len(parent.text) <= config.child_chunk_size:
+        return [(parent.text, 0)]
+    if parent.parent_type == "table":
+        return _table_segments(parent.text, config.child_chunk_size)
+    if parent.parent_type in {"code", "list", "reference"}:
+        return _line_aware_segments(parent.text, config.child_chunk_size, config.child_chunk_overlap)
+    docs = splitter.create_documents([parent.text], metadatas=[{"parent_id": parent.parent_id}])
+    return [
+        (doc.page_content.strip(), int(doc.metadata.get("start_index", 0)))
+        for doc in docs
+        if doc.page_content.strip()
+    ]
 
 
 def build_child_chunks(
@@ -268,27 +365,21 @@ def build_child_chunks(
     )
     output: list[ChildChunk] = []
     for parent in parents:
-        if len(parent.text) <= config.child_chunk_size:
-            segments = [(parent.text, 0)]
-        else:
-            docs = splitter.create_documents([parent.text], metadatas=[{"parent_id": parent.parent_id}])
-            segments = [
-                (doc.page_content.strip(), int(doc.metadata.get("start_index", 0)))
-                for doc in docs
-                if doc.page_content.strip()
-            ]
+        segments = _segments_for_parent(parent, config, splitter)
         for child_index, (text, relative_start) in enumerate(segments):
             content_hash = _content_hash(text)
             chunk_id = hashlib.sha256(
                 f"{source.document_id}:{source.document_version}:{parent.parent_index}:{child_index}:{content_hash}".encode("utf-8")
             ).hexdigest()
             section = " > ".join(parent.section_path)
+            structure_label = f"Structure type: {parent.parent_type}"
             embedding_text = "\n".join(
                 part
                 for part in (
                     f"技术：{source.technology}",
                     f"标题：{parent.title}" if parent.title else "",
                     f"章节：{section}" if section else "",
+                    structure_label,
                     f"正文：{text}",
                 )
                 if part
@@ -321,6 +412,11 @@ def build_child_chunks(
                     license_status=source.license_status,
                     authority_priority=source.authority_priority,
                     structure_confidence=parent.structure_confidence,
+                    heading_level=parent.heading_level,
+                    bbox=parent.bbox,
+                    media_path=parent.media_path,
+                    mineru_node_path=parent.mineru_node_path,
+                    structure_metadata=parent.structure_metadata,
                 )
             )
     if len(output) > config.max_chunks_per_document:

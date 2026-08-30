@@ -59,6 +59,16 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24 * 30
     upload_dir: str = "uploads"
     knowledge_upload_dir: str = "uploads/knowledge"
+    mineru_enabled: bool = True
+    mineru_api_token: str | None = None
+    mineru_api_base_url: str = "https://mineru.net"
+    mineru_artifact_dir: str = "data/mineru-artifacts"
+    mineru_model_version: str = "vlm"
+    mineru_poll_interval_seconds: float = 5.0
+    mineru_timeout_seconds: float = 600.0
+    mineru_enable_ocr: bool = False
+    mineru_enable_formula: bool = True
+    mineru_enable_table: bool = True
     # Milvus is the sole vector store. The adapter connects lazily on first
     # retrieval/write so application startup does not require a live server.
     milvus_enabled: bool = True
@@ -70,6 +80,22 @@ class Settings(BaseSettings):
     milvus_metric_type: str = "COSINE"
     milvus_consistency_level: str = "Bounded"
     milvus_retrieval_top_k: int = 5
+    # Retrieve broadly, then apply a second-stage cross-encoder/API reranker.
+    milvus_dense_recall_k: int = 50
+    milvus_sparse_recall_k: int = 50
+    # Application-layer hybrid retrieval is compatible with Milvus Lite. It
+    # must not be confused with Milvus' server-side BM25 Function, which needs
+    # Standalone/Distributed deployments.
+    milvus_hybrid_enabled: bool = True
+    milvus_rrf_k: int = 60
+    milvus_rerank_enabled: bool = True
+    milvus_rerank_provider: str = "dashscope"
+    milvus_rerank_model: str = "gte-rerank-v2"
+    milvus_rerank_top_k: int = 8
+    milvus_rerank_min_score: float = 0.1
+    milvus_rerank_instruction: str = "优先选择能够直接回答用户问题的完整技术段落；忽略仅顺带提及主题的内容。"
+    milvus_rerank_timeout_seconds: float = 8.0
+    cohere_api_key: str | None = None
     milvus_public_min_score: float = 0.25
     milvus_shadow_read: bool = False
     milvus_auto_create_collections: bool = True

@@ -52,14 +52,13 @@ class AgenticRAGState(TypedDict, total=False):
 
 
 def _topic_terms(value: str) -> list[str]:
-    return list(
-        dict.fromkeys(
-            re.findall(
-                r"[A-Za-z][A-Za-z0-9_+#.-]{1,}|[\u4e00-\u9fff]{2,}",
-                value.lower(),
-            )
-        )
-    )
+    terms = re.findall(r"[A-Za-z][A-Za-z0-9_+#.-]{1,}", value.lower())
+    for segment in re.findall(r"[\u4e00-\u9fff]{2,}", value):
+        if len(segment) <= 4:
+            terms.append(segment)
+        else:
+            terms.extend(segment[index:index + 2] for index in range(len(segment) - 1))
+    return list(dict.fromkeys(terms))
 
 
 def _select_retrieval_query(topic: str, expanded_queries: list[str]) -> str:
@@ -84,13 +83,22 @@ def _doc_payload(doc: Any, score: float | None, source_type: str) -> dict[str, A
         "text": str(metadata.get("evidence_text") or getattr(doc, "page_content", ""))[:6000],
         "score": float(score) if score is not None else None,
         "source_type": source_type,
+        "document_id": str(metadata.get("document_id") or metadata.get("source_id") or "source"),
         "source_id": str(metadata.get("document_id") or metadata.get("source_id") or "source"),
         "citation": str(metadata.get("source_url") or metadata.get("source_name") or ""),
+        "source_url": str(metadata.get("source_url") or ""),
+        "source_name": str(metadata.get("source_name") or metadata.get("title") or ""),
         "title": str(metadata.get("source_name") or metadata.get("title") or ""),
         "version": str(metadata.get("version") or ""),
         "parent_id": str(metadata.get("parent_id") or ""),
         "document_version": str(metadata.get("document_version") or ""),
         "corpus_version": str(metadata.get("corpus_version") or ""),
+        "technology": str(metadata.get("technology") or ""),
+        "role_tags": metadata.get("role_tags") or [],
+        "section_path": str(metadata.get("section_path") or ""),
+        "parent_type": str(metadata.get("parent_type") or metadata.get("knowledge_type") or ""),
+        "knowledge_type": str(metadata.get("knowledge_type") or ""),
+        "content_hash": str(metadata.get("content_hash") or ""),
     }
 
 
@@ -128,12 +136,41 @@ def _public_payloads(rows: list[Any], store: Any) -> list[dict[str, Any]]:
     return payloads
 
 
+def _compound_queries(topic: str, query: str) -> list[str]:
+    """Create bounded sub-queries for questions containing independent intents."""
+    parts = [part.strip() for part in re.split(r"(?:\u548c|\u4e0e|\u4ee5\u53ca|\u540c\u65f6|\u3001|,|\uff0c|\u53ca)", topic) if part.strip()]
+    if len(parts) <= 1:
+        return [query]
+    base = re.split(r"(?:\u5982\u4f55|\u600e\u4e48|\u600e\u6837|\u4e3a\u4ec0\u4e48|\u4e3a\u4f55|\u662f\u4ec0\u4e48)", topic, maxsplit=1)[0].strip()
+    queries = [query]
+    for part in parts:
+        candidate = f"{base} {part}".strip()
+        if candidate and candidate not in queries:
+            queries.append(candidate[:500])
+    return queries
+
+
+def _public_search_candidates(store: Any, topic: str, query: str, role: str | None, k: int) -> list[Any]:
+    merged: list[Any] = []
+    seen: set[str] = set()
+    for candidate_query in _compound_queries(topic, query):
+        for row in store.search(candidate_query, k, role=role, published_only=True):
+            doc = row[0] if isinstance(row, tuple) else row
+            metadata = dict(getattr(doc, "metadata", None) or {})
+            identity = str(metadata.get("content_hash") or metadata.get("parent_id") or metadata.get("document_id") or id(doc))
+            if identity in seen:
+                continue
+            seen.add(identity)
+            merged.append(row)
+    return merged
+
+
 def _tool_defs() -> list[StructuredTool]:
     def public_search(query: str, role: str = "general", k: int = 5) -> list[dict[str, Any]]:
         from app.services.knowledge_service import get_public_vector_store
 
         store = get_public_vector_store()
-        rows = store.search(query, k, role=role, published_only=True)
+        rows = _public_search_candidates(store, query, query, role, k)
         return _public_payloads(rows, store)
 
     def personal_search(query: str, user_id: int, document_id: str | None = None, k: int = 5) -> list[dict[str, Any]]:
@@ -223,7 +260,17 @@ async def _retrieve(state: AgenticRAGState) -> dict[str, Any]:
             from app.services.knowledge_service import get_public_vector_store
 
             store = get_public_vector_store()
-            docs = await asyncio.wait_for(asyncio.to_thread(store.search, query, get_settings().milvus_retrieval_top_k, role=state.get("role"), published_only=True), get_settings().agentic_rag_tool_timeout_seconds)
+            docs = await asyncio.wait_for(
+                asyncio.to_thread(
+                    _public_search_candidates,
+                    store,
+                    policy.topic,
+                    query,
+                    state.get("role"),
+                    get_settings().milvus_retrieval_top_k,
+                ),
+                get_settings().agentic_rag_tool_timeout_seconds,
+            )
             rows = await asyncio.wait_for(
                 asyncio.to_thread(_public_payloads, docs, store),
                 get_settings().agentic_rag_tool_timeout_seconds,
@@ -260,21 +307,76 @@ def _grade(state: AgenticRAGState) -> dict[str, Any]:
         if key and key not in unique:
             unique[key] = item
     kept = list(unique.values())
+    def contains(term: str, text: str) -> bool:
+        if re.fullmatch(r"[a-z][a-z0-9_+#.-]{1,}", term):
+            return bool(re.search(rf"(?<![a-z0-9_+#.-]){re.escape(term)}(?![a-z0-9_+#.-])", text.lower()))
+        return term in text.lower()
+
+    def intents(topic: str) -> list[str]:
+        parts = [part.strip() for part in re.split(r"(?:\u548c|\u4e0e|\u4ee5\u53ca|\u540c\u65f6|\u3001|,|\uff0c|\u53ca)", topic) if part.strip()]
+        return parts if len(parts) > 1 else [topic]
+
+    query_intents = intents(state.get("topic", ""))
+    def lexical_terms(value: str) -> list[str]:
+        terms = re.findall(r"[A-Za-z][A-Za-z0-9_+#.-]{1,}", value.lower())
+        for segment in re.findall(r"[\u4e00-\u9fff]{2,}", value):
+            if len(segment) <= 4:
+                terms.append(segment)
+            else:
+                terms.extend(segment[index:index + 2] for index in range(len(segment) - 1))
+        return list(dict.fromkeys(terms))
+
+    intent_terms = [lexical_terms(part) for part in query_intents]
+    def intent_threshold(terms: list[str]) -> int:
+        return 1 if len(terms) <= 2 else 2
+
     if topic_terms and kept:
-        match_counts = [
-            sum(1 for term in topic_terms if term in str(item.get("text", "")).lower())
-            for item in kept
-        ]
-        best_match_count = max(match_counts, default=0)
-        if best_match_count:
-            kept = [
-                item
-                for item, match_count in zip(kept, match_counts, strict=True)
-                if match_count == best_match_count
-            ]
+        scored: list[tuple[dict[str, Any], int, int]] = []
+        for item in kept:
+            searchable = " ".join(
+                str(item.get(field) or "")
+                for field in ("text", "technology", "title", "section_path", "knowledge_type")
+            ).lower()
+            term_hits = sum(1 for term in topic_terms if contains(term, searchable))
+            intent_hits = sum(
+                1
+                for terms in intent_terms
+                if terms and sum(1 for term in terms if contains(term, searchable)) >= intent_threshold(terms)
+            )
+            scored.append((item, term_hits, intent_hits))
+        if len(query_intents) > 1:
+            # Keep complementary evidence for compound questions. At least one
+            # strong result per intent is retained, instead of selecting only
+            # the globally highest lexical match.
+            kept = [item for item, term_hits, intent_hits in scored if intent_hits or term_hits > 0]
+            kept.sort(key=lambda item: (
+                sum(1 for terms in intent_terms if terms and sum(1 for term in terms if contains(term, " ".join(str(item.get(field) or "") for field in ("text", "technology", "title", "section_path", "knowledge_type")).lower())) >= intent_threshold(terms)),
+                float(item.get("score") or 0.0),
+            ), reverse=True)
+        else:
+            best_match_count = max((term_hits for _, term_hits, _ in scored), default=0)
+            if best_match_count:
+                kept = [item for item, term_hits, _ in scored if term_hits == best_match_count]
     combined_text = " ".join(str(item.get("text", "")).lower() for item in kept)
-    matched_terms = sum(1 for term in topic_terms if term in combined_text)
-    coverage = min(1.0, matched_terms / len(topic_terms)) if topic_terms else min(1.0, len(kept) / 3)
+    compound_question = any(char in state.get("topic", "") for char in "\u548c\u4e0e\u4ee5\u53ca\u540c\u65f6\u3001,\uff0c\u53ca")
+    if compound_question:
+        coverage_parts = [part.strip() for part in re.split(r"(?:\u548c|\u4e0e|\u4ee5\u53ca|\u540c\u65f6|\u3001|,|\uff0c|\u53ca)", state.get("topic", "")) if part.strip()]
+
+        def covered_part(part: str) -> bool:
+            ascii_anchors = re.findall(r"[A-Za-z][A-Za-z0-9_+#.-]{1,}", part.lower())
+            cjk = "".join(re.findall(r"[\u4e00-\u9fff]", part))[-6:]
+            anchors = [*ascii_anchors, *(cjk[index:index + 2] for index in range(max(0, len(cjk) - 1)))]
+            return any(contains(anchor, combined_text) for anchor in anchors if len(anchor) >= 2)
+
+        covered_intents = sum(
+            1
+            for part in coverage_parts
+            if covered_part(part)
+        )
+        coverage = covered_intents / max(1, len(coverage_parts))
+    else:
+        matched_terms = sum(1 for term in topic_terms if contains(term, combined_text))
+        coverage = min(1.0, matched_terms / len(topic_terms)) if topic_terms else min(1.0, len(kept) / 3)
     score_values = [float(item["score"]) for item in kept if item.get("score") is not None]
     confidence = (max(score_values) if score_values else (0.5 if kept else 0.0)) * 0.7 + coverage * 0.3
     versions = {str(item.get("version")) for item in kept if item.get("version") and str(item.get("version")) != "unknown"}

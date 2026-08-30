@@ -6,6 +6,7 @@ from copy import deepcopy
 import pytest
 
 from app.corpus.config import CorpusConfig
+from app.corpus.manifest import load_manifest
 from app.corpus.pipeline import CorpusPipeline, PublicationError
 from app.corpus.storage import InMemoryCorpusStore
 
@@ -97,6 +98,21 @@ def test_ingest_is_idempotent_and_candidate_remains_unpublished(tmp_path):
     assert store.count() == first.chunk_count
     assert {row["status"] for row in store.rows} == {"unpublished"}
     assert all(row["corpus_version"] == "pilot-v1" for row in store.rows)
+
+
+def test_pipeline_revision_invalidates_old_parse_cache(tmp_path):
+    manifest = write_manifest(tmp_path)
+    first = CorpusPipeline(
+        CorpusConfig(runtime_root=tmp_path / "runtime", review_root=tmp_path / "reviews", pipeline_revision="text-v1"),
+        store=InMemoryCorpusStore(),
+    )
+    second = CorpusPipeline(
+        CorpusConfig(runtime_root=tmp_path / "runtime", review_root=tmp_path / "reviews", pipeline_revision="mineru-v2"),
+        store=InMemoryCorpusStore(),
+    )
+    sources = load_manifest(manifest).sources
+
+    assert first._batch_id(manifest.resolve(), "ingest", sources) != second._batch_id(manifest.resolve(), "ingest", sources)
 
 
 def test_unlicensed_candidate_cannot_be_approved_or_published(tmp_path):
