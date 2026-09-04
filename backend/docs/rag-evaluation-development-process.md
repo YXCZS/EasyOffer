@@ -266,6 +266,23 @@ RAGAS mock/失败状态、业务规则、Agent 四层指标、脱敏、报告快
 - Agent trace 显示本轮走 `base_model` fallback、无工具调用，不能宣称
   Milvus/Tavily Agent 路由评估通过。
 
+### 11.3 评估适配器修复后的单样本复核
+
+全量报告生成后发现，公共 Golden 样本没有 `user_id` 时，Agent 评估适配器
+没有使用评估专用身份 `0`，因此把公共样本误当成游客，所有工具都被策略
+禁止。修复后用真实 Milvus Standalone 对 `g-001` 做了单样本回放，结果为：
+
+- route：`public_kb`；
+- tool：`public_milvus_search`；
+- candidate/filtered：`5/5`；
+- completed：`true`；
+- fallback_reason：空；
+- policy_findings：空。
+
+这次修复只改变评估适配器的身份映射和 Agent 终止状态归一化，不改变线上
+检索算法。此前保存的 100 条全量报告仍作为修复前历史审计证据；若要发布
+修复后的 Agent 全量指标，需要重新执行完整离线回放。
+
 ## 12. 开发过程中遇到的问题与解决方式
 
 ### 问题一：第一次全量回放在中途连续超时

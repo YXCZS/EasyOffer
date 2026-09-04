@@ -365,7 +365,9 @@ def test_agent_aggregation_tracks_process_efficiency_and_risk_denominators():
 
 
 def test_production_adapter_preserves_sanitized_agent_event_contract():
+    captured = {}
     async def fake_agent(*args, **kwargs):
+        captured["user_id"] = kwargs.get("user_id")
         return {
             "route": "public_milvus_search", "done": True, "completed": True, "evidence": [{"text": "evidence", "source_type": "public_kb", "corpus_version": "v"}],
             "trace_events": [{"name": "public_milvus_search", "arguments": {"query_length": 12, "role": "backend"}, "duration_ms": 3, "status": "success", "result_count": 1}],
@@ -375,6 +377,7 @@ def test_production_adapter_preserves_sanitized_agent_event_contract():
     trace = adapter.agent_trace(query=BenchmarkQuery.model_validate(query()), observation=None)
     assert trace.completed and trace.tool_calls[0].arguments == {"query_length": 12, "role": "backend"}
     assert "What is RAG" not in trace.model_dump_json()
+    assert captured["user_id"] == 0
 
 
 def test_production_generation_uses_evaluation_identity_for_public_rag():

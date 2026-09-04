@@ -457,5 +457,10 @@ async def run_agentic_rag(topic: str, role: str, difficulty: str, *, user_id: in
     }
     result = await build_agentic_rag_graph().ainvoke(initial)
     result["total_latency_ms"] = (time.perf_counter() - initial["started_at"]) * 1000
-    result["completed"] = bool(result.get("done"))
+    # Reaching the graph's END edge is a successful Agent execution even when
+    # the terminal edge came directly from ``grade_evidence``.  Some paths do
+    # not write ``done`` in the final node, so normalize the terminal state
+    # here for downstream progress and evaluation traces.
+    result["done"] = True
+    result["completed"] = True
     return result

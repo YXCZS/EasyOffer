@@ -129,11 +129,16 @@ class ProductionEvaluationAdapter:
                 runner = run_agentic_rag
             else:
                 runner = self.agent_runner
+            effective_user_id = (
+                int(query.user_id)
+                if query.user_id is not None and str(query.user_id).isdigit()
+                else self.evaluation_user_id
+            )
             state = _run_awaitable(runner(
                 query.topic,
                 query.role,
                 query.difficulty,
-                user_id=int(query.user_id) if query.user_id is not None and str(query.user_id).isdigit() else None,
+                user_id=effective_user_id,
                 knowledge_only=query.knowledge_scope == "private",
             ))
             evidence = list(state.get("evidence") or [])

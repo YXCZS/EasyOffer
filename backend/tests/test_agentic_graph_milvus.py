@@ -25,6 +25,8 @@ def test_graph_routes_to_public_milvus_and_records_tool(monkeypatch):
     assert "public_milvus_search" in state["tool_calls"]
     assert state["evidence"]
     assert state["route"] == "public_kb"
+    assert state["done"] is True
+    assert state["completed"] is True
 
 
 def test_graph_uses_autonomous_tool_choice(monkeypatch):
