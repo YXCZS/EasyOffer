@@ -281,13 +281,13 @@ Parent 是适合生成答案或题目的较完整知识单元。每个 Parent �
 
 ### 7.2 Milvus
 
-Milvus 是项目唯一的向量数据库；项目已移除 Chroma 路径。当前本机运行态是 Milvus Standalone `2.5.16`。
+Milvus 是项目唯一的向量数据库；项目已移除 Chroma 路径。当前本机运行态是 Milvus Lite，健康检查返回 `milvus_lite-3.2.1`。
 
 公共知识库和用户私有知识库使用不同 collection/作用域。公共检索会按发布状态、语料版本和岗位标签过滤；私有检索会强制 owner/document scope，避免用户读到别人的文档。
 
-### 7.3 Milvus Standalone 原生混合检索
+### 7.3 Milvus Lite 的限制
 
-生产集合使用 Milvus 原生 BM25 Function：`text` 字段经 analyzer 生成 `sparse` 字段，并与 dense `vector` 在服务端执行 hybrid search 和显式 RRF。旧 Lite 数据（如存在）只作为迁移备份，不参与线上检索。
+Milvus Lite 适合本地和小规模场景，但不支持 Milvus Standalone/Distributed 的服务端 BM25 Function。因此当前没有启用 `BM25BuiltInFunction`，而是使用应用层 `rank-bm25`。
 
 ---
 
@@ -299,16 +299,17 @@ Milvus 是项目唯一的向量数据库；项目已移除 Chroma 路径。当�
 
 用户 Query 经过 Embedding 后，在 Milvus 中做向量相似度召回。公共检索会 over-fetch，默认 `milvus_dense_recall_k=50`，而不是一开始只取最终的 5 条，避免目标证据被相邻主题占满。
 
-### 8.2 原生 BM25 关键词召回
+### 8.2 应用层 BM25
 
 BM25 是基于词频、逆文档频率和文档长度的关键词检索算法，适合版本号、类名、配置项、缩写和精确技术名。
 
-当前实现使用 Milvus Standalone 的 BM25 analyzer：
+当前实现使用 `rank-bm25` 的 `BM25Okapi`：
 
 - 英文和技术标识符尽量保持完整，如 `HashMap`、`Spring Boot`、配置名；
 - 中文使用单字和二元组，降低中文没有空格分词造成的漏召回；
 - 修复 MinerU 常见断词，如 `HashM ap`、`M ilvus`；
-- 稀疏倒排索引由 Milvus 管理，检索时不把全量语料拉回应用进程。
+- 按 collection 和过滤作用域缓存 BM25 索引；
+- 文档写入和删除后失效缓存。
 
 ### 8.3 RRF 融合
 
@@ -532,20 +533,20 @@ Benchmark 通过 YAML 版本化，使用 Pydantic 校验。
 
 可以用下面这段准确描述：
 
-> EasyOffer 采用结构感知的 RAG 流程。离线侧使用 MinerU 解析 PDF、DOCX 等文件，保留标题、表格、代码、公式、页码和坐标等结构信息，统一转换成内部结构块；经过确定性文本清洗后构建 Parent，再按不同结构用 RecursiveCharacterTextSplitter、按行或按表格行生成 Child。普通文本使用 SHA-256 精确去重和 SimHash 近重复去重。在线侧以 Milvus Standalone 做 Dense + 原生 BM25 宽召回，用显式 RRF 融合，随后通过 DashScope TextReRank 二阶段精排，命中 Child 后恢复 Parent。Agentic RAG 根据用户身份、是否 URL、是否私有知识库和当前证据情况，在公共/私有 Milvus、Tavily Search、Tavily Extract 之间做受策略约束的单步路由。当前已经有 Golden Set 离线检索评测和发布门禁，但尚未接入 RAGAS 或 LLM-as-a-Judge，所以不能宣称已经得到 Faithfulness 等生成质量指标。
+> EasyOffer 采用结构感知的 RAG 流程。离线侧使用 MinerU 解析 PDF、DOCX 等文件，保留标题、表格、代码、公式、页码和坐标等结构信息，统一转换成内部结构块；经过确定性文本清洗后构建 Parent，再按不同结构用 RecursiveCharacterTextSplitter、按行或按表格行生成 Child。普通文本使用 SHA-256 精确去重和 SimHash 近重复去重。在线侧以 Milvus 做 Dense 宽召回，在 Milvus Lite 场景用应用层 rank-bm25 补充关键词召回，再用标准 RRF 融合，最后通过 DashScope TextReRank 或 Cohere 做二阶段精排，命中 Child 后恢复 Parent。Agentic RAG 根据用户身份、是否 URL、是否私有知识库和当前证据情况，在公共/私有 Milvus、Tavily Search、Tavily Extract 之间做受策略约束的单步路由。当前已经有 Golden Set 离线检索评测和发布门禁，但尚未接入 RAGAS 或 LLM-as-a-Judge，所以不能宣称已经得到 Faithfulness 等生成质量指标。
 
 ---
 
 ## 16. 成本、性能和复杂度取舍
 
-当前没有把所有流行技术无条件叠加，而是根据 EasyOffer 的中文面试场景和 Milvus Standalone 环境做了取舍：
+当前没有把所有流行技术无条件叠加，而是根据 EasyOffer 的中文面试场景和本机 Milvus Lite 环境做了取舍：
 
 | 方案 | 优点 | 当前状态 |
 | --- | --- | --- |
 | 仅 Dense | 延迟和实现成本最低 | 作为对照 benchmark |
-| Dense + Milvus 原生 BM25 | 技术名、版本号和中文关键词更容易命中，检索不扫描应用全量语料 | 当前默认 |
+| Dense + 应用层 BM25 | 技术名、版本号和中文关键词更容易命中 | 当前默认 |
 | RRF | 不需要把 Dense/BM25 分数硬归一化，融合开销小 | 当前默认 |
-| Cross-Encoder/API Rerank | 提高候选排序精度 | DashScope 默认 |
+| Cross-Encoder/API Rerank | 提高候选排序精度 | DashScope 默认、Cohere 可选 |
 | LLM 逐条重排 | 质量上限高但慢且贵 | 未实现 |
 
 正常在线流程不应该让大模型对整个知识库逐条判断。当前只对几十条宽召回候选做二阶段精排，再把少量证据交给 DeepSeek。这样增加了一次精排调用，但避免了错误 Top1 直接进入生成。
@@ -610,16 +611,16 @@ MinerU 结构解析
 - 已经有 Faithfulness、Answer Relevancy 的真实分数；
 - 已经使用视觉模型生成图片向量；
 - 已经启用语义模型切分或智能体动态切分；
-- 仍在使用 Milvus Lite 或应用层 BM25；
+- 已经使用 Milvus Lite 服务端 BM25 Function；
 - 已经证明逐题生成质量与一次性生成完全相同。
 
 ---
 
 ## 21. 审核记录
 
-审核日期：2026-09-04。
+审核日期：2026-08-30。
 
-核对范围：`backend/app/corpus/`、`backend/app/services/`、`backend/app/research/`、`backend/app/core/config.py`、`backend/tests/` 以及 Milvus Standalone 运行态。
+核对范围：`backend/app/corpus/`、`backend/app/services/`、`backend/app/research/`、`backend/app/core/config.py`、`backend/tests/` 以及 Milvus Lite 运行态。
 
 验证结果：
 
@@ -630,4 +631,4 @@ python -m pytest -q
 
 专项测试覆盖 MinerU 结构化解析、切分、去重、Milvus 检索、Agentic RAG 路由和评测模块，也已完成公共知识库主题抽查。
 
-审核结论：本文档只把当前源码、配置和测试可以证明的功能写成当前实现；所有尚未接入的 RAGAS、LLM-as-a-Judge、视觉 Embedding 和默认语义切分均明确标注为未实现。
+审核结论：本文档只把当前源码、配置和测试可以证明的功能写成当前实现；所有尚未接入的 RAGAS、LLM-as-a-Judge、视觉 Embedding、默认语义切分和 Milvus Lite 服务端 BM25 均明确标注为未实现。

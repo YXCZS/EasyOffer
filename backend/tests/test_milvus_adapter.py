@@ -76,15 +76,46 @@ def test_private_upsert_preserves_structured_chunk_metadata():
     assert document.metadata["role_tags"] == "|ai|"
 
 
+def test_private_upsert_and_delete_always_include_owner_scope():
+    store = MilvusVectorStore(42)
+
+    class ScopedFake(FakeStore):
+        def __init__(self):
+            super().__init__()
+            self.deleted_expr = None
+
+        def delete(self, *, expr):
+            self.deleted_expr = expr
+
+    fake = ScopedFake()
+    store._store = fake
+    store.upsert_document("doc-owner-42", "notes.md", [{
+        "chunk_id": "chunk-owner-42", "chunk_index": 0, "text": "owner scoped text", "content_hash": "h",
+    }])
+    store.delete_document("doc-owner-42")
+    assert "owner_id == 42" in fake.deleted_expr
+    assert "document_id == 'doc-owner-42'" in fake.deleted_expr
+
+
 def test_public_milvus_search_filters_published_role(monkeypatch):
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_hybrid_enabled", False)
     store = MilvusVectorStore(public=True)
     fake = FakeStore()
     store._store = fake
     rows = store.search("Redis", 5, role="backend", published_only=True)
     assert len(rows) == 1
     assert "status == 'published'" in fake.expr
+
+
+def test_public_search_defaults_to_published_status(monkeypatch):
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "milvus_native_hybrid_enabled", False)
+    store = MilvusVectorStore(public=True)
+    fake = FakeStore()
+    store._store = fake
+    rows = store.search("Redis", 5)
+    assert "status == 'published'" in fake.expr
+    assert len(rows) == 1
 
 
 def test_public_search_overfetches_when_role_filter_falls_back(monkeypatch):
@@ -120,7 +151,6 @@ def test_public_search_applies_min_score_before_ranking(monkeypatch):
             ]
 
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_hybrid_enabled", False)
     monkeypatch.setattr(settings, "milvus_rerank_enabled", False)
     monkeypatch.setattr(settings, "milvus_public_min_score", 0.25)
     store = MilvusVectorStore(public=True)
@@ -160,7 +190,6 @@ def test_milvus_adapter_keeps_lite_schema_dense_only(monkeypatch):
     import types
 
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_hybrid_enabled", True)
     monkeypatch.setattr(settings, "milvus_vector_dimension", 8)
     captured = {}
 
@@ -178,33 +207,111 @@ def test_milvus_adapter_keeps_lite_schema_dense_only(monkeypatch):
     assert captured["search_params"]["metric_type"] == "COSINE"
 
 
-def test_cohere_reranker_reorders_broad_milvus_candidates(monkeypatch):
-    import httpx
+def test_milvus_adapter_native_hybrid_declares_bm25_function(monkeypatch):
+    import sys
+    import types
+
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_rerank_enabled", True)
-    monkeypatch.setattr(settings, "milvus_rerank_provider", "cohere")
-    monkeypatch.setattr(settings, "cohere_api_key", "test-key")
-    store = MilvusVectorStore(public=True)
-
-    class Response:
-        def raise_for_status(self):
-            return None
-
-        def json(self):
-            return {"results": [{"index": 1, "relevance_score": 0.99}, {"index": 0, "relevance_score": 0.2}]}
-
+    monkeypatch.setattr(settings, "milvus_native_hybrid_enabled", True)
+    monkeypatch.setattr(settings, "milvus_vector_dimension", 8)
     captured = {}
 
-    def post(url, **kwargs):
-        captured.update(kwargs)
-        return Response()
+    class FakeBM25:
+        def __init__(self, **kwargs):
+            self.kwargs = kwargs
 
-    monkeypatch.setattr(httpx, "post", post)
-    rows = [(FakeDoc(0), 0.4), (FakeDoc(0), 0.8)]
-    ranked = store._rerank_candidates("Redis persistence", rows)
-    assert [item[0] for item in ranked] == [rows[1][0], rows[0][0]]
-    assert ranked[0][1] == 0.99
-    assert captured["json"]["model"] == settings.milvus_rerank_model
+    class FakeMilvus:
+        def __init__(self, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setitem(
+        sys.modules,
+        "langchain_milvus",
+        types.SimpleNamespace(Milvus=FakeMilvus, BM25BuiltInFunction=FakeBM25),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "pymilvus",
+        types.SimpleNamespace(connections=types.SimpleNamespace(has_connection=lambda alias: True)),
+    )
+
+    store = MilvusVectorStore(public=True)
+    store._get()
+
+    assert store.collection_name.endswith("_hybrid_v2")
+    assert captured["vector_field"] == ["vector", "sparse"]
+    assert captured["builtin_function"].kwargs["input_field_names"] == "text"
+    assert captured["builtin_function"].kwargs["output_field_names"] == "sparse"
+    assert captured["search_params"][1]["metric_type"] == "BM25"
+
+
+def test_native_search_passes_explicit_rrf_and_broad_fetch_k(monkeypatch):
+    from langchain_core.documents import Document
+
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "milvus_native_hybrid_enabled", True)
+    monkeypatch.setattr(settings, "milvus_rerank_enabled", False)
+    monkeypatch.setattr(settings, "milvus_rrf_k", 77)
+    monkeypatch.setattr(settings, "milvus_dense_recall_k", 31)
+    monkeypatch.setattr(settings, "milvus_sparse_recall_k", 47)
+    monkeypatch.setattr(settings, "milvus_fetch_k_max", 100)
+
+    class NativeStore:
+        def __init__(self):
+            self.calls = []
+
+        def similarity_search_with_score(self, query, **kwargs):
+            self.calls.append((query, kwargs))
+            return [(Document(page_content="exact RRF", metadata={"chunk_id": "native", "status": "published"}), 0.8)]
+
+    store = MilvusVectorStore(public=True)
+    fake = NativeStore()
+    store._store = fake
+
+    rows = store.search("exact", 5, published_only=True)
+
+    assert len(rows) == 1
+    kwargs = fake.calls[0][1]
+    assert kwargs["fetch_k"] == 47
+    ranker = kwargs["reranker"]
+    assert getattr(ranker, "params", {}).get("strategy") == "rrf" or getattr(ranker, "_params", {}).get("strategy") == "rrf"
+    assert getattr(ranker, "params", {}).get("k") == 77 or getattr(ranker, "_params", {}).get("k") == 77
+
+
+def test_native_search_does_not_build_application_bm25(monkeypatch):
+    from langchain_core.documents import Document
+
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "milvus_native_hybrid_enabled", True)
+    monkeypatch.setattr(settings, "milvus_rerank_enabled", False)
+    monkeypatch.setattr(settings, "milvus_dense_recall_k", 12)
+    monkeypatch.setattr(settings, "milvus_sparse_recall_k", 12)
+
+    class NativeStore:
+        def similarity_search_with_score(self, query, **kwargs):
+            return [(Document(page_content="native", metadata={"chunk_id": "native", "status": "published"}), 0.9)]
+
+    store = MilvusVectorStore(public=True)
+    store._store = NativeStore()
+    assert store.search("native", 3, published_only=True)
+
+
+def test_native_search_logs_failure_type_without_query_or_secret(monkeypatch, caplog):
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "milvus_native_hybrid_enabled", True)
+
+    class BrokenStore:
+        def similarity_search_with_score(self, query, **kwargs):
+            raise RuntimeError("connection failed token=secret-value")
+
+    store = MilvusVectorStore(public=True)
+    store._store = BrokenStore()
+    with caplog.at_level("WARNING"):
+        assert store.search("private user document secret-value", 2, published_only=True) == []
+    message = " ".join(record.getMessage() for record in caplog.records)
+    assert "RuntimeError" in message
+    assert "secret-value" not in message
+    assert "private user document" not in message
 
 
 def test_public_upsert_embeds_enriched_text_and_retains_original_evidence():
@@ -314,39 +421,6 @@ def test_public_parent_lookup_uses_exact_scalar_identity(monkeypatch):
     assert "corpus_version == 'pilot-v1'" in captured["filter"]
 
 
-def test_application_hybrid_uses_bm25_and_standard_rrf(monkeypatch):
-    from langchain_core.documents import Document
-    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_hybrid_enabled", True)
-    monkeypatch.setattr(settings, "milvus_rerank_enabled", False)
-    store = MilvusVectorStore(public=True)
-    dense = [(Document(page_content="generic Redis", metadata={"chunk_id": "generic"}), 0.9)]
-    sparse = [(Document(page_content="Redis RDB persistence", metadata={"chunk_id": "target"}), 4.2)]
-    merged = store._rrf_merge(dense, sparse)
-    assert {row[0].metadata["chunk_id"] for row in merged} == {"generic", "target"}
-    assert all(row[0].metadata["retrieval_stage"] == "rrf" for row in merged)
-    assert merged[0][0].metadata["bm25_rank"] == -1 or merged[0][0].metadata["dense_rank"] == -1
-
-
-def test_search_runs_dense_bm25_rrf_pipeline(monkeypatch):
-    from langchain_core.documents import Document
-    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
-    monkeypatch.setattr(settings, "milvus_hybrid_enabled", True)
-    monkeypatch.setattr(settings, "milvus_rerank_enabled", False)
-    store = MilvusVectorStore(public=True)
-
-    class FakeDense:
-        def similarity_search_with_relevance_scores(self, query, k=4, **kwargs):
-            return [(Document(page_content="generic", metadata={"chunk_id": "a", "status": "published", "role_tags": "|backend|"}), 0.8)]
-
-    store._store = FakeDense()
-    monkeypatch.setattr(store, "_bm25_search", lambda *args, **kwargs: [(Document(page_content="exact", metadata={"chunk_id": "b", "status": "published", "role_tags": "|backend|"}), 8.0)])
-    rows = store.search("exact", 2, role="backend", published_only=True)
-    assert len(rows) == 2
-    assert {row[0].metadata["retrieval_stage"] for row in rows} == {"rrf"}
-    assert any(row[0].metadata["bm25_rank"] == 1 for row in rows)
-
-
 def test_bm25_tokenizer_preserves_identifiers_and_chinese_bigrams():
     tokens = MilvusVectorStore._tokenize("HashMap 与 ConcurrentHashMap 的底层结构")
     assert "hashmap" in tokens
@@ -359,7 +433,6 @@ def test_dashscope_reranker_reorders_rows(monkeypatch):
     from langchain_core.documents import Document
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
     monkeypatch.setattr(settings, "milvus_rerank_enabled", True)
-    monkeypatch.setattr(settings, "milvus_rerank_provider", "dashscope")
     monkeypatch.setattr(settings, "dashscope_api_key", "test-key")
     monkeypatch.setattr(settings, "milvus_rerank_model", "gte-rerank-v2")
     store = MilvusVectorStore(public=True)
@@ -393,7 +466,6 @@ def test_reranker_rejects_unrelated_low_score_candidates(monkeypatch):
     from langchain_core.documents import Document
     settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
     monkeypatch.setattr(settings, "milvus_rerank_enabled", True)
-    monkeypatch.setattr(settings, "milvus_rerank_provider", "dashscope")
     monkeypatch.setattr(settings, "dashscope_api_key", "test-key")
     monkeypatch.setattr(settings, "milvus_rerank_min_score", 0.1)
     store = MilvusVectorStore(public=True)

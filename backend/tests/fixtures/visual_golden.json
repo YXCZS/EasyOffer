@@ -1,0 +1,23 @@
+[
+  {
+    "id": "ocr-text-image-001",
+    "kind": "ocr",
+    "question": "截图中的 RAG 检索流程是什么？",
+    "expected_terms": ["RAG", "检索", "生成"],
+    "required_metadata": ["media_path", "visual_status"]
+  },
+  {
+    "id": "table-001",
+    "kind": "table",
+    "question": "表格中的召回率和延迟分别是多少？",
+    "expected_terms": ["召回率", "延迟"],
+    "required_metadata": ["bbox", "visual_type", "uncertainties"]
+  },
+  {
+    "id": "flowchart-001",
+    "kind": "flowchart",
+    "question": "流程图中检索和生成的先后关系是什么？",
+    "expected_terms": ["检索", "生成"],
+    "required_metadata": ["relations", "media_path"]
+  }
+]

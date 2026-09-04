@@ -1,0 +1,32 @@
+{
+  "captured_at_utc": "2026-09-04T01:38:00Z",
+  "milvus_server_version": "2.5.16",
+  "collections": {
+    "easyoffer_public_chunks_hybrid_v2": {
+      "exists": true,
+      "loaded": true,
+      "schema_version": "native-hybrid-v2",
+      "fields": ["pk", "sparse", "text", "vector"],
+      "vector_dimension": 1536,
+      "functions": ["text_bm25"],
+      "indexes": ["sparse", "vector"],
+      "row_count": 10936
+    },
+    "easyoffer_private_chunks_hybrid_v2": {
+      "exists": true,
+      "loaded": true,
+      "schema_version": "native-hybrid-v2",
+      "fields": ["pk", "sparse", "text", "vector"],
+      "vector_dimension": 1536,
+      "functions": ["text_bm25"],
+      "indexes": ["sparse", "vector"],
+      "row_count": 6
+    }
+  },
+  "benchmark_baseline": "backend/docs/milvus-benchmark-2026-09-04.md",
+  "legacy_lite_backup": {
+    "expected_path": "backend/data/milvus-lite",
+    "present": false,
+    "note": "No legacy Lite directory was found during baseline capture."
+  }
+}

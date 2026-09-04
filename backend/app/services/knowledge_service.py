@@ -5,7 +5,7 @@ import json
 import logging
 import re
 import secrets
-import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -13,16 +13,16 @@ from app.core.config import get_settings
 from app.corpus.chunking import build_child_chunks, build_parent_units
 from app.corpus.config import CorpusConfig
 from app.corpus.dedup import deduplicate_chunks
+from app.corpus.file_detection import FileTypeDetectionError, detect_file_type
 from app.corpus.models import SourceEntry
 from app.corpus.parsers import parse_source_async
 from app.repositories import knowledge_repository
 from app.services.mineru_service import MinerUParser as StructuredMinerUParser
 
 logger = logging.getLogger(__name__)
-_BM25_CACHE: dict[tuple[str, str], tuple[str, list[Any], Any]] = {}
-_BM25_CACHE_LOCK = threading.RLock()
 ALLOWED_EXTENSIONS = {
     ".pdf": "application/pdf",
+    ".doc": "application/msword",
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".ppt": "application/vnd.ms-powerpoint",
     ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
@@ -102,7 +102,25 @@ def validate_upload(filename: str | None, content_type: str | None, content: byt
         raise KnowledgeValidationError("文件不能为空")
     if len(content) > get_settings().knowledge_max_file_bytes:
         raise KnowledgeValidationError("文件超过大小限制")
-    return name, mime
+    try:
+        logical_type = detect_file_type(name, content_type, content)
+    except FileTypeDetectionError as exc:
+        raise KnowledgeValidationError(str(exc)) from exc
+    # Store the verified logical type, not merely the suffix-provided MIME.
+    # This makes an RTF payload named ``*.docx`` take the RTF Word path later.
+    verified_mime = {
+        "pdf": "application/pdf",
+        "doc": "application/msword",
+        "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "ppt": "application/vnd.ms-powerpoint",
+        "pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "xls": "application/vnd.ms-excel",
+        "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image": mime,
+        "html": "text/html",
+        "markdown": "text/markdown",
+    }[logical_type]
+    return name, verified_mime
 
 
 def parse_document(path: str, mime_type: str) -> str:
@@ -150,23 +168,23 @@ async def process_document(connection: Any, user_id: int, document_id: str, stor
         return
     try:
         settings = get_settings()
-        extension = Path(row["original_name"]).suffix.lower()
-        content_type_by_extension = {
-            ".pdf": "pdf",
-            ".docx": "docx",
-            ".ppt": "ppt",
-            ".pptx": "pptx",
-            ".xls": "xls",
-            ".xlsx": "xlsx",
-            ".html": "html",
-            ".htm": "html",
-            ".png": "image",
-            ".jpg": "image",
-            ".jpeg": "image",
-            ".md": "markdown",
-            ".markdown": "markdown",
+        content_type_by_mime = {
+            "application/pdf": "pdf",
+            "application/msword": "doc",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+            "application/vnd.ms-powerpoint": "ppt",
+            "application/vnd.openxmlformats-officedocument.presentationml.presentation": "pptx",
+            "application/vnd.ms-excel": "xls",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+            "text/html": "html",
+            "image/png": "image", "image/jpeg": "image",
+            "text/markdown": "markdown",
         }
-        digest = hashlib.sha256(Path(row["storage_path"]).read_bytes()).hexdigest()
+        raw_content = Path(row["storage_path"]).read_bytes()
+        # Re-detect at ingestion too, which also keeps previously stored files
+        # correct when their display suffix did not match their actual format.
+        content_type = detect_file_type(row["original_name"], row.get("mime_type"), raw_content)
+        digest = hashlib.sha256(raw_content).hexdigest()
         source = SourceEntry(
             document_id=document_id,
             path=row["storage_path"],
@@ -174,7 +192,7 @@ async def process_document(connection: Any, user_id: int, document_id: str, stor
             technology=Path(row["original_name"]).stem or "personal knowledge",
             role_tags=["general"],
             document_version=digest[:16],
-            content_type=content_type_by_extension.get(extension, "markdown"),
+            content_type=content_type or content_type_by_mime.get(row.get("mime_type"), "markdown"),
             license_status="approved",
             target_corpus_version="personal",
         )
@@ -248,11 +266,20 @@ class MilvusVectorStore:
         self.user_id = user_id
         self.public = public
         self._store = None
+        # Per-request diagnostics used by the reproducible retrieval benchmark.
+        # Keep this metadata local to the adapter and never expose document text
+        # or credentials through it.
+        self.last_retrieval_stats: dict[str, Any] = {}
 
     @property
     def collection_name(self) -> str:
         settings = get_settings()
-        return settings.milvus_public_collection if self.public else settings.milvus_private_collection
+        name = settings.milvus_public_collection if self.public else settings.milvus_private_collection
+        # Both native-hybrid and emergency dense-only modes read the same
+        # migrated collection. The feature flag changes the query path, not
+        # the data location, so rollback never depends on a retired Lite
+        # collection or destructive data migration.
+        return f"{name}{settings.milvus_native_collection_suffix}"
 
     def _get(self):
         if self._store is None:
@@ -279,12 +306,40 @@ class MilvusVectorStore:
                 "auto_id": False,
                 "enable_dynamic_field": True,
             }
-            # Do not configure BM25BuiltInFunction here. Milvus' server-side
-            # full-text function is unavailable in Milvus Lite. Hybrid search
-            # is implemented below with a standard application-side BM25
-            # index, so the same collection/schema works in Lite and server
-            # deployments.
-            if settings.milvus_vector_dimension:
+            native_enabled = settings.milvus_native_hybrid_enabled
+            try:
+                from langchain_milvus import BM25BuiltInFunction
+            except ImportError:
+                # Keep lightweight test doubles and legacy adapters usable;
+                # production dependencies always include the native function.
+                native_enabled = False
+                BM25BuiltInFunction = None
+            if native_enabled:
+                # Native BM25 requires a collection created with a text field,
+                # sparse output field and BM25 Function. The admin initializer
+                # creates that schema before this adapter is used.
+                kwargs["builtin_function"] = BM25BuiltInFunction(
+                    input_field_names="text",
+                    output_field_names="sparse",
+                    analyzer_params={"type": "standard"},
+                )
+                kwargs["vector_field"] = ["vector", "sparse"]
+                kwargs["index_params"] = [
+                    {
+                        "index_type": "AUTOINDEX",
+                        "metric_type": settings.milvus_metric_type,
+                    },
+                    {
+                        "index_type": "SPARSE_INVERTED_INDEX",
+                        "metric_type": "BM25",
+                        "params": {"drop_ratio_build": 0.2},
+                    },
+                ]
+                kwargs["search_params"] = [
+                    {"metric_type": settings.milvus_metric_type, "params": {}},
+                    {"metric_type": "BM25", "params": {}},
+                ]
+            if settings.milvus_vector_dimension and not native_enabled:
                 # langchain-milvus expects the vector schema as a field
                 # configuration (the embedding field type is inferred).
                 kwargs["vector_schema"] = {"dim": settings.milvus_vector_dimension}
@@ -302,6 +357,40 @@ class MilvusVectorStore:
         return self._store
 
     @staticmethod
+    def _build_native_reranker() -> Any:
+        """Build an explicit Milvus RRF ranker for native hybrid search.
+
+        Recent langchain-milvus releases recommend a ``Function`` with
+        ``FunctionType.RERANK``.  Older pymilvus releases expose the equivalent
+        ``RRFRanker`` object, so keep that narrowly-scoped compatibility path
+        for migrations without allowing LangChain's implicit WeightedRanker.
+        """
+        settings = get_settings()
+        rrf_k = int(settings.milvus_rrf_k)
+        try:
+            from pymilvus import Function, FunctionType
+
+            return Function(
+                name="easyoffer_rrf_ranker",
+                function_type=FunctionType.RERANK,
+                input_field_names=["vector", "sparse"],
+                params={"strategy": "rrf", "k": rrf_k},
+            )
+        except (ImportError, AttributeError, TypeError, ValueError):
+            try:
+                from pymilvus import RRFRanker
+
+                return RRFRanker(k=rrf_k)
+            except (ImportError, AttributeError, TypeError) as exc:
+                raise RuntimeError("Milvus client does not provide an RRF ranker") from exc
+
+    @staticmethod
+    def _native_fetch_k(requested: int) -> int:
+        settings = get_settings()
+        configured = max(int(settings.milvus_dense_recall_k), int(settings.milvus_sparse_recall_k), int(requested))
+        return min(configured, int(settings.milvus_fetch_k_max))
+
+    @staticmethod
     def _escape(value: str) -> str:
         return value.replace("\\", "\\\\").replace("'", "\\'")
 
@@ -316,7 +405,9 @@ class MilvusVectorStore:
     ) -> str:
         clauses: list[str] = []
         if self.public:
-            effective_status = "published" if published_only else status
+            # Online public retrieval is published-only by default. Evaluation
+            # and release tooling can explicitly request a candidate status.
+            effective_status = "published" if published_only or status is None else status
             if effective_status:
                 clauses.append(f"status == '{self._escape(effective_status)}'")
             if corpus_version:
@@ -336,25 +427,9 @@ class MilvusVectorStore:
     def _metadata(doc: Any) -> dict[str, Any]:
         return dict(getattr(doc, "metadata", None) or {})
 
-    def _invalidate_bm25_cache(self) -> None:
-        with _BM25_CACHE_LOCK:
-            for key in [key for key in _BM25_CACHE if key[0] == self.collection_name]:
-                _BM25_CACHE.pop(key, None)
-
     @staticmethod
     def _row_document(row: Any) -> Any:
         return row[0] if isinstance(row, tuple) else row
-
-    @classmethod
-    def _row_key(cls, row: Any) -> str:
-        doc = cls._row_document(row)
-        metadata = cls._metadata(doc)
-        return str(
-            metadata.get("chunk_id")
-            or metadata.get("pk")
-            or metadata.get("content_hash")
-            or hashlib.sha256(str(getattr(doc, "page_content", "")).encode("utf-8")).hexdigest()
-        )
 
     @staticmethod
     def _normalize_retrieval_text(text: str) -> str:
@@ -369,122 +444,27 @@ class MilvusVectorStore:
 
     @classmethod
     def _tokenize(cls, text: str) -> list[str]:
-        """Tokenize Chinese and technical identifiers for application BM25.
+        """Tokenize text for diagnostics and migration tooling only.
 
-        Latin identifiers (``HashMap``, ``Spring Boot``, dotted config names)
-        remain intact, while contiguous CJK text contributes unigrams and
-        bigrams so Chinese queries do not depend on whitespace segmentation.
+        Production retrieval uses Milvus' native BM25 analyzer; this helper
+        remains dependency-free for offline migration checks.
         """
         value = cls._normalize_retrieval_text(text).lower()
         tokens: list[str] = []
-        latin_spans = list(re.finditer(r"[a-z][a-z0-9_+.#:/-]*", value))
-        tokens.extend(match.group(0) for match in latin_spans)
+        tokens.extend(match.group(0) for match in re.finditer(r"[a-z][a-z0-9_+.#:/-]*", value))
         for match in re.finditer(r"[\u4e00-\u9fff]+", value):
             run = match.group(0)
             tokens.extend(run)
             tokens.extend(run[index:index + 2] for index in range(len(run) - 1))
         return tokens or [value]
 
-    def _load_bm25_index(self, scope_filter: str) -> tuple[list[Any], Any] | None:
-        """Build or reuse an application-side BM25 index for the current scope."""
-        settings = get_settings()
-        cache_key = (self.collection_name, scope_filter)
-        try:
-            from rank_bm25 import BM25Okapi
-        except ImportError:
-            logger.warning("hybrid_bm25_unavailable dependency=rank-bm25")
-            return None
-        with _BM25_CACHE_LOCK:
-            cached = _BM25_CACHE.get(cache_key)
-            if cached:
-                return cached[1], cached[2]
-        try:
-            if self.public:
-                try:
-                    records = self.query_public_chunks(scope_filter, limit=settings.knowledge_max_chunks)
-                except Exception:
-                    fallback_filter = re.sub(r"\s+and\s+role_tags like '[^']*'", "", scope_filter)
-                    records = self.query_public_chunks(fallback_filter, limit=settings.knowledge_max_chunks)
-            else:
-                records = list(self._milvus_client().query(
-                    collection_name=self.collection_name,
-                    filter=scope_filter,
-                    output_fields=["*"],
-                    limit=max(1, int(settings.knowledge_max_chunks)),
-                ))
-            from langchain_core.documents import Document
-            docs: list[Any] = []
-            tokenized: list[list[str]] = []
-            for item in records:
-                text = self._normalize_retrieval_text(item.get("evidence_text") or item.get("text") or item.get("page_content") or "").strip()
-                if not text:
-                    continue
-                metadata = dict(item)
-                metadata.setdefault("chunk_id", item.get("pk") or item.get("id"))
-                docs.append(Document(page_content=text, metadata=metadata))
-                tokenized.append(self._tokenize(text))
-            if not docs:
-                return None
-            index = BM25Okapi(tokenized)
-            with _BM25_CACHE_LOCK:
-                _BM25_CACHE[cache_key] = ("v1", docs, index)
-            return docs, index
-        except Exception as exc:
-            logger.warning("hybrid_bm25_failed failure_type=%s", type(exc).__name__)
-            return None
-
-    def _bm25_search(self, query: str, k: int, scope_filter: str) -> list[Any]:
-        loaded = self._load_bm25_index(scope_filter)
-        if not loaded:
-            return []
-        docs, index = loaded
-        scores = index.get_scores(self._tokenize(query))
-        ranked_indices = sorted(range(len(docs)), key=lambda i: float(scores[i]), reverse=True)
-        rows: list[Any] = []
-        for position in ranked_indices[:max(1, int(k))]:
-            if float(scores[position]) <= 0:
-                continue
-            rows.append((docs[position], float(scores[position])))
-        return rows
-
-    def _rrf_merge(self, dense_rows: list[Any], sparse_rows: list[Any]) -> list[Any]:
-        """Fuse rankings with the standard Reciprocal Rank Fusion formula."""
-        rrf_k = max(1, int(get_settings().milvus_rrf_k))
-        merged: dict[str, dict[str, Any]] = {}
-        for source, rows in (("dense", dense_rows), ("bm25", sparse_rows)):
-            for rank, row in enumerate(rows, start=1):
-                key = self._row_key(row)
-                entry = merged.setdefault(key, {"row": row, "ranks": {}, "score": 0.0})
-                entry["ranks"][source] = rank
-                entry["score"] += 1.0 / (rrf_k + rank)
-                # Dense rows contain the original LangChain metadata and are
-                # preferred when the same chunk exists in both lists.
-                if source == "dense" or "row" not in entry:
-                    entry["row"] = row
-        output: list[Any] = []
-        for entry in sorted(merged.values(), key=lambda item: item["score"], reverse=True):
-            row = entry["row"]
-            doc = self._row_document(row)
-            metadata = self._metadata(doc)
-            metadata["retrieval_stage"] = "rrf"
-            metadata["rrf_score"] = entry["score"]
-            metadata["dense_rank"] = entry["ranks"].get("dense", -1)
-            metadata["bm25_rank"] = entry["ranks"].get("bm25", -1)
-            try:
-                doc.metadata = metadata
-            except Exception:
-                pass
-            output.append((doc, entry["score"]))
-        logger.info("rrf_fusion dense=%d bm25=%d candidates=%d", len(dense_rows), len(sparse_rows), len(output))
-        return output
-
     def _rerank_candidates(self, query: str, rows: list[Any]) -> list[Any]:
-        """Second-stage rerank with DashScope or Cohere, falling back to RRF."""
+        """Second-stage rerank with DashScope, falling back to native RRF."""
         settings = get_settings()
         if not rows or not settings.milvus_rerank_enabled:
+            self.last_retrieval_stats["rerank_status"] = "disabled"
             return rows
-        provider = (settings.milvus_rerank_provider or "").lower()
-        if provider == "dashscope" and settings.dashscope_api_key:
+        if settings.dashscope_api_key:
             try:
                 from dashscope import TextReRank
                 response = TextReRank.call(
@@ -504,38 +484,18 @@ class MilvusVectorStore:
                         score = float(getattr(item, "relevance_score", 0.0))
                         ranked.append((self._row_document(rows[index]), score))
                 if ranked:
+                    self.last_retrieval_stats["rerank_status"] = "applied"
                     logger.info("reranker_applied provider=dashscope candidates=%d returned=%d", len(rows), len(ranked))
                     accepted = [row for row in ranked if row[1] >= float(settings.milvus_rerank_min_score)]
                     if not accepted:
                         logger.info("reranker_rejected_all provider=dashscope min_score=%s", settings.milvus_rerank_min_score)
                     return accepted
             except Exception as exc:
+                self.last_retrieval_stats["rerank_status"] = "failed"
                 logger.warning("reranker_failed provider=dashscope failure_type=%s", type(exc).__name__)
-        if provider == "cohere" and settings.cohere_api_key:
-            import httpx
-            documents = [self._normalize_retrieval_text(self._metadata(self._row_document(row)).get("evidence_text") or getattr(self._row_document(row), "page_content", ""))[:12000] for row in rows]
-            try:
-                response = httpx.post(
-                    "https://api.cohere.com/v2/rerank",
-                    headers={"Authorization": f"Bearer {settings.cohere_api_key}", "Content-Type": "application/json"},
-                    json={"model": settings.milvus_rerank_model, "query": query, "documents": documents, "top_n": min(len(rows), max(1, settings.milvus_rerank_top_k)), "return_documents": False},
-                    timeout=settings.milvus_rerank_timeout_seconds,
-                )
-                response.raise_for_status()
-                ranked = []
-                for item in response.json().get("results", []):
-                    index = int(item.get("index", -1))
-                    if 0 <= index < len(rows):
-                        ranked.append((self._row_document(rows[index]), float(item.get("relevance_score", 0.0))))
-                if ranked:
-                    logger.info("reranker_applied provider=cohere candidates=%d returned=%d", len(rows), len(ranked))
-                    accepted = [row for row in ranked if row[1] >= float(settings.milvus_rerank_min_score)]
-                    if not accepted:
-                        logger.info("reranker_rejected_all provider=cohere min_score=%s", settings.milvus_rerank_min_score)
-                    return accepted
-            except Exception as exc:
-                logger.warning("reranker_failed provider=cohere failure_type=%s", type(exc).__name__)
-        logger.info("reranker_unavailable provider=%s", provider or "none")
+        else:
+            self.last_retrieval_stats["rerank_status"] = "unavailable"
+        logger.info("reranker_unavailable provider=dashscope")
         return rows
 
     def _post_filter(
@@ -556,7 +516,7 @@ class MilvusVectorStore:
                 continue
             if document_id and str(metadata.get("document_id", "")) != document_id:
                 continue
-            effective_status = "published" if published_only else status
+            effective_status = "published" if published_only or (self.public and status is None) else status
             if effective_status and str(metadata.get("status", "")) != effective_status:
                 continue
             if corpus_version and str(metadata.get("corpus_version", "")) != corpus_version:
@@ -605,6 +565,9 @@ class MilvusVectorStore:
                 "media_path": str(item.get("media_path") or ""),
                 "mineru_node_path": str(item.get("mineru_node_path") or ""),
                 "structure_metadata": json.dumps(item.get("structure_metadata") or {}, ensure_ascii=False, default=str),
+                "visual_type": str(item.get("visual_type") or ""),
+                "visual_status": str(item.get("visual_status") or ""),
+                "visual_confidence": float(item.get("visual_confidence") or 0.0),
                 "evidence_text": str(item.get("text") or ""),
                 "technology": str(item.get("technology") or ""),
                 "role_tags": "|" + "|".join(sorted({str(role) for role in (item.get("role_tags") or ["general"]) if role})) + "|",
@@ -621,14 +584,15 @@ class MilvusVectorStore:
             ids.append(item["chunk_id"])
         if docs:
             store.add_documents(docs, ids=ids)
-            self._invalidate_bm25_cache()
 
     def upsert_public_chunks(self, chunks: list[dict[str, Any]], *, replace_document_id: str | None = None) -> None:
         if not self.public:
             raise ValueError("public chunks require the public Milvus store")
         store = self._get()
         if replace_document_id:
-            expr = self._scope_expr(document_id=replace_document_id)
+            # Replacement must remove every lifecycle state for the document,
+            # including an unpublished candidate from a previous build.
+            expr = self._scope_expr(document_id=replace_document_id, status="")
             if expr:
                 try:
                     store.delete(expr=expr)
@@ -675,6 +639,9 @@ class MilvusVectorStore:
                 "media_path": str(item.get("media_path") or ""),
                 "mineru_node_path": str(item.get("mineru_node_path") or ""),
                 "structure_metadata": json.dumps(item.get("structure_metadata") or {}, ensure_ascii=False, default=str),
+                "visual_type": str(item.get("visual_type") or ""),
+                "visual_status": str(item.get("visual_status") or ""),
+                "visual_confidence": float(item.get("visual_confidence") or 0.0),
                 "evidence_text": str(item.get("text") or ""),
                 "chunk_index": int(item.get("chunk_index", 0)),
                 "child_index": int(item.get("child_index", item.get("chunk_index", 0))),
@@ -695,13 +662,11 @@ class MilvusVectorStore:
             ids.append(str(item["chunk_id"]))
         if docs:
             store.upsert(documents=docs, ids=ids)
-            self._invalidate_bm25_cache()
 
     def delete_document(self, document_id: str) -> None:
         expr = self._scope_expr(document_id=document_id)
         if expr:
             self._get().delete(expr=expr)
-            self._invalidate_bm25_cache()
 
     def search(
         self,
@@ -736,9 +701,30 @@ class MilvusVectorStore:
         )
         if expr:
             kwargs["expr"] = expr
+        store = self._get()
+        native_search = getattr(store, "similarity_search_with_score", None)
+        # Real Standalone stores expose the score API for multi-vector native
+        # hybrid search. Older Lite/test adapters only expose relevance scores.
+        use_native = bool(settings.milvus_native_hybrid_enabled and native_search)
+        search_method = native_search if use_native else store.similarity_search_with_relevance_scores
+        fetch_k = self._native_fetch_k(requested) if use_native else None
+        if use_native:
+            kwargs["fetch_k"] = fetch_k
+            kwargs["reranker"] = self._build_native_reranker()
+        started = time.perf_counter()
+        self.last_retrieval_stats = {
+            "mode": "native_hybrid" if use_native else "dense",
+            "collection": self.collection_name,
+            "fetch_k": fetch_k,
+            "rrf_k": int(settings.milvus_rrf_k) if use_native else None,
+            "requested_k": requested,
+            "milvus_candidates": 0,
+            "rrf_candidates": 0,
+            "rerank_ms": 0.0,
+        }
         try:
-            rows = self._get().similarity_search_with_relevance_scores(query, **kwargs)
-        except Exception:
+            rows = search_method(query, **kwargs)
+        except Exception as exc:
             # Older Milvus servers or schemas may not support LIKE expressions;
             # retry without the role clause and enforce it locally.
             if role and "expr" in kwargs:
@@ -750,12 +736,22 @@ class MilvusVectorStore:
                 )
                 kwargs["expr"] = fallback_expr
                 try:
-                    rows = self._get().similarity_search_with_relevance_scores(query, **kwargs)
+                    rows = search_method(query, **kwargs)
                 except Exception as exc:
-                    logger.warning("dense_retrieval_failed failure_type=%s", type(exc).__name__)
+                    logger.warning(
+                        "milvus_retrieval_failed mode=%s collection=%s failure_type=%s",
+                        "native_hybrid" if use_native else "dense",
+                        self.collection_name,
+                        type(exc).__name__,
+                    )
                     rows = []
             else:
-                logger.warning("dense_retrieval_failed failure_type=unknown")
+                logger.warning(
+                    "milvus_retrieval_failed mode=%s collection=%s failure_type=%s",
+                    "native_hybrid" if use_native else "dense",
+                    self.collection_name,
+                    type(exc).__name__,
+                )
                 rows = []
         filtered = self._post_filter(
             rows,
@@ -765,21 +761,29 @@ class MilvusVectorStore:
             corpus_version=corpus_version,
             status=status,
         )
-        if self.public:
+        self.last_retrieval_stats["milvus_candidates"] = len(filtered)
+        if self.public and not use_native:
             threshold = float(settings.milvus_public_min_score)
             filtered = [row for row in filtered if row[1] is None or float(row[1]) >= threshold]
-        if settings.milvus_hybrid_enabled and not document_id:
-            sparse_rows = self._bm25_search(query, settings.milvus_sparse_recall_k, expr)
-            sparse_rows = self._post_filter(
-                sparse_rows,
-                document_id=document_id,
-                role=role,
-                published_only=published_only,
-                corpus_version=corpus_version,
-                status=status,
+        if use_native:
+            # Milvus has already fused dense and BM25 candidates through its
+            # native hybrid_search/RRFRanker path. Do not pull the corpus back
+            # into the application to build a second BM25 index.
+            rerank_started = time.perf_counter()
+            ranked = self._rerank_candidates(query, filtered)
+            self.last_retrieval_stats["rerank_ms"] = (time.perf_counter() - rerank_started) * 1000
+            self.last_retrieval_stats["rrf_candidates"] = len(filtered)
+            logger.info(
+                "milvus_retrieval mode=native_hybrid collection=%s fetch_k=%s rrf_k=%s candidates=%d returned=%d elapsed_ms=%.1f query_chars=%d",
+                self.collection_name,
+                fetch_k,
+                settings.milvus_rrf_k,
+                len(filtered),
+                min(len(ranked), requested),
+                (time.perf_counter() - started) * 1000,
+                len(str(query or "")),
             )
-            fused = self._rrf_merge(filtered, sparse_rows)
-            return self._rerank_candidates(query, fused)[:requested]
+            return ranked[:requested]
         # Rerank the complete broad candidate set; truncating before the
         # cross-encoder would defeat the recall-then-precision design.
         return self._rerank_candidates(query, filtered)[:requested] if not document_id else filtered

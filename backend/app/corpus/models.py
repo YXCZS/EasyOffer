@@ -11,6 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validat
 LicenseStatus = Literal["approved", "local-evaluation-only", "rejected"]
 ContentType = Literal[
     "pdf",
+    "doc",
     "docx",
     "ppt",
     "pptx",
@@ -102,6 +103,9 @@ class ParsedBlock:
     media_path: str = ""
     mineru_node_path: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
+    visual_type: str = ""
+    visual_status: str = ""
+    visual_confidence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -138,6 +142,9 @@ class ParentUnit:
     media_path: str = ""
     mineru_node_path: str = ""
     structure_metadata: dict[str, Any] = field(default_factory=dict)
+    visual_type: str = ""
+    visual_status: str = ""
+    visual_confidence: float | None = None
 
 
 @dataclass(frozen=True)
@@ -177,6 +184,9 @@ class ChildChunk:
     media_path: str = ""
     mineru_node_path: str = ""
     structure_metadata: dict[str, Any] = field(default_factory=dict)
+    visual_type: str = ""
+    visual_status: str = ""
+    visual_confidence: float | None = None
 
     def to_record(self) -> dict[str, Any]:
         value = asdict(self)
@@ -200,6 +210,7 @@ class DocumentProcessResult:
     warnings: list[str] = field(default_factory=list)
     quality_issues: list[str] = field(default_factory=list)
     failure_reason: str | None = None
+    metrics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass

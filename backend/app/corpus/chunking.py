@@ -193,6 +193,9 @@ def build_parent_units(
                         media_path=previous_block.media_path,
                         mineru_node_path=previous_block.mineru_node_path,
                         metadata=previous_block.metadata,
+                        visual_type=previous_block.visual_type,
+                        visual_status=previous_block.visual_status,
+                        visual_confidence=previous_block.visual_confidence,
                     ),
                 )
             else:
@@ -232,6 +235,9 @@ def build_parent_units(
                                 media_path=template.media_path,
                                 mineru_node_path=template.mineru_node_path,
                                 metadata=template.metadata,
+                                visual_type=template.visual_type,
+                                visual_status=template.visual_status,
+                                visual_confidence=template.visual_confidence,
                             ),
                         )
                     )
@@ -267,6 +273,9 @@ def build_parent_units(
                 media_path=block.media_path,
                 mineru_node_path=block.mineru_node_path,
                 structure_metadata=block.metadata,
+                visual_type=block.visual_type or str(block.metadata.get("visual_type") or ""),
+                visual_status=block.visual_status or str(block.metadata.get("visual_status") or ""),
+                visual_confidence=block.visual_confidence if block.visual_confidence is not None else block.metadata.get("confidence"),
             )
         )
     return parents
@@ -384,6 +393,9 @@ def build_child_chunks(
                 )
                 if part
             )
+            visual_summary = str(parent.structure_metadata.get("summary") or "").strip()
+            if visual_summary:
+                embedding_text += f"\n视觉摘要：{visual_summary}"
             output.append(
                 ChildChunk(
                     chunk_id=chunk_id,
@@ -417,6 +429,9 @@ def build_child_chunks(
                     media_path=parent.media_path,
                     mineru_node_path=parent.mineru_node_path,
                     structure_metadata=parent.structure_metadata,
+                    visual_type=parent.visual_type,
+                    visual_status=parent.visual_status,
+                    visual_confidence=parent.visual_confidence,
                 )
             )
     if len(output) > config.max_chunks_per_document:

@@ -233,7 +233,10 @@ def test_public_parse_source_uses_mineru_structured_result(tmp_path, monkeypatch
 
 def test_personal_document_pipeline_upserts_structured_deduplicated_chunks(tmp_path, monkeypatch):
     path = tmp_path / "personal.pdf"
-    path.write_bytes(b"fixture")
+    # Ingestion now re-validates persisted files using PDF magic bytes and a
+    # parser check. Use a real PDF fixture so this test exercises structured
+    # chunk upsert rather than the corruption rejection path.
+    write_text_pdf(path, "RAG structured retrieval fixture")
     result = MinerUStructuredResult(
         text="RAG\n\n<table><tr><td>dense retrieval</td></tr></table>",
         markdown="",

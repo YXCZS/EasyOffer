@@ -514,7 +514,14 @@ class MinerUParser:
         result = MinerUParser.parse_archive(archive)
         return result.markdown or result.text
 
-    async def parse_structured(self, path: str, *, document_id: str, original_name: str) -> MinerUStructuredResult:
+    async def parse_structured(
+        self,
+        path: str,
+        *,
+        document_id: str,
+        original_name: str,
+        is_ocr: bool | None = None,
+    ) -> MinerUStructuredResult:
         settings = get_settings()
         token = settings.mineru_api_token
         if not token:
@@ -525,7 +532,7 @@ class MinerUParser:
         request_data = {
             "files": [{"name": Path(original_name).name, "data_id": document_id}],
             "model_version": model_version,
-            "is_ocr": settings.mineru_enable_ocr,
+            "is_ocr": settings.mineru_enable_ocr if is_ocr is None else bool(is_ocr),
             "enable_formula": settings.mineru_enable_formula,
             "enable_table": settings.mineru_enable_table,
             "language": "ch",
@@ -569,8 +576,26 @@ class MinerUParser:
                     zip_url = str((current or {}).get("full_zip_url") or "")
                     if not zip_url:
                         raise RuntimeError("MinerU task completed without full_zip_url")
-                    archive_response = await client.get(zip_url)
-                    archive_response.raise_for_status()
+                    archive_response = None
+                    download_error: Exception | None = None
+                    download_attempts = max(1, int(settings.mineru_download_retries) + 1)
+                    for attempt in range(download_attempts):
+                        try:
+                            # Result ZIPs can be much larger than the polling
+                            # responses. Use a dedicated timeout and retry
+                            # transient proxy/TLS disconnects.
+                            async with self.client_factory(
+                                timeout=httpx.Timeout(float(settings.mineru_download_timeout_seconds))
+                            ) as download_client:
+                                archive_response = await download_client.get(zip_url)
+                                archive_response.raise_for_status()
+                            break
+                        except (httpx.HTTPError, OSError) as exc:
+                            download_error = exc
+                            if attempt < download_attempts - 1:
+                                await asyncio.sleep(min(1.0 * (attempt + 1), 4.0))
+                    if archive_response is None:
+                        raise RuntimeError("MinerU result download failed") from download_error
                     parsed = self.parse_archive(archive_response.content)
                     return self.persist_artifacts(
                         archive_response.content,

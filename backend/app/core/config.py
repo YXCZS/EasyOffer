@@ -1,6 +1,11 @@
 from functools import lru_cache
+from pathlib import Path
 
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+_BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -66,9 +71,20 @@ class Settings(BaseSettings):
     mineru_model_version: str = "vlm"
     mineru_poll_interval_seconds: float = 5.0
     mineru_timeout_seconds: float = 600.0
+    mineru_download_retries: int = 2
+    mineru_download_timeout_seconds: float = 120.0
     mineru_enable_ocr: bool = False
     mineru_enable_formula: bool = True
     mineru_enable_table: bool = True
+    # Document visual understanding is opt-in. OCR for scanned PDFs is still
+    # selected automatically by the PDF preflight and sent to MinerU.
+    document_visual_enabled: bool = False
+    document_visual_model: str = "qwen-vl-plus"
+    document_visual_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+    document_visual_timeout_seconds: float = 30.0
+    document_visual_max_retries: int = 1
+    document_visual_max_concurrency: int = 2
+    document_visual_max_images: int = 20
     # Milvus is the sole vector store. The adapter connects lazily on first
     # retrieval/write so application startup does not require a live server.
     milvus_enabled: bool = True
@@ -81,21 +97,22 @@ class Settings(BaseSettings):
     milvus_consistency_level: str = "Bounded"
     milvus_retrieval_top_k: int = 5
     # Retrieve broadly, then apply a second-stage cross-encoder/API reranker.
-    milvus_dense_recall_k: int = 50
-    milvus_sparse_recall_k: int = 50
-    # Application-layer hybrid retrieval is compatible with Milvus Lite. It
-    # must not be confused with Milvus' server-side BM25 Function, which needs
-    # Standalone/Distributed deployments.
-    milvus_hybrid_enabled: bool = True
-    milvus_rrf_k: int = 60
+    milvus_dense_recall_k: int = Field(default=50, gt=0, le=1000)
+    milvus_sparse_recall_k: int = Field(default=50, gt=0, le=1000)
+    milvus_fetch_k_max: int = Field(default=200, gt=0, le=2000)
+    # EasyOffer runs against Milvus Standalone/Distributed and uses the
+    # server-side BM25 Function for hybrid retrieval. The former Lite and
+    # application-side BM25 path is intentionally no longer the mainline.
+    milvus_native_hybrid_enabled: bool = True
+    milvus_native_collection_suffix: str = "_hybrid_v2"
+    milvus_native_text_max_length: int = 65535
+    milvus_rrf_k: int = Field(default=60, gt=0, le=10000)
     milvus_rerank_enabled: bool = True
-    milvus_rerank_provider: str = "dashscope"
     milvus_rerank_model: str = "gte-rerank-v2"
     milvus_rerank_top_k: int = 8
     milvus_rerank_min_score: float = 0.1
     milvus_rerank_instruction: str = "优先选择能够直接回答用户问题的完整技术段落；忽略仅顺带提及主题的内容。"
     milvus_rerank_timeout_seconds: float = 8.0
-    cohere_api_key: str | None = None
     milvus_public_min_score: float = 0.25
     milvus_shadow_read: bool = False
     milvus_auto_create_collections: bool = True
@@ -154,7 +171,16 @@ class Settings(BaseSettings):
     incremental_question_attempts: int = 2
     incremental_task_timeout_seconds: float = 300.0
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Resolve the local file from the backend package, so ``uvicorn`` started
+    # from the repository root and from ``backend`` load the same settings.
+    # Real secrets can still be injected through process environment variables.
+    model_config = SettingsConfigDict(env_file=str(_BACKEND_ROOT / ".env"), extra="ignore")
+
+    @model_validator(mode="after")
+    def validate_milvus_recall_bounds(self) -> "Settings":
+        if self.milvus_fetch_k_max < max(self.milvus_dense_recall_k, self.milvus_sparse_recall_k):
+            raise ValueError("MILVUS_FETCH_K_MAX must be >= dense/sparse recall depth")
+        return self
 
 
 @lru_cache

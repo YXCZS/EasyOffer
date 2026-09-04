@@ -46,8 +46,9 @@ def test_markdown_and_docx_parsers_keep_structure_and_location(tmp_path):
 def test_blank_pdf_is_reported_as_scanned_or_empty(tmp_path):
     blank_pdf = write_blank_pdf(tmp_path / "scan.pdf")
 
-    with pytest.raises(CorpusParseError, match="scanned_or_empty_pdf"):
-        parse_source(source_for(blank_pdf, "pdf"))
+    parsed = parse_source(source_for(blank_pdf, "pdf"))
+    assert parsed.parser_name == "pdf-page-render-fallback"
+    assert parsed.blocks[0].metadata["ocr_status"] == "degraded"
 
 
 def test_malformed_pdf_is_reported_without_external_services(tmp_path):

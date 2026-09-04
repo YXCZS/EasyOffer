@@ -1,39 +1,61 @@
 # EasyOffer RAG Retrieval
 
-EasyOffer uses a production-style two-stage retrieval pipeline that runs in the local Milvus Lite environment:
+EasyOffer uses a production-style two-stage retrieval pipeline on Milvus
+Standalone (and the same schema is compatible with Milvus Distributed):
 
 ```text
 query
-  -> Milvus dense ANN recall (top 50)
-  -> application BM25 lexical recall (top 50)
-  -> standard RRF fusion (k=60)
-  -> DashScope TextReRank / Cohere Rerank (top 8)
+  -> Milvus native dense + BM25 hybrid recall (top 50 per route)
+  -> Milvus RRFRanker fusion (k=60)
+  -> DashScope TextReRank (top 8)
   -> parent chunk recovery
   -> DeepSeek generation
 ```
 
-The `MILVUS_HYBRID_ENABLED` setting means application-layer hybrid retrieval. It does not enable `BM25BuiltInFunction`; that server-side function requires Milvus Standalone or Distributed and is intentionally not used here. The same dense collection therefore works with Milvus Lite and can later be moved to a server deployment without a schema migration.
+`MILVUS_NATIVE_HYBRID_ENABLED=true` is the production setting. Native
+collections contain a `text` field, a BM25 Function output `sparse` field,
+and a sparse inverted index. The old dense-only collections are retained only
+as a migration backup and are not queried by the application.
+
+The one-time migration helper is `python scripts/migrate_milvus_hybrid.py`.
+It reads the old collections without deleting them, writes the native
+collections, and can be removed after the backup retention period.
 
 ## Configuration
 
 ```dotenv
-MILVUS_HYBRID_ENABLED=true
 MILVUS_DENSE_RECALL_K=50
 MILVUS_SPARSE_RECALL_K=50
+MILVUS_FETCH_K_MAX=200
 MILVUS_RRF_K=60
 MILVUS_RERANK_ENABLED=true
-MILVUS_RERANK_PROVIDER=dashscope
 MILVUS_RERANK_MODEL=gte-rerank-v2
 MILVUS_RERANK_TOP_K=8
 DASHSCOPE_API_KEY=...
 ```
 
-`rank-bm25` implements standard Okapi BM25. Chinese text contributes character unigrams and bigrams; technical identifiers such as `HashMap`, `ConcurrentHashMap`, and `Spring Boot` remain searchable as tokens. Indexes are cached per collection and scalar scope and invalidated after upsert/delete.
+Milvus' BM25 Function analyzes the `text` field and builds the sparse inverted
+index inside Standalone. This keeps lexical retrieval close to the data and
+avoids pulling the full corpus into the application process. Technical
+identifiers and Chinese terms are therefore handled by the configured Milvus
+analyzer rather than an application-side `rank-bm25` index.
 
-RRF uses `sum(1 / (k + rank))`, so dense and lexical scores do not need unsafe normalization. DashScope's official `TextReRank.call` is the default second-stage cross-encoder/API reranker. Cohere remains an optional provider. If a reranker is unavailable or fails, the service returns the RRF order and logs `reranker_unavailable` or `reranker_failed`.
+Milvus RRFRanker uses `sum(1 / (k + rank))`, so dense and lexical scores do
+not need unsafe normalization. DashScope's official `TextReRank.call` is the
+default second-stage cross-encoder/API reranker. If the reranker is
+unavailable or fails, the service returns the Milvus fused order and logs
+`reranker_unavailable` or `reranker_failed`.
+
+The public adapter applies `status=published` when no lifecycle status is
+explicitly supplied. Candidate and inactive versions remain queryable only by
+release/evaluation tooling. `MILVUS_FETCH_K_MAX` bounds per-route prefetch
+depth; the effective value is the maximum of dense/sparse recall and requested
+top-k, capped by this limit.
 
 ## Accuracy Evaluation
 
 The benchmark must distinguish document hit from answer hit. For every query record top-k text, source, section, parent id, dense rank, BM25 rank, RRF score, rerank score, and a human/label-based `answers_question` flag. Report Recall@5, Hit@1, Hit@3, MRR, nDCG@5, content precision, source traceability, and p50/p95 latency.
 
-Recommended comparison is dense-only, dense+BM25+RRF, and dense+BM25+RRF+reranker on the same published corpus and query labels. Do not compare raw scores from different reranker providers.
+Recommended comparison is dense-only, native dense+BM25+RRF, and native
+dense+BM25+RRF+DashScope reranker on the same published corpus and query
+labels. Do not compare raw scores from different reranker providers.

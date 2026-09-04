@@ -186,6 +186,10 @@ class CorpusPipeline:
                         rejected_blocks=rejected,
                         completed_stages=completed_stages,
                         warnings=parsed.warnings,
+                        metrics={
+                            "pdf_preflight": parsed.metadata.get("pdf_preflight", {}),
+                            "visual": parsed.metadata.get("visual_metrics", {}),
+                        },
                     )
                 )
             except Exception as exc:
