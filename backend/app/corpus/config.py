@@ -35,6 +35,9 @@ class CorpusConfig:
     gates: dict[str, dict[str, float | str]] = field(
         default_factory=lambda: {key: dict(value) for key, value in DEFAULT_GATES.items()}
     )
+    comparison_thresholds: dict[str, float] = field(
+        default_factory=lambda: {"quality": 0.0, "risk_rate": 0.0, "latency_ms": 0.0}
+    )
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "runtime_root", Path(self.runtime_root))
@@ -47,6 +50,8 @@ class CorpusConfig:
             raise ValueError("duplicate_content_ratio_threshold must be between 0 and 1")
         if not self.pipeline_revision.strip():
             raise ValueError("pipeline_revision must not be empty")
+        if any(float(value) < 0 for value in self.comparison_thresholds.values()):
+            raise ValueError("comparison_thresholds must be non-negative")
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "CorpusConfig":

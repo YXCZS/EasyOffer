@@ -12,7 +12,15 @@ from typing import Any
 from app.corpus.chunking import DeepSeekBoundaryClassifier, build_child_chunks, build_parent_units
 from app.corpus.config import CorpusConfig
 from app.corpus.dedup import deduplicate_chunks
-from app.corpus.evaluation import EvaluationReport, enforce_gate, evaluate_store, load_benchmark
+from app.corpus.evaluation import (
+    EvaluationReport, QueryEvaluation, enforce_gate, evaluate_store, load_benchmark, load_golden_dataset,
+    calculate_context_metrics, calculate_metrics, _answer_integrity, _normalize_hit,
+    build_evaluation_payload, evaluate_quiz_business, evaluate_report_business,
+    aggregate_quiz_quality, aggregate_report_quality, evaluate_agent_trace, detect_agent_risks,
+    aggregate_agent_evaluations, enforce_full_gate, write_evaluation_files,
+    FULL_EVALUATION_GATES,
+)
+from app.corpus.evaluation_runner import OfflineEvaluationRunner, ProductionEvaluationAdapter
 from app.corpus.manifest import load_manifest
 from app.corpus.models import (
     BatchResult,
@@ -320,6 +328,132 @@ class CorpusPipeline:
             {"path": str(path), "gate": gate.model_dump(mode="json"), "recorded_at": _now()},
         )
         return report
+
+    def evaluate_full(self, benchmark_path: str | Path, corpus_version: str, *, status: str = "published",
+                      generation_fn: Any | None = None, agent_trace_fn: Any | None = None,
+                      include_generation: bool = False, include_agent: bool = False,
+                      include_ragas: bool = False, output: str | Path | None = None,
+                      override_reason: str | None = None, override_by: str | None = None) -> dict[str, Any]:
+        """Run the offline, auditable evaluation envelope.
+
+        Optional model and Agent stages call the real production boundaries
+        through a thin adapter. Deterministic evaluation never calls a model.
+        """
+        dataset = load_golden_dataset(benchmark_path)
+        if include_ragas and not include_generation:
+            raise ValueError("include_ragas requires include_generation")
+        adapter = ProductionEvaluationAdapter(
+            self.store, corpus_version=corpus_version, status=status, top_k=dataset.top_k,
+        )
+        runner = OfflineEvaluationRunner(
+            self.store, corpus_version=corpus_version, status=status, top_k=dataset.top_k,
+            generation_fn=(generation_fn or adapter.generate) if include_generation else None,
+            agent_trace_fn=(agent_trace_fn or adapter.agent_trace) if include_agent else None,
+        )
+        full_run = runner.run_full(dataset)
+        observations = full_run["observations"]
+        # Keep the legacy EvaluationReport envelope while using the same
+        # observation adapter for full evaluation. This prevents offline
+        # metrics from silently drifting from the production retrieval call.
+        query_results: list[QueryEvaluation] = []
+        for query, observation in zip(dataset.queries, observations):
+            hits = observation.hits
+            context = calculate_context_metrics(query, hits[:dataset.top_k])
+            query_results.append(QueryEvaluation(query=query, hits=hits,
+                latency_ms=observation.latency_ms,
+                answer_integrity=all(_answer_integrity(hit) for hit in hits) if hits else False,
+                **context, error=observation.error))
+        report = EvaluationReport(corpus_version=corpus_version,
+                                  benchmark_version=dataset.benchmark_version,
+                                  top_k=dataset.top_k, metrics=calculate_metrics(query_results, dataset.top_k),
+                                  queries=query_results)
+        quiz_results, report_results, agent_results = [], [], []
+        responses: dict[str, str] = {}
+        errors: list[str] = [f"{item['sample_id']}:{item['stage']}:{item['error']}" for item in full_run["errors"]]
+        report_by_id = {item.query.query_id: item for item in report.queries}
+        for query in dataset.queries:
+            item = report_by_id[query.query_id]
+            generated = full_run["generations"].get(query.query_id)
+            if include_generation:
+                if generated is None or getattr(generated, "error", None):
+                    quiz_results.append(evaluate_quiz_business(query.query_id, None, query.expected_knowledge_points, query.difficulty))
+                    if generated is not None and getattr(generated, "error", None):
+                        errors.append(f"{query.query_id}:generation:{generated.error}")
+                else:
+                    quiz_payload = getattr(generated, "quiz", generated)
+                    report_payload = getattr(generated, "report", None)
+                    quiz_results.append(evaluate_quiz_business(query.query_id, quiz_payload, query.expected_knowledge_points, query.difficulty, item.hits))
+                    if report_payload is not None:
+                        report_results.append(evaluate_report_business(query.query_id, report_payload, query.expected_knowledge_points, query.topic, item.hits))
+                    responses[query.query_id] = str(getattr(generated, "response", "") or "")
+            trace = full_run["traces"].get(query.query_id)
+            if include_agent:
+                if trace is None:
+                    agent_results.append({"result": {"task_completed": False, "answer_present": False}, "process": {"route_correct": False, "expected_tools_present": False, "stopped_within_budget": False}, "risk": {"passed": False}})
+                    errors.append(f"{query.query_id}:agent:missing_trace")
+                else:
+                    trace.policy_findings = sorted(set(trace.policy_findings + detect_agent_risks(trace, private=query.knowledge_scope == "private")))
+                    agent_results.append(evaluate_agent_trace(trace, query.expected_route, query.expected_tools))
+        quiz_quality = aggregate_quiz_quality(quiz_results)
+        report_quality = aggregate_report_quality(report_results)
+        agent_quality = aggregate_agent_evaluations(agent_results)
+        ragas_result = None
+        if include_ragas:
+            try:
+                from app.corpus.ragas_evaluation import evaluate_ragas_from_observations
+                import asyncio
+                ragas_result = asyncio.run(evaluate_ragas_from_observations(dataset, observations, responses=responses))
+                if ragas_result.status != "success":
+                    errors.append(ragas_result.error or f"ragas_status:{ragas_result.status}")
+            except Exception as exc:
+                from app.corpus.evaluation import RagasEvaluationReport
+                ragas_result = RagasEvaluationReport(status="failed", error=f"{type(exc).__name__}: {exc}")
+                errors.append(ragas_result.error or "ragas_failed")
+        metrics = {**report.metrics}
+        if include_generation:
+            metrics.update(quiz_quality)
+            if report_results:
+                metrics.update(report_quality)
+        if include_agent:
+            metrics.update(agent_quality)
+        if ragas_result:
+            metrics.update({name: float(value) for name, value in ragas_result.metrics.items() if value is not None})
+        selected_gates = dict(self.config.gates)
+        if include_generation:
+            selected_gates.update({name: FULL_EVALUATION_GATES[name] for name in ("quiz_valid_rate", "quiz_duplicate_rate")})
+        if include_ragas:
+            selected_gates.update({
+                name: FULL_EVALUATION_GATES[name]
+                for name in (
+                    "context_precision",
+                    "context_recall",
+                    "faithfulness",
+                    "answer_relevancy",
+                )
+            })
+        if include_agent:
+            selected_gates.update({name: FULL_EVALUATION_GATES[name] for name in ("private_kb_violation_rate", "high_risk_false_allow_rate")})
+        gates = enforce_full_gate(metrics, gates=selected_gates, required_metrics=set(selected_gates),
+                                  override_reason=override_reason, override_by=override_by)
+        payload = build_evaluation_payload(report, dataset=dataset, ragas=ragas_result,
+                                           quiz_quality=quiz_quality, report_quality=report_quality,
+                                           agent=agent_quality, gates=gates, errors=errors,
+                                           metadata={"status_filter": status, "include_ragas": include_ragas,
+                                                     "include_generation": include_generation, "include_agent": include_agent,
+                                                     "code_version": self.config.pipeline_revision,
+                                                     "comparison_thresholds": self.config.comparison_thresholds},
+                                           generation_observations=full_run["generations"], agent_traces=full_run["traces"])
+        if output is None:
+            output = self.config.runtime_root / "evaluations" / f"{corpus_version}-{dataset.benchmark_version}-full.json"
+        json_path, md_path = write_evaluation_files(payload, output)
+        payload["report_path"] = str(json_path)
+        payload["markdown_path"] = str(md_path)
+        self.registry.record_evaluation(corpus_version, {
+            "path": str(json_path), "markdown_path": str(md_path),
+            "sha256": hashlib.sha256(json_path.read_bytes()).hexdigest(),
+            "gate": gates.model_dump(mode="json"), "recorded_at": _now(),
+        })
+        return payload
 
     def approve(
         self,

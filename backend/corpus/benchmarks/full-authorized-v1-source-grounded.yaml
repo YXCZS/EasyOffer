@@ -10,11 +10,76 @@ queries:
   expected_technologies: &id001
   - AI 大模型
   relevance:
-    mianshiya-ai-large-model: 2
+    90ef7dc09a8a50dfb16247f3c0598c57ddd2f5b792e0bd557830250badba96f4: 2
   expected_knowledge_points:
   - 上下文窗口
   - 向量数据库
   - 外部存储
+  reference_answer: '根据 AI 大模型原理和应用面试题速记通关版; page 7：M CP 的⼯作流程是什么？
+
+    M CP 其实是 M odel Context Protocol 的缩写，它不是传统中间件或 J ava 领域的标准组件，⽽是在 AI Agent 架构中⽤
+
+    来规范⼤模型与外部⼯具、数据源之间交互的协议。它的核⼼作⽤是让模型能安全、可控地访问运⾏时上下⽂。
+
+    整个流程从⽤户发起请求开始。Agent 接收到输⼊后，会先做⼀次意图解析，判断是否需要调⽤⼯具。如果需要，就
+
+    会构造⼀个符合 M CP 格式的请求包，⾥⾯包含动作类型、参数和上下⽂元信息。
+
+    接下来这个请求会被转发给对应的⼯具适配器。⽐如你要查数据库，就会⾛ SQL ⼯具链；要发 HTTP 请求，就交给
+
+    API 客户端处理。执⾏结果原路返回，由 M CP 解析器把原始响应转成模型能理解的⾃然语⾔⽚段。
+
+    1）请求触发：⽤户输⼊进⼊ Agent 循环
+
+    2）决策判断：Controller 判断是否需外部调⽤
+
+    3）协议封装：按 M CP 标准⽣成 tool call 消息
+
+    4）⼯具执⾏：Adapter 调⽤具体服务并获取结果
+
+    5）上下⽂注⼊：将结果以结构化⽅式回填到 prom pt 上下⽂
+
+    这种设计的好处是解耦了模型逻辑和外部系统。像 LangChain 或 Sem antic K ernel 这类框架，底层其实就是靠类似
+
+    M CP 的机制在做调度。你不需要改模型代码，只要注册新⼯具就能扩展能⼒。'
+  reference_context_ids:
+  - 90ef7dc09a8a50dfb16247f3c0598c57ddd2f5b792e0bd557830250badba96f4
+  reference_contexts:
+  - '来源：AI 大模型原理和应用面试题速记通关版; page 7
+
+    M CP 的⼯作流程是什么？
+
+    M CP 其实是 M odel Context Protocol 的缩写，它不是传统中间件或 J ava 领域的标准组件，⽽是在 AI Agent 架构中⽤
+
+    来规范⼤模型与外部⼯具、数据源之间交互的协议。它的核⼼作⽤是让模型能安全、可控地访问运⾏时上下⽂。
+
+    整个流程从⽤户发起请求开始。Agent 接收到输⼊后，会先做⼀次意图解析，判断是否需要调⽤⼯具。如果需要，就
+
+    会构造⼀个符合 M CP 格式的请求包，⾥⾯包含动作类型、参数和上下⽂元信息。
+
+    接下来这个请求会被转发给对应的⼯具适配器。⽐如你要查数据库，就会⾛ SQL ⼯具链；要发 HTTP 请求，就交给
+
+    API 客户端处理。执⾏结果原路返回，由 M CP 解析器把原始响应转成模型能理解的⾃然语⾔⽚段。
+
+    1）请求触发：⽤户输⼊进⼊ Agent 循环
+
+    2）决策判断：Controller 判断是否需外部调⽤
+
+    3）协议封装：按 M CP 标准⽣成 tool call 消息
+
+    4）⼯具执⾏：Adapter 调⽤具体服务并获取结果
+
+    5）上下⽂注⼊：将结果以结构化⽅式回填到 prom pt 上下⽂
+
+    这种设计的好处是解耦了模型逻辑和外部系统。像 LangChain 或 Sem antic K ernel 这类框架，底层其实就是靠类似
+
+    M CP 的机制在做调度。你不需要改模型代码，只要注册新⼯具就能扩展能⼒。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 90ef7dc09a8a50dfb16247f3c0598c57ddd2f5b792e0bd557830250badba96f4
+  knowledge_scope: public
 - query_id: ai-02
   topic: AI 大模型
   query: 大模型微调 LoRA 的原理和优势是什么
@@ -22,10 +87,175 @@ queries:
   difficulty: hard
   expected_technologies: *id001
   relevance:
-    mianshiya-ai-large-model: 2
+    93361e2287f8922e8211d650ba33a9ac1c75a8e9d47e9f0562f46b320735b852: 2
   expected_knowledge_points:
   - LoRA
   - 参数高效微调
+  reference_answer: '根据 AI 大模型原理和应用面试题速记通关版; page 33：PEFT 是什么？为什么需要 PEFT？
+
+    PEFT 全称是 Param eter-Eﬃcient Fine-Tuning，直⽩点说就是“只动⼀⼩部分参数来微调⼤模型”。现在⼤模型动不
+
+    动就上百亿、上千亿参数，⽐如 Llam a、ChatG LM 这种，直接全量微调成本太⾼了，显存、算⼒、时间都吃不消。
+
+    其实我们发现，微调的时候没必要更新所有参数。PEFT 的思路是冻结原模型绝⼤部分权重，只训练少量额外引⼊或选
+
+    中的参数，就能达到接近全量微调的效果。这样显存能省下 70% 以上，训练速度也快很多，普通⼏张卡甚⾄单卡也能
+
+    搞。
+
+    常⻅的 PEFT ⽅法⾥，LoRA 是最⽕的。它在原始层旁边加个低秩矩阵做增量，训练时只更新这个⼩矩阵。⽐如⼀个
+
+    7B 模型，⽤ LoRA 可能只改 0.1% 的参数，效果却不差。HuggingFace 的 peft 库已经⽀持得⾮常好，配合
+
+    transform ers 能轻松上⼿。
+
+    代码⻓这样：
+
+    from peft import LoraConfig, get_peft_model
+
+    lora_config = LoraConfig(
+
+    r=8,
+
+    lora_alpha=16,
+
+    target_modules=["q_proj", "v_proj"],
+
+    lora_dropout=0.1,
+
+    bias="none",
+
+    task_type="CAUSAL_LM"
+
+    )
+
+    model = get_peft_model(model, lora_config)
+
+    除了 LoRA，还有 Adapter、Preﬁx-tuning 等⽅法，但 LoRA 因为⽆推理延迟、实现简单，成了主流选择。特别是资源
+
+    有限⼜想定制⼤模型的场景，⽐如企业私有模型微调，PEFT ⼏乎是标配⽅案。
+
+    参数⾼效微调（PEFT）的核⼼思路是什么？列举 3 种典型⽅法
+
+    参数⾼效微调的核⼼思路是只微调模型中极⼩⼀部分参数，冻结绝⼤部分原始参数，从⽽在保持下游任务性能的同
+
+    时，⼤幅降低计算和存储开销。
+
+    参数⾼效微调（PEFT）的核⼼思路是什么？列举 3 种典型⽅法
+
+    参数⾼效微调的核⼼思路是只微调模型中极⼩⼀部分参数，冻结绝⼤部分原始参数，从⽽在保持下游任务性能的同
+
+    时，⼤幅降低计算和存储开销。
+
+    ⼤模型动辄上百亿参数，全量微调需要⼏⼗甚⾄上百 G B 显存，普通团队根本搞不定。PEFT 的做法是“以⼩博⼤”，
+
+    通过引⼊少量可训练参数来适配新任务，⽐如只调 0.1%~1% 的参数就能达到接近全量微调的效果。
+
+    1） LoRA（Low-Rank Adaptation）
+
+    在原始权重旁注⼊低秩矩阵，训练时只更新这些⼩矩阵。推理时可以合并到原权重中，完全不增加推理延迟。
+
+    HuggingFace Transform ers 已深度集成，现已成为主流选择。
+
+    2） Adapter
+
+    在 Transform er 模块间插⼊⼩型前馈⽹络（通常两层 M LP），原模型冻结，只训练插⼊的模块。虽然效果好，但会增
+
+    加推理延迟，因为每次前向都要⾛额外⽹络。
+
+    3） Prom pt Tuning / Preﬁx Tuning
+
+    通过可学习的“软提⽰”向量引导模型输出，本质是把任务建模成“填提⽰”的过程。Preﬁx Tuning 把这些向量拼接
+
+    在每⼀层输⼊前，Prom pt Tuning 只加在第⼀层。节省参数，但对初始化敏感，⼩模型上容易不稳定。'
+  reference_context_ids:
+  - 93361e2287f8922e8211d650ba33a9ac1c75a8e9d47e9f0562f46b320735b852
+  reference_contexts:
+  - '来源：AI 大模型原理和应用面试题速记通关版; page 33
+
+    PEFT 是什么？为什么需要 PEFT？
+
+    PEFT 全称是 Param eter-Eﬃcient Fine-Tuning，直⽩点说就是“只动⼀⼩部分参数来微调⼤模型”。现在⼤模型动不
+
+    动就上百亿、上千亿参数，⽐如 Llam a、ChatG LM 这种，直接全量微调成本太⾼了，显存、算⼒、时间都吃不消。
+
+    其实我们发现，微调的时候没必要更新所有参数。PEFT 的思路是冻结原模型绝⼤部分权重，只训练少量额外引⼊或选
+
+    中的参数，就能达到接近全量微调的效果。这样显存能省下 70% 以上，训练速度也快很多，普通⼏张卡甚⾄单卡也能
+
+    搞。
+
+    常⻅的 PEFT ⽅法⾥，LoRA 是最⽕的。它在原始层旁边加个低秩矩阵做增量，训练时只更新这个⼩矩阵。⽐如⼀个
+
+    7B 模型，⽤ LoRA 可能只改 0.1% 的参数，效果却不差。HuggingFace 的 peft 库已经⽀持得⾮常好，配合
+
+    transform ers 能轻松上⼿。
+
+    代码⻓这样：
+
+    from peft import LoraConfig, get_peft_model
+
+    lora_config = LoraConfig(
+
+    r=8,
+
+    lora_alpha=16,
+
+    target_modules=["q_proj", "v_proj"],
+
+    lora_dropout=0.1,
+
+    bias="none",
+
+    task_type="CAUSAL_LM"
+
+    )
+
+    model = get_peft_model(model, lora_config)
+
+    除了 LoRA，还有 Adapter、Preﬁx-tuning 等⽅法，但 LoRA 因为⽆推理延迟、实现简单，成了主流选择。特别是资源
+
+    有限⼜想定制⼤模型的场景，⽐如企业私有模型微调，PEFT ⼏乎是标配⽅案。
+
+    参数⾼效微调（PEFT）的核⼼思路是什么？列举 3 种典型⽅法
+
+    参数⾼效微调的核⼼思路是只微调模型中极⼩⼀部分参数，冻结绝⼤部分原始参数，从⽽在保持下游任务性能的同
+
+    时，⼤幅降低计算和存储开销。
+
+    参数⾼效微调（PEFT）的核⼼思路是什么？列举 3 种典型⽅法
+
+    参数⾼效微调的核⼼思路是只微调模型中极⼩⼀部分参数，冻结绝⼤部分原始参数，从⽽在保持下游任务性能的同
+
+    时，⼤幅降低计算和存储开销。
+
+    ⼤模型动辄上百亿参数，全量微调需要⼏⼗甚⾄上百 G B 显存，普通团队根本搞不定。PEFT 的做法是“以⼩博⼤”，
+
+    通过引⼊少量可训练参数来适配新任务，⽐如只调 0.1%~1% 的参数就能达到接近全量微调的效果。
+
+    1） LoRA（Low-Rank Adaptation）
+
+    在原始权重旁注⼊低秩矩阵，训练时只更新这些⼩矩阵。推理时可以合并到原权重中，完全不增加推理延迟。
+
+    HuggingFace Transform ers 已深度集成，现已成为主流选择。
+
+    2） Adapter
+
+    在 Transform er 模块间插⼊⼩型前馈⽹络（通常两层 M LP），原模型冻结，只训练插⼊的模块。虽然效果好，但会增
+
+    加推理延迟，因为每次前向都要⾛额外⽹络。
+
+    3） Prom pt Tuning / Preﬁx Tuning
+
+    通过可学习的“软提⽰”向量引导模型输出，本质是把任务建模成“填提⽰”的过程。Preﬁx Tuning 把这些向量拼接
+
+    在每⼀层输⼊前，Prom pt Tuning 只加在第⼀层。节省参数，但对初始化敏感，⼩模型上容易不稳定。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 93361e2287f8922e8211d650ba33a9ac1c75a8e9d47e9f0562f46b320735b852
+  knowledge_scope: public
 - query_id: es-01
   topic: Elasticsearch
   query: Elasticsearch 倒排索引的原理是什么
@@ -34,10 +264,40 @@ queries:
   expected_technologies: &id002
   - Elasticsearch
   relevance:
-    mianshiya-elasticsearch: 2
+    e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077: 2
   expected_knowledge_points:
   - 倒排索引
   - 分词
+  reference_answer: '根据 Elasticsearch 面试题速记通关版; page 115：Elasticsearch 中的 Fielddata
+    是什么？如何优化其性能？
+
+    Fielddata 是 Elasticsearch 为 text 类型字段构建的⼀种内存数据结构，⽤来⽀持聚合、排序等操作。默认情况下，
+
+    text 字段会被分词，倒排索引只记录 term 和⽂档 ID 的关系，没法直接做聚合。这时候就得靠 ﬁelddata 把分词后的值
+
+    加载到堆内存⾥，重新组织成列式存储格式。
+
+    但这个机制很吃内存，⽽且⼀旦触发就会把整个字段的值全加载进去，容易引发 G C 甚⾄ OOM 。⽣产环境⽤多了会出'
+  reference_context_ids:
+  - e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077
+  reference_contexts:
+  - '来源：Elasticsearch 面试题速记通关版; page 115
+
+    Elasticsearch 中的 Fielddata 是什么？如何优化其性能？
+
+    Fielddata 是 Elasticsearch 为 text 类型字段构建的⼀种内存数据结构，⽤来⽀持聚合、排序等操作。默认情况下，
+
+    text 字段会被分词，倒排索引只记录 term 和⽂档 ID 的关系，没法直接做聚合。这时候就得靠 ﬁelddata 把分词后的值
+
+    加载到堆内存⾥，重新组织成列式存储格式。
+
+    但这个机制很吃内存，⽽且⼀旦触发就会把整个字段的值全加载进去，容易引发 G C 甚⾄ OOM 。⽣产环境⽤多了会出'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077
+  knowledge_scope: public
 - query_id: es-02
   topic: Elasticsearch
   query: Elasticsearch 深分页为什么慢，应该如何优化
@@ -45,10 +305,40 @@ queries:
   difficulty: hard
   expected_technologies: *id002
   relevance:
-    mianshiya-elasticsearch: 2
+    e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077: 2
   expected_knowledge_points:
   - 深分页
   - search_after
+  reference_answer: '根据 Elasticsearch 面试题速记通关版; page 115：Elasticsearch 中的 Fielddata
+    是什么？如何优化其性能？
+
+    Fielddata 是 Elasticsearch 为 text 类型字段构建的⼀种内存数据结构，⽤来⽀持聚合、排序等操作。默认情况下，
+
+    text 字段会被分词，倒排索引只记录 term 和⽂档 ID 的关系，没法直接做聚合。这时候就得靠 ﬁelddata 把分词后的值
+
+    加载到堆内存⾥，重新组织成列式存储格式。
+
+    但这个机制很吃内存，⽽且⼀旦触发就会把整个字段的值全加载进去，容易引发 G C 甚⾄ OOM 。⽣产环境⽤多了会出'
+  reference_context_ids:
+  - e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077
+  reference_contexts:
+  - '来源：Elasticsearch 面试题速记通关版; page 115
+
+    Elasticsearch 中的 Fielddata 是什么？如何优化其性能？
+
+    Fielddata 是 Elasticsearch 为 text 类型字段构建的⼀种内存数据结构，⽤来⽀持聚合、排序等操作。默认情况下，
+
+    text 字段会被分词，倒排索引只记录 term 和⽂档 ID 的关系，没法直接做聚合。这时候就得靠 ﬁelddata 把分词后的值
+
+    加载到堆内存⾥，重新组织成列式存储格式。
+
+    但这个机制很吃内存，⽽且⼀旦触发就会把整个字段的值全加载进去，容易引发 G C 甚⾄ OOM 。⽣产环境⽤多了会出'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - e0f8095cd26396a4dfce07ea26dcf54ba02a729c85e8bdd62509f330f728a077
+  knowledge_scope: public
 - query_id: java-01
   topic: Java 基础
   query: Java 方法重载和方法重写有什么区别
@@ -58,11 +348,100 @@ queries:
   - Java 基础
   - Java 综合
   relevance:
-    mianshiya-java-basics: 2
+    2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4: 2
   expected_knowledge_points:
   - 重载
   - 重写
   - 多态
+  reference_answer: '根据 Java 基础面试题速记通关版; page 6：什么是 Java 中的继承机制？
+
+    J ava ⾥的继承，说⽩了就是⼦类可以拿⽗类的属性和⽅法来⽤，不⽤重复写。⼀个类只能继承⼀个⽗类，这是单继
+
+    承，靠的是 extends 关键字。
+
+    1）⼦类会⾃动拥有⽗类的⾮私有字段和⽅法。⽐如你写个 Animal 类有 eat() ⽅法，Dog extends Animal
+
+    就可以直接调⽤ eat() 。
+
+    2）构造过程是先跑⽗类构造器，再跑⼦类的。如果你没⼿动调 super() ，编译器会⾃动插⼀句 super() 在⼦类
+
+    构造器第⼀⾏。
+
+    3）⽅法重写（Override）是重点。⼦类可以改写⽗类的⽅法逻辑，但签名得⼀样。加个 @Override 注解能防⽌你
+
+    写错签名，也⽅便别⼈看。
+
+    class Animal {
+
+    void sound() { System.out.println(" 叫了⼀声 "); }
+
+    }
+
+    class Dog extends Animal {
+
+    @Override
+
+    void sound() { System.out.println(" 汪汪 "); }
+
+    }
+
+    多态也是基于继承来的。你⽤ Animal a = new Dog() 这种写法，调 a.sound() 实际执⾏的是 Dog 的版
+
+    本，这就是运⾏时动态绑定。
+
+    不过别滥⽤继承。⽗类⼀改，⼦类可能就出问题。⼀般来说，is-a 关系才考虑继承，⽐如 Dog is an Animal 。要
+
+    是只是想复⽤代码，优先⽤组合，不然后期搞不定。'
+  reference_context_ids:
+  - 2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4
+  reference_contexts:
+  - '来源：Java 基础面试题速记通关版; page 6
+
+    什么是 Java 中的继承机制？
+
+    J ava ⾥的继承，说⽩了就是⼦类可以拿⽗类的属性和⽅法来⽤，不⽤重复写。⼀个类只能继承⼀个⽗类，这是单继
+
+    承，靠的是 extends 关键字。
+
+    1）⼦类会⾃动拥有⽗类的⾮私有字段和⽅法。⽐如你写个 Animal 类有 eat() ⽅法，Dog extends Animal
+
+    就可以直接调⽤ eat() 。
+
+    2）构造过程是先跑⽗类构造器，再跑⼦类的。如果你没⼿动调 super() ，编译器会⾃动插⼀句 super() 在⼦类
+
+    构造器第⼀⾏。
+
+    3）⽅法重写（Override）是重点。⼦类可以改写⽗类的⽅法逻辑，但签名得⼀样。加个 @Override 注解能防⽌你
+
+    写错签名，也⽅便别⼈看。
+
+    class Animal {
+
+    void sound() { System.out.println(" 叫了⼀声 "); }
+
+    }
+
+    class Dog extends Animal {
+
+    @Override
+
+    void sound() { System.out.println(" 汪汪 "); }
+
+    }
+
+    多态也是基于继承来的。你⽤ Animal a = new Dog() 这种写法，调 a.sound() 实际执⾏的是 Dog 的版
+
+    本，这就是运⾏时动态绑定。
+
+    不过别滥⽤继承。⽗类⼀改，⼦类可能就出问题。⼀般来说，is-a 关系才考虑继承，⽐如 Dog is an Animal 。要
+
+    是只是想复⽤代码，优先⽤组合，不然后期搞不定。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4
+  knowledge_scope: public
 - query_id: java-02
   topic: Java 基础
   query: Java checked exception 和 runtime exception 有什么区别
@@ -70,11 +449,100 @@ queries:
   difficulty: medium
   expected_technologies: *id003
   relevance:
-    mianshiya-java-basics: 2
+    2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4: 2
   expected_knowledge_points:
   - 异常
   - 编译期
   - 运行时
+  reference_answer: '根据 Java 基础面试题速记通关版; page 6：什么是 Java 中的继承机制？
+
+    J ava ⾥的继承，说⽩了就是⼦类可以拿⽗类的属性和⽅法来⽤，不⽤重复写。⼀个类只能继承⼀个⽗类，这是单继
+
+    承，靠的是 extends 关键字。
+
+    1）⼦类会⾃动拥有⽗类的⾮私有字段和⽅法。⽐如你写个 Animal 类有 eat() ⽅法，Dog extends Animal
+
+    就可以直接调⽤ eat() 。
+
+    2）构造过程是先跑⽗类构造器，再跑⼦类的。如果你没⼿动调 super() ，编译器会⾃动插⼀句 super() 在⼦类
+
+    构造器第⼀⾏。
+
+    3）⽅法重写（Override）是重点。⼦类可以改写⽗类的⽅法逻辑，但签名得⼀样。加个 @Override 注解能防⽌你
+
+    写错签名，也⽅便别⼈看。
+
+    class Animal {
+
+    void sound() { System.out.println(" 叫了⼀声 "); }
+
+    }
+
+    class Dog extends Animal {
+
+    @Override
+
+    void sound() { System.out.println(" 汪汪 "); }
+
+    }
+
+    多态也是基于继承来的。你⽤ Animal a = new Dog() 这种写法，调 a.sound() 实际执⾏的是 Dog 的版
+
+    本，这就是运⾏时动态绑定。
+
+    不过别滥⽤继承。⽗类⼀改，⼦类可能就出问题。⼀般来说，is-a 关系才考虑继承，⽐如 Dog is an Animal 。要
+
+    是只是想复⽤代码，优先⽤组合，不然后期搞不定。'
+  reference_context_ids:
+  - 2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4
+  reference_contexts:
+  - '来源：Java 基础面试题速记通关版; page 6
+
+    什么是 Java 中的继承机制？
+
+    J ava ⾥的继承，说⽩了就是⼦类可以拿⽗类的属性和⽅法来⽤，不⽤重复写。⼀个类只能继承⼀个⽗类，这是单继
+
+    承，靠的是 extends 关键字。
+
+    1）⼦类会⾃动拥有⽗类的⾮私有字段和⽅法。⽐如你写个 Animal 类有 eat() ⽅法，Dog extends Animal
+
+    就可以直接调⽤ eat() 。
+
+    2）构造过程是先跑⽗类构造器，再跑⼦类的。如果你没⼿动调 super() ，编译器会⾃动插⼀句 super() 在⼦类
+
+    构造器第⼀⾏。
+
+    3）⽅法重写（Override）是重点。⼦类可以改写⽗类的⽅法逻辑，但签名得⼀样。加个 @Override 注解能防⽌你
+
+    写错签名，也⽅便别⼈看。
+
+    class Animal {
+
+    void sound() { System.out.println(" 叫了⼀声 "); }
+
+    }
+
+    class Dog extends Animal {
+
+    @Override
+
+    void sound() { System.out.println(" 汪汪 "); }
+
+    }
+
+    多态也是基于继承来的。你⽤ Animal a = new Dog() 这种写法，调 a.sound() 实际执⾏的是 Dog 的版
+
+    本，这就是运⾏时动态绑定。
+
+    不过别滥⽤继承。⽗类⼀改，⼦类可能就出问题。⼀般来说，is-a 关系才考虑继承，⽐如 Dog is an Animal 。要
+
+    是只是想复⽤代码，优先⽤组合，不然后期搞不定。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2a9cc3d5a7add5daa00c8db53a2a8c5015a698d10146d92d1491756b1c157ec4
+  knowledge_scope: public
 - query_id: concurrency-01
   topic: Java 并发
   query: synchronized 和 ReentrantLock 有什么区别
@@ -83,10 +551,91 @@ queries:
   expected_technologies: &id004
   - Java 并发
   relevance:
-    mianshiya-java-concurrency: 2
+    706d63a1efccdcc60f89c1fa5d3256f0d9518dcd98ee1384aeb6d92756cff59b: 2
   expected_knowledge_points:
   - synchronized
   - ReentrantLock
+  reference_answer: '根据 Java 并发面试题速记通关版; page 37：什么是 Java 中的指令重排？
+
+    J ava 代码执⾏时，J VM 和 CPU 为了优化性能，可能会调整指令的执⾏顺序，这就是指令重排。只要结果和程序顺序
+
+    ⼀致，这种重排就不会被察觉，但多线程环境下就容易出问题。
+
+    1）编译器会在⽣成字节码时重排，⽐如把循环不变量提到外⾯。
+
+    2）CPU 在运⾏时也会根据流⽔线效率动态调度指令，⽐如先执⾏不依赖前⾯结果的独⽴操作。
+
+    3）内存系统还有⾃⼰的缓冲和写合并机制，看起来也像指令乱序。
+
+    最典型的坑是双重检查单例：
+
+    if (instance == null) {
+
+    synchronized (Singleton.class) {
+
+    if (instance == null) {
+
+    instance = new Singleton(); // 这⼀步可能被重排
+
+    }
+
+    }
+
+    }
+
+    new Singleton() 实际分三步：分配内存、初始化对象、引⽤赋值。如果 3 在 2 前⾯执⾏，另⼀个线程可能拿到
+
+    未初始化完的对象。
+
+    解决办法是⽤ volatile 修饰变量，它能禁⽌特定类型的指令重排，保证可⻅性和有序性。或者直接⽤静态内部类
+
+    实现单例，更简洁安全。'
+  reference_context_ids:
+  - 706d63a1efccdcc60f89c1fa5d3256f0d9518dcd98ee1384aeb6d92756cff59b
+  reference_contexts:
+  - '来源：Java 并发面试题速记通关版; page 37
+
+    什么是 Java 中的指令重排？
+
+    J ava 代码执⾏时，J VM 和 CPU 为了优化性能，可能会调整指令的执⾏顺序，这就是指令重排。只要结果和程序顺序
+
+    ⼀致，这种重排就不会被察觉，但多线程环境下就容易出问题。
+
+    1）编译器会在⽣成字节码时重排，⽐如把循环不变量提到外⾯。
+
+    2）CPU 在运⾏时也会根据流⽔线效率动态调度指令，⽐如先执⾏不依赖前⾯结果的独⽴操作。
+
+    3）内存系统还有⾃⼰的缓冲和写合并机制，看起来也像指令乱序。
+
+    最典型的坑是双重检查单例：
+
+    if (instance == null) {
+
+    synchronized (Singleton.class) {
+
+    if (instance == null) {
+
+    instance = new Singleton(); // 这⼀步可能被重排
+
+    }
+
+    }
+
+    }
+
+    new Singleton() 实际分三步：分配内存、初始化对象、引⽤赋值。如果 3 在 2 前⾯执⾏，另⼀个线程可能拿到
+
+    未初始化完的对象。
+
+    解决办法是⽤ volatile 修饰变量，它能禁⽌特定类型的指令重排，保证可⻅性和有序性。或者直接⽤静态内部类
+
+    实现单例，更简洁安全。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 706d63a1efccdcc60f89c1fa5d3256f0d9518dcd98ee1384aeb6d92756cff59b
+  knowledge_scope: public
 - query_id: concurrency-02
   topic: Java 并发
   query: Java volatile 如何保证可见性，为什么不保证原子性
@@ -94,11 +643,84 @@ queries:
   difficulty: hard
   expected_technologies: *id004
   relevance:
-    mianshiya-java-concurrency: 2
+    61710000070ac7ac1782089d5b0af20bda2731c2a56dfc7cd52b678a115f52e7: 2
   expected_knowledge_points:
   - volatile
   - 可见性
   - 原子性
+  reference_answer: '根据 Java 并发面试题速记通关版; page 32：你使⽤过 Java 的累加器吗？
+
+    J ava 的并发累加器，主要是 LongAdder 和 DoubleAdder ，这玩意⼉在⾼并发计数场景下⽐ AtomicLong 能
+
+    扛得多。
+
+    它背后的思路很直接：当多个线程同时更新⼀个值时，AtomicLong 会因为 CAS 竞争导致⼤量线程⾃旋失败，性能
+
+    急剧下降。⽽ LongAdder 采⽤分段累加的思想，把冲突分散到多个 cell 中，每个线程尽量操作⾃⼰的 cell，最后再
+
+    把所有 cell 加起来。这种空间换时间的策略，在 100+ 线程并发更新时，吞吐量能⾼出⼀个数量级。
+
+    适合⽤它的场景⽐如监控埋点、请求计数、分布式 ID ⽣成器中的本地步⻓控制。像 M icrom eter 这种监控库底层就⽤
+
+    了 LongAdder 来收集指标。
+
+    LongAdder adder = new LongAdder();
+
+    adder.increment(); // 线程安全累加
+
+    adder.sum(); // 获取总和（可能有延迟）
+
+    注意 sum() 不是强⼀致的，它返回的是调⽤时刻的快照，中间可能有正在更新的 cell 没合并进来。如果需要严格实
+
+    时总数，还是得⽤ AtomicLong ，但你要清楚这是以性能为代价的。
+
+    1）不要频繁调⽤ reset() ，尤其是在并发环境下，可能导致统计丢失
+
+    2）读多写少的场景没必要⽤ LongAdder ，AtomicLong 更轻量
+
+    3）DoubleAdder 同理，只是对应浮点类型'
+  reference_context_ids:
+  - 61710000070ac7ac1782089d5b0af20bda2731c2a56dfc7cd52b678a115f52e7
+  reference_contexts:
+  - '来源：Java 并发面试题速记通关版; page 32
+
+    你使⽤过 Java 的累加器吗？
+
+    J ava 的并发累加器，主要是 LongAdder 和 DoubleAdder ，这玩意⼉在⾼并发计数场景下⽐ AtomicLong 能
+
+    扛得多。
+
+    它背后的思路很直接：当多个线程同时更新⼀个值时，AtomicLong 会因为 CAS 竞争导致⼤量线程⾃旋失败，性能
+
+    急剧下降。⽽ LongAdder 采⽤分段累加的思想，把冲突分散到多个 cell 中，每个线程尽量操作⾃⼰的 cell，最后再
+
+    把所有 cell 加起来。这种空间换时间的策略，在 100+ 线程并发更新时，吞吐量能⾼出⼀个数量级。
+
+    适合⽤它的场景⽐如监控埋点、请求计数、分布式 ID ⽣成器中的本地步⻓控制。像 M icrom eter 这种监控库底层就⽤
+
+    了 LongAdder 来收集指标。
+
+    LongAdder adder = new LongAdder();
+
+    adder.increment(); // 线程安全累加
+
+    adder.sum(); // 获取总和（可能有延迟）
+
+    注意 sum() 不是强⼀致的，它返回的是调⽤时刻的快照，中间可能有正在更新的 cell 没合并进来。如果需要严格实
+
+    时总数，还是得⽤ AtomicLong ，但你要清楚这是以性能为代价的。
+
+    1）不要频繁调⽤ reset() ，尤其是在并发环境下，可能导致统计丢失
+
+    2）读多写少的场景没必要⽤ LongAdder ，AtomicLong 更轻量
+
+    3）DoubleAdder 同理，只是对应浮点类型'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 61710000070ac7ac1782089d5b0af20bda2731c2a56dfc7cd52b678a115f52e7
+  knowledge_scope: public
 - query_id: jvm-01
   topic: JVM
   query: JVM G1 垃圾收集器的回收流程是什么
@@ -107,11 +729,66 @@ queries:
   expected_technologies: &id005
   - JVM
   relevance:
-    mianshiya-jvm: 2
+    912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078: 2
   expected_knowledge_points:
   - G1
   - Region
   - Mixed GC
+  reference_answer: '根据 Java 虚拟机面试题速记通关版; page 1：你常⽤哪些⼯具来分析 JVM 性能？
+
+    分析 J VM 性能，关键得看场景。如果是线上突发问题，Arthas 是⾸选，不⽤重启应⽤就能直接连上去看堆栈、内存、
+
+    线程，特别适合定位死锁或 CPU 突增。
+
+    本地调试或者压测时，J DK ⾃带的⼯具更轻量。jstat 看 G C 频率和内存变化最直接，⽐如每秒 Young G C 次数超过
+
+    5 次就得警惕了。jstack 抓线程堆栈，配合 top -H 找出 CPU 占⾼的线程，能快速定位到是哪个⽅法卡住了。
+
+    jmap 可以导出堆 dum p，再⽤ M AT 或 J VisualVM 分析对象占⽤，查内存泄漏很管⽤。
+
+    如果要⻓期监控，⼀般会上 Prom etheus + G rafana，配合 M icrom eter 或 J M X Exporter 采集 J VM 指标。G
+    C 次数、
+
+    堆内存、线程数这些数据⼀⽬了然，还能设告警。
+
+    复杂问题还得靠⻜⾏记录器。J FR（J ava Flight Recorder）和 J M C 搭配，能拿到⽅法级的性能采样数据，像⽕焰图⼀
+
+    样看出热点⽅法。不过这功能在 Oracle J DK 免费，OpenJ DK 要从 11+ 开启额外参数。
+
+    简单问题别搞太重，jstat 和 jstack 组合拳基本够⽤。真要深挖，Arthas 和 J FR 才是杀⼿锏。'
+  reference_context_ids:
+  - 912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078
+  reference_contexts:
+  - '来源：Java 虚拟机面试题速记通关版; page 1
+
+    你常⽤哪些⼯具来分析 JVM 性能？
+
+    分析 J VM 性能，关键得看场景。如果是线上突发问题，Arthas 是⾸选，不⽤重启应⽤就能直接连上去看堆栈、内存、
+
+    线程，特别适合定位死锁或 CPU 突增。
+
+    本地调试或者压测时，J DK ⾃带的⼯具更轻量。jstat 看 G C 频率和内存变化最直接，⽐如每秒 Young G C 次数超过
+
+    5 次就得警惕了。jstack 抓线程堆栈，配合 top -H 找出 CPU 占⾼的线程，能快速定位到是哪个⽅法卡住了。
+
+    jmap 可以导出堆 dum p，再⽤ M AT 或 J VisualVM 分析对象占⽤，查内存泄漏很管⽤。
+
+    如果要⻓期监控，⼀般会上 Prom etheus + G rafana，配合 M icrom eter 或 J M X Exporter 采集 J VM 指标。G
+    C 次数、
+
+    堆内存、线程数这些数据⼀⽬了然，还能设告警。
+
+    复杂问题还得靠⻜⾏记录器。J FR（J ava Flight Recorder）和 J M C 搭配，能拿到⽅法级的性能采样数据，像⽕焰图⼀
+
+    样看出热点⽅法。不过这功能在 Oracle J DK 免费，OpenJ DK 要从 11+ 开启额外参数。
+
+    简单问题别搞太重，jstat 和 jstack 组合拳基本够⽤。真要深挖，Arthas 和 J FR 才是杀⼿锏。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078
+  knowledge_scope: public
 - query_id: jvm-02
   topic: JVM
   query: JVM 什么时候会触发 Full GC
@@ -119,11 +796,66 @@ queries:
   difficulty: hard
   expected_technologies: *id005
   relevance:
-    mianshiya-jvm: 2
+    912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078: 2
   expected_knowledge_points:
   - Full GC
   - 老年代
   - 元空间
+  reference_answer: '根据 Java 虚拟机面试题速记通关版; page 1：你常⽤哪些⼯具来分析 JVM 性能？
+
+    分析 J VM 性能，关键得看场景。如果是线上突发问题，Arthas 是⾸选，不⽤重启应⽤就能直接连上去看堆栈、内存、
+
+    线程，特别适合定位死锁或 CPU 突增。
+
+    本地调试或者压测时，J DK ⾃带的⼯具更轻量。jstat 看 G C 频率和内存变化最直接，⽐如每秒 Young G C 次数超过
+
+    5 次就得警惕了。jstack 抓线程堆栈，配合 top -H 找出 CPU 占⾼的线程，能快速定位到是哪个⽅法卡住了。
+
+    jmap 可以导出堆 dum p，再⽤ M AT 或 J VisualVM 分析对象占⽤，查内存泄漏很管⽤。
+
+    如果要⻓期监控，⼀般会上 Prom etheus + G rafana，配合 M icrom eter 或 J M X Exporter 采集 J VM 指标。G
+    C 次数、
+
+    堆内存、线程数这些数据⼀⽬了然，还能设告警。
+
+    复杂问题还得靠⻜⾏记录器。J FR（J ava Flight Recorder）和 J M C 搭配，能拿到⽅法级的性能采样数据，像⽕焰图⼀
+
+    样看出热点⽅法。不过这功能在 Oracle J DK 免费，OpenJ DK 要从 11+ 开启额外参数。
+
+    简单问题别搞太重，jstat 和 jstack 组合拳基本够⽤。真要深挖，Arthas 和 J FR 才是杀⼿锏。'
+  reference_context_ids:
+  - 912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078
+  reference_contexts:
+  - '来源：Java 虚拟机面试题速记通关版; page 1
+
+    你常⽤哪些⼯具来分析 JVM 性能？
+
+    分析 J VM 性能，关键得看场景。如果是线上突发问题，Arthas 是⾸选，不⽤重启应⽤就能直接连上去看堆栈、内存、
+
+    线程，特别适合定位死锁或 CPU 突增。
+
+    本地调试或者压测时，J DK ⾃带的⼯具更轻量。jstat 看 G C 频率和内存变化最直接，⽐如每秒 Young G C 次数超过
+
+    5 次就得警惕了。jstack 抓线程堆栈，配合 top -H 找出 CPU 占⾼的线程，能快速定位到是哪个⽅法卡住了。
+
+    jmap 可以导出堆 dum p，再⽤ M AT 或 J VisualVM 分析对象占⽤，查内存泄漏很管⽤。
+
+    如果要⻓期监控，⼀般会上 Prom etheus + G rafana，配合 M icrom eter 或 J M X Exporter 采集 J VM 指标。G
+    C 次数、
+
+    堆内存、线程数这些数据⼀⽬了然，还能设告警。
+
+    复杂问题还得靠⻜⾏记录器。J FR（J ava Flight Recorder）和 J M C 搭配，能拿到⽅法级的性能采样数据，像⽕焰图⼀
+
+    样看出热点⽅法。不过这功能在 Oracle J DK 免费，OpenJ DK 要从 11+ 开启额外参数。
+
+    简单问题别搞太重，jstat 和 jstack 组合拳基本够⽤。真要深挖，Arthas 和 J FR 才是杀⼿锏。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 912f108e573ba7a93ecf281211efa13a67d2815e56ef087b4dcfae3b836ae078
+  knowledge_scope: public
 - query_id: collections-01
   topic: Java 集合
   query: HashMap 在 Java 8 中的底层结构是什么
@@ -132,11 +864,92 @@ queries:
   expected_technologies: &id006
   - Java 集合
   relevance:
-    mianshiya-java-collections: 2
+    aafa6e6d0e78c9f5114d4b83a165b9a33d78739e050feb87a3b10087a9653435: 2
   expected_knowledge_points:
   - HashMap
   - 数组
   - 红黑树
+  reference_answer: '根据 Java 集合面试题速记通关版; page 11：J ava 中的 LinkedHashM ap 是什么？
+
+    LinkedHashM ap 是 HashM ap 的⼦类，它在哈希表的基础上，额外维护了⼀条双向链表，⽤来记录插⼊顺序或者访问
+
+    顺序。
+
+    这就让它能按顺序遍历 key-value 对。默认情况下，它是按插⼊顺序排列的。⽐如你 put("a", 1)，再 put("b", 2)，遍历
+
+    时先 a 后 b。如果你构造时开启 accessOrder 模式，就会变成按访问顺序排列，最近访问的放到最后，适合实现 LRU
+
+    缓存。
+
+    像 M yBatis 的缓存、Spring M VC 处理请求参数绑定，都⽤到了 LinkedHashM ap 来保证顺序性。它和 TreeM ap 不⼀
+
+    样，TreeM ap 是靠 Com parable 或 Com parator 排序，底层是红⿊树，性能开销更⼤。
+
+    代码上基本和 HashM ap ⼀样⽤：
+
+    Map<String, Integer> map = new LinkedHashMap<>();
+
+    map.put("first", 1);
+
+    map.put("second", 2);
+
+    遍历结果就是插⼊顺序。如果想实现 LRU ，可以重写 rem oveEldestEntry ⽅法：
+
+    protected boolean removeEldestEntry(Map.Entry eldest) {
+
+    return size() > MAX_SIZE;
+
+    }
+
+    这时候超过容量会⾃动淘汰最⽼的数据。注意初始容量和负载因⼦别设得太⼩，不然频繁扩容影响性能。
+
+    它的缺点是内存占⽤⽐ HashM ap 稍⾼，因为要存前后指针。但⼤多数场景下这点开销不值⼀提。'
+  reference_context_ids:
+  - aafa6e6d0e78c9f5114d4b83a165b9a33d78739e050feb87a3b10087a9653435
+  reference_contexts:
+  - '来源：Java 集合面试题速记通关版; page 11
+
+    J ava 中的 LinkedHashM ap 是什么？
+
+    LinkedHashM ap 是 HashM ap 的⼦类，它在哈希表的基础上，额外维护了⼀条双向链表，⽤来记录插⼊顺序或者访问
+
+    顺序。
+
+    这就让它能按顺序遍历 key-value 对。默认情况下，它是按插⼊顺序排列的。⽐如你 put("a", 1)，再 put("b", 2)，遍历
+
+    时先 a 后 b。如果你构造时开启 accessOrder 模式，就会变成按访问顺序排列，最近访问的放到最后，适合实现 LRU
+
+    缓存。
+
+    像 M yBatis 的缓存、Spring M VC 处理请求参数绑定，都⽤到了 LinkedHashM ap 来保证顺序性。它和 TreeM ap 不⼀
+
+    样，TreeM ap 是靠 Com parable 或 Com parator 排序，底层是红⿊树，性能开销更⼤。
+
+    代码上基本和 HashM ap ⼀样⽤：
+
+    Map<String, Integer> map = new LinkedHashMap<>();
+
+    map.put("first", 1);
+
+    map.put("second", 2);
+
+    遍历结果就是插⼊顺序。如果想实现 LRU ，可以重写 rem oveEldestEntry ⽅法：
+
+    protected boolean removeEldestEntry(Map.Entry eldest) {
+
+    return size() > MAX_SIZE;
+
+    }
+
+    这时候超过容量会⾃动淘汰最⽼的数据。注意初始容量和负载因⼦别设得太⼩，不然频繁扩容影响性能。
+
+    它的缺点是内存占⽤⽐ HashM ap 稍⾼，因为要存前后指针。但⼤多数场景下这点开销不值⼀提。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - aafa6e6d0e78c9f5114d4b83a165b9a33d78739e050feb87a3b10087a9653435
+  knowledge_scope: public
 - query_id: collections-02
   topic: Java 集合
   query: ConcurrentHashMap 如何保证线程安全
@@ -144,11 +957,52 @@ queries:
   difficulty: hard
   expected_technologies: *id006
   relevance:
-    mianshiya-java-collections: 2
+    ecefb74b4d982ae8fc01f6c480ab17d2e32e16785ddc3b7dacbc12c3dfd5f79d: 2
   expected_knowledge_points:
   - ConcurrentHashMap
   - CAS
   - synchronized
+  reference_answer: '根据 Java 集合面试题速记通关版; page 1：J ava 集合⾯试题速记通关版 _ ⾯试刷题 m ianshiya.com
+
+    本资源来⾃⾯试鸭：https://www.m ianshiya.com
+
+    推荐更多免费学编程资源：
+
+    1. 编程导航学习⽹站：学编程、做项⽬、拿 Oﬀer！
+
+    2. 企业⾼频⾯试题库：开始刷题，⾯试遇原题！
+
+    3. 精选简历模板⼤全：1 分钟搞定简历！
+
+    4. AI 资源导航⽹站：获取最新 AI ⿊科技！
+
+    5. 1 对 1 模拟⾯试：随时随地提升⾯试能⼒'
+  reference_context_ids:
+  - ecefb74b4d982ae8fc01f6c480ab17d2e32e16785ddc3b7dacbc12c3dfd5f79d
+  reference_contexts:
+  - '来源：Java 集合面试题速记通关版; page 1
+
+    J ava 集合⾯试题速记通关版 _ ⾯试刷题 m ianshiya.com
+
+    本资源来⾃⾯试鸭：https://www.m ianshiya.com
+
+    推荐更多免费学编程资源：
+
+    1. 编程导航学习⽹站：学编程、做项⽬、拿 Oﬀer！
+
+    2. 企业⾼频⾯试题库：开始刷题，⾯试遇原题！
+
+    3. 精选简历模板⼤全：1 分钟搞定简历！
+
+    4. AI 资源导航⽹站：获取最新 AI ⿊科技！
+
+    5. 1 对 1 模拟⾯试：随时随地提升⾯试能⼒'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - ecefb74b4d982ae8fc01f6c480ab17d2e32e16785ddc3b7dacbc12c3dfd5f79d
+  knowledge_scope: public
 - query_id: mybatis-01
   topic: MyBatis
   query: MyBatis 一级缓存和二级缓存有什么区别
@@ -157,12 +1011,144 @@ queries:
   expected_technologies: &id007
   - MyBatis
   relevance:
-    mianshiya-java-top-200: 2
-    mianshiya-mybatis: 1
+    2198ce3f0611efbcbb7780590bced9f36c01d2c0bd840f7a586c8da4aa045ee6: 2
   expected_knowledge_points:
   - 一级缓存
   - 二级缓存
   - SqlSession
+  reference_answer: '根据 Java 热门面试题 200 道速记通关版; page 102：简述 M yBatis 的插件运⾏原理，以及如何编写⼀个插件？
+
+    M yBatis 插件本质上是通过 拦截器 机制，对四⼤核⼼对象的⽅法调⽤进⾏增强。这四个对象分别是 Executor、
+
+    StatementHandler、ParameterHandler 和 ResultSetHandler。插件不会侵⼊原有逻辑，⽽是利⽤动态代理，在关键
+
+    ⽅法执⾏时回调你定义的 intercept ⽅法。
+
+    1）要写⼀个插件，先实现 Interceptor 接⼝，重写 intercept ⽅法，⾥⾯写你的增强逻辑，⽐如打印 SQL 执⾏时间。
+
+    2）⽤ @Signature 注解声明你要拦截哪个类的哪个⽅法，⽬标明确，不能乱来。
+
+    3）最后在 mybatis-conﬁg.xml ⾥注册这个插件，或者⽤编程式配置加进去。
+
+    @Intercepts({
+
+    @Signature(type = StatementHandler.class, method = "prepare", args =
+
+    {Connection.class, Integer.class})
+
+    })
+
+    public class SqlCostPlugin implements Interceptor {
+
+    @Override
+
+    public Object intercept(Invocation invocation) throws Throwable {
+
+    long start = System.currentTimeMillis();
+
+    try {
+
+    return invocation.proceed();
+
+    } finally {
+
+    long cost = System.currentTimeMillis() - start;
+
+    System.out.println("SQL 执⾏耗时： " + cost + "ms");
+
+    }
+
+    }
+
+    }
+
+    注意，多个插件会形成责任链，按注册顺序依次执⾏。代理逻辑由 Plugin.wrap ⽅法触发，它会判断当前对象是否匹
+
+    }
+
+    }
+
+    }
+
+    注意，多个插件会形成责任链，按注册顺序依次执⾏。代理逻辑由 Plugin.wrap ⽅法触发，它会判断当前对象是否匹
+
+    配 @Signature 声明的⽬标，是的话就包⼀层代理。
+
+    整个过程其实就是在创建四⼤对象时，调⽤ interceptorChain.pluginAll() 把所有插件都套上去。⽐如 new Executor
+
+    时，会被各个插件的 plugin ⽅法处理，最终返回被代理后的实例。'
+  reference_context_ids:
+  - 2198ce3f0611efbcbb7780590bced9f36c01d2c0bd840f7a586c8da4aa045ee6
+  reference_contexts:
+  - '来源：Java 热门面试题 200 道速记通关版; page 102
+
+    简述 M yBatis 的插件运⾏原理，以及如何编写⼀个插件？
+
+    M yBatis 插件本质上是通过 拦截器 机制，对四⼤核⼼对象的⽅法调⽤进⾏增强。这四个对象分别是 Executor、
+
+    StatementHandler、ParameterHandler 和 ResultSetHandler。插件不会侵⼊原有逻辑，⽽是利⽤动态代理，在关键
+
+    ⽅法执⾏时回调你定义的 intercept ⽅法。
+
+    1）要写⼀个插件，先实现 Interceptor 接⼝，重写 intercept ⽅法，⾥⾯写你的增强逻辑，⽐如打印 SQL 执⾏时间。
+
+    2）⽤ @Signature 注解声明你要拦截哪个类的哪个⽅法，⽬标明确，不能乱来。
+
+    3）最后在 mybatis-conﬁg.xml ⾥注册这个插件，或者⽤编程式配置加进去。
+
+    @Intercepts({
+
+    @Signature(type = StatementHandler.class, method = "prepare", args =
+
+    {Connection.class, Integer.class})
+
+    })
+
+    public class SqlCostPlugin implements Interceptor {
+
+    @Override
+
+    public Object intercept(Invocation invocation) throws Throwable {
+
+    long start = System.currentTimeMillis();
+
+    try {
+
+    return invocation.proceed();
+
+    } finally {
+
+    long cost = System.currentTimeMillis() - start;
+
+    System.out.println("SQL 执⾏耗时： " + cost + "ms");
+
+    }
+
+    }
+
+    }
+
+    注意，多个插件会形成责任链，按注册顺序依次执⾏。代理逻辑由 Plugin.wrap ⽅法触发，它会判断当前对象是否匹
+
+    }
+
+    }
+
+    }
+
+    注意，多个插件会形成责任链，按注册顺序依次执⾏。代理逻辑由 Plugin.wrap ⽅法触发，它会判断当前对象是否匹
+
+    配 @Signature 声明的⽬标，是的话就包⼀层代理。
+
+    整个过程其实就是在创建四⼤对象时，调⽤ interceptorChain.pluginAll() 把所有插件都套上去。⽐如 new Executor
+
+    时，会被各个插件的 plugin ⽅法处理，最终返回被代理后的实例。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2198ce3f0611efbcbb7780590bced9f36c01d2c0bd840f7a586c8da4aa045ee6
+  knowledge_scope: public
 - query_id: mybatis-02
   topic: MyBatis
   query: 'MyBatis 中 #{} 和 ${} 有什么区别'
@@ -170,11 +1156,88 @@ queries:
   difficulty: medium
   expected_technologies: *id007
   relevance:
-    mianshiya-mybatis: 2
+    b4724f16f57fcc6aa664502292c6892cb2dea0a975b9e38e8b00755b3faec9b6: 2
   expected_knowledge_points:
   - '#{}'
   - ${}
   - SQL 注入
+  reference_answer: '根据 MyBatis 面试题速记通关版; page 8：J DBC 编程有哪些不⾜之处，M yBatis 是如何解决的？
+
+    J DBC 直接写在代码⾥，SQL 和 J ava 逻辑紧耦合，改个字段就得重新编译，维护成本特别⾼。更头疼的是，结果集要
+
+    ⼿动映射到对象，每个 ResultSet#getXxx 都得写⼀遍，脏活累活全是程序员的。
+
+    1）SQL 耦合问题
+
+    原⽣ J DBC 把 SQL 拼在字符串⾥，不仅难读，还容易出错。M yBatis ⽤ XM L 或注解把 SQL 抽出来，放在 .xml ⽂件
+
+    ⾥集中管理，DAO 接⼝只定义⽅法，SQL 独⽴可配，改查询不⽤动代码。
+
+    2）参数设置繁琐
+
+    J DBC 设置 PreparedStatement 参数，⼀个问号对应⼀个 setXxx ，顺序不能错。M yBatis ⾃动做参数映射，⽆
+
+    论是单个参数还是 POJ O，都能通过 #{} 对应上，压根不操⼼下标。
+
+    3）结果集⼿动封装
+
+    J DBC 必须⼀⾏⾏取值再 set 到对象⾥，⽐如 user.setId(rs.getInt("id")) ，重复代码⼀⼤堆。M yBatis ⽀持
+
+    ⾃动映射，查出来的列名直接对上实体类属性，甚⾄⽀持复杂嵌套关系，<resultMap> 搞定关联字段。
+
+    4）数据库⽅⾔差异
+
+    分⻚在 M ySQL ⽤ LIMIT ，Oracle 得套多层 ROWNUM ，J DBC 写死 SQL 就没法跨库。M yBatis 可以结合动态标签
+
+    <if> 、<where> ⽣成不同⽅⾔语句，换数据库时只需改 SQL ⽂件，代码不动。
+
+    简单说，M yBatis 不是 ORM 框架像 Hibernate 那样完全屏蔽 SQL，⽽是给 J DBC 套了层“智能外壳”，保留 SQL 精细
+
+    控制权的同时，把重复劳动全⾃动化了。'
+  reference_context_ids:
+  - b4724f16f57fcc6aa664502292c6892cb2dea0a975b9e38e8b00755b3faec9b6
+  reference_contexts:
+  - '来源：MyBatis 面试题速记通关版; page 8
+
+    J DBC 编程有哪些不⾜之处，M yBatis 是如何解决的？
+
+    J DBC 直接写在代码⾥，SQL 和 J ava 逻辑紧耦合，改个字段就得重新编译，维护成本特别⾼。更头疼的是，结果集要
+
+    ⼿动映射到对象，每个 ResultSet#getXxx 都得写⼀遍，脏活累活全是程序员的。
+
+    1）SQL 耦合问题
+
+    原⽣ J DBC 把 SQL 拼在字符串⾥，不仅难读，还容易出错。M yBatis ⽤ XM L 或注解把 SQL 抽出来，放在 .xml ⽂件
+
+    ⾥集中管理，DAO 接⼝只定义⽅法，SQL 独⽴可配，改查询不⽤动代码。
+
+    2）参数设置繁琐
+
+    J DBC 设置 PreparedStatement 参数，⼀个问号对应⼀个 setXxx ，顺序不能错。M yBatis ⾃动做参数映射，⽆
+
+    论是单个参数还是 POJ O，都能通过 #{} 对应上，压根不操⼼下标。
+
+    3）结果集⼿动封装
+
+    J DBC 必须⼀⾏⾏取值再 set 到对象⾥，⽐如 user.setId(rs.getInt("id")) ，重复代码⼀⼤堆。M yBatis ⽀持
+
+    ⾃动映射，查出来的列名直接对上实体类属性，甚⾄⽀持复杂嵌套关系，<resultMap> 搞定关联字段。
+
+    4）数据库⽅⾔差异
+
+    分⻚在 M ySQL ⽤ LIMIT ，Oracle 得套多层 ROWNUM ，J DBC 写死 SQL 就没法跨库。M yBatis 可以结合动态标签
+
+    <if> 、<where> ⽣成不同⽅⾔语句，换数据库时只需改 SQL ⽂件，代码不动。
+
+    简单说，M yBatis 不是 ORM 框架像 Hibernate 那样完全屏蔽 SQL，⽽是给 J DBC 套了层“智能外壳”，保留 SQL 精细
+
+    控制权的同时，把重复劳动全⾃动化了。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - b4724f16f57fcc6aa664502292c6892cb2dea0a975b9e38e8b00755b3faec9b6
+  knowledge_scope: public
 - query_id: mysql-01
   topic: MySQL
   query: MySQL 聚簇索引和二级索引有什么区别
@@ -183,11 +1246,96 @@ queries:
   expected_technologies: &id008
   - MySQL
   relevance:
-    mianshiya-mysql: 2
+    18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a: 2
   expected_knowledge_points:
   - 聚簇索引
   - 二级索引
   - 回表
+  reference_answer: '根据 MySQL 面试题速记通关版; page 36：M ySQL 中⻓事务可能会导致哪些问题？
+
+    ⻓时间运⾏的事务在 M ySQL ⾥是个隐患，尤其在⾼并发场景下容易引发连锁反应。
+
+    1）锁竞争加剧
+
+    ⻓事务持有锁的时间更久，别的事务等锁的时间变⻓，响应变慢。⽐如⼀个事务⼀直没提交，它锁住的⾏别⼈就改不
+
+    了，严重时直接把线程池拖垮，⼤量连接堆积。
+
+    2）回滚段压⼒⼤
+
+    InnoDB 的 M VCC 依赖 undo log 维护多版本数据。⻓事务不结束，undo log 就不能清理，这些历史版本⼀直占着空
+
+    间。极端情况下，可能让 ibdata1 ⽂件疯狂增⻓，磁盘撑爆。
+
+    3）主从延迟
+
+    主库上执⾏了 5 分钟的事务，从库得按同样的节奏重放。如果这个事务还涉及⼤量⾏变更，从库 SQL Thread 跟不上
+
+    节奏，延迟就来了。像阿⾥云 RDS 这类环境，延迟超过 30 秒可能触发告警。
+
+    4）临时⽂件和内存泄漏⻛险
+
+    事务过程中产⽣的临时结果集、排序缓冲都得维持状态。时间越⻓，内存占⽤越⾼，可能触发 OOM 。特别是 ORDER
+
+    BY 、GROUP BY 操作，容易⽤到磁盘临时表。
+
+    5）逻辑备份失败
+
+    mysqldump 默认⽤ REPEATABLE READ 隔离级别加全局读锁，⻓事务会让 FLUSH TABLES WITH READ LOCK
+
+    卡住，导致备份超时。换成 --single-transaction 也⼀样，如果备份期间有⻓事务，快照⼀致性就保不住。
+
+    ⼀般建议控制在⼏秒内完成，超过 30 秒就算危险信号。可以查 information_schema.innodb_trx 表定位异常
+
+    事务。'
+  reference_context_ids:
+  - 18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a
+  reference_contexts:
+  - '来源：MySQL 面试题速记通关版; page 36
+
+    M ySQL 中⻓事务可能会导致哪些问题？
+
+    ⻓时间运⾏的事务在 M ySQL ⾥是个隐患，尤其在⾼并发场景下容易引发连锁反应。
+
+    1）锁竞争加剧
+
+    ⻓事务持有锁的时间更久，别的事务等锁的时间变⻓，响应变慢。⽐如⼀个事务⼀直没提交，它锁住的⾏别⼈就改不
+
+    了，严重时直接把线程池拖垮，⼤量连接堆积。
+
+    2）回滚段压⼒⼤
+
+    InnoDB 的 M VCC 依赖 undo log 维护多版本数据。⻓事务不结束，undo log 就不能清理，这些历史版本⼀直占着空
+
+    间。极端情况下，可能让 ibdata1 ⽂件疯狂增⻓，磁盘撑爆。
+
+    3）主从延迟
+
+    主库上执⾏了 5 分钟的事务，从库得按同样的节奏重放。如果这个事务还涉及⼤量⾏变更，从库 SQL Thread 跟不上
+
+    节奏，延迟就来了。像阿⾥云 RDS 这类环境，延迟超过 30 秒可能触发告警。
+
+    4）临时⽂件和内存泄漏⻛险
+
+    事务过程中产⽣的临时结果集、排序缓冲都得维持状态。时间越⻓，内存占⽤越⾼，可能触发 OOM 。特别是 ORDER
+
+    BY 、GROUP BY 操作，容易⽤到磁盘临时表。
+
+    5）逻辑备份失败
+
+    mysqldump 默认⽤ REPEATABLE READ 隔离级别加全局读锁，⻓事务会让 FLUSH TABLES WITH READ LOCK
+
+    卡住，导致备份超时。换成 --single-transaction 也⼀样，如果备份期间有⻓事务，快照⼀致性就保不住。
+
+    ⼀般建议控制在⼏秒内完成，超过 30 秒就算危险信号。可以查 information_schema.innodb_trx 表定位异常
+
+    事务。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a
+  knowledge_scope: public
 - query_id: mysql-02
   topic: MySQL
   query: MySQL MVCC 如何实现可重复读
@@ -195,11 +1343,96 @@ queries:
   difficulty: hard
   expected_technologies: *id008
   relevance:
-    mianshiya-mysql: 2
+    18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a: 2
   expected_knowledge_points:
   - MVCC
   - ReadView
   - undo log
+  reference_answer: '根据 MySQL 面试题速记通关版; page 36：M ySQL 中⻓事务可能会导致哪些问题？
+
+    ⻓时间运⾏的事务在 M ySQL ⾥是个隐患，尤其在⾼并发场景下容易引发连锁反应。
+
+    1）锁竞争加剧
+
+    ⻓事务持有锁的时间更久，别的事务等锁的时间变⻓，响应变慢。⽐如⼀个事务⼀直没提交，它锁住的⾏别⼈就改不
+
+    了，严重时直接把线程池拖垮，⼤量连接堆积。
+
+    2）回滚段压⼒⼤
+
+    InnoDB 的 M VCC 依赖 undo log 维护多版本数据。⻓事务不结束，undo log 就不能清理，这些历史版本⼀直占着空
+
+    间。极端情况下，可能让 ibdata1 ⽂件疯狂增⻓，磁盘撑爆。
+
+    3）主从延迟
+
+    主库上执⾏了 5 分钟的事务，从库得按同样的节奏重放。如果这个事务还涉及⼤量⾏变更，从库 SQL Thread 跟不上
+
+    节奏，延迟就来了。像阿⾥云 RDS 这类环境，延迟超过 30 秒可能触发告警。
+
+    4）临时⽂件和内存泄漏⻛险
+
+    事务过程中产⽣的临时结果集、排序缓冲都得维持状态。时间越⻓，内存占⽤越⾼，可能触发 OOM 。特别是 ORDER
+
+    BY 、GROUP BY 操作，容易⽤到磁盘临时表。
+
+    5）逻辑备份失败
+
+    mysqldump 默认⽤ REPEATABLE READ 隔离级别加全局读锁，⻓事务会让 FLUSH TABLES WITH READ LOCK
+
+    卡住，导致备份超时。换成 --single-transaction 也⼀样，如果备份期间有⻓事务，快照⼀致性就保不住。
+
+    ⼀般建议控制在⼏秒内完成，超过 30 秒就算危险信号。可以查 information_schema.innodb_trx 表定位异常
+
+    事务。'
+  reference_context_ids:
+  - 18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a
+  reference_contexts:
+  - '来源：MySQL 面试题速记通关版; page 36
+
+    M ySQL 中⻓事务可能会导致哪些问题？
+
+    ⻓时间运⾏的事务在 M ySQL ⾥是个隐患，尤其在⾼并发场景下容易引发连锁反应。
+
+    1）锁竞争加剧
+
+    ⻓事务持有锁的时间更久，别的事务等锁的时间变⻓，响应变慢。⽐如⼀个事务⼀直没提交，它锁住的⾏别⼈就改不
+
+    了，严重时直接把线程池拖垮，⼤量连接堆积。
+
+    2）回滚段压⼒⼤
+
+    InnoDB 的 M VCC 依赖 undo log 维护多版本数据。⻓事务不结束，undo log 就不能清理，这些历史版本⼀直占着空
+
+    间。极端情况下，可能让 ibdata1 ⽂件疯狂增⻓，磁盘撑爆。
+
+    3）主从延迟
+
+    主库上执⾏了 5 分钟的事务，从库得按同样的节奏重放。如果这个事务还涉及⼤量⾏变更，从库 SQL Thread 跟不上
+
+    节奏，延迟就来了。像阿⾥云 RDS 这类环境，延迟超过 30 秒可能触发告警。
+
+    4）临时⽂件和内存泄漏⻛险
+
+    事务过程中产⽣的临时结果集、排序缓冲都得维持状态。时间越⻓，内存占⽤越⾼，可能触发 OOM 。特别是 ORDER
+
+    BY 、GROUP BY 操作，容易⽤到磁盘临时表。
+
+    5）逻辑备份失败
+
+    mysqldump 默认⽤ REPEATABLE READ 隔离级别加全局读锁，⻓事务会让 FLUSH TABLES WITH READ LOCK
+
+    卡住，导致备份超时。换成 --single-transaction 也⼀样，如果备份期间有⻓事务，快照⼀致性就保不住。
+
+    ⼀般建议控制在⼏秒内完成，超过 30 秒就算危险信号。可以查 information_schema.innodb_trx 表定位异常
+
+    事务。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 18594e79e8494ef4be83ec12359fc4bb3ab37a3c3f03041c6b32d03fd46c3e4a
+  knowledge_scope: public
 - query_id: nginx-01
   topic: Nginx
   query: Nginx 的 master worker 进程模型是什么
@@ -208,11 +1441,90 @@ queries:
   expected_technologies: &id009
   - Nginx
   relevance:
-    mianshiya-nginx: 2
+    53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f: 2
   expected_knowledge_points:
   - master
   - worker
   - 事件驱动
+  reference_answer: '根据 Nginx 面试题速记通关版; page 55：如何获取 Nginx 中每个 IP 的请求状态码情况？
+
+    要统计 Nginx 中每个 IP 的请求状态码分布，核⼼是解析 Nginx 的访问⽇志。默认⽇志格式包含客户端 IP、请求路径、
+
+    HTTP 状态码等关键字段，只要⽇志记录了这些信息，就可以做聚合分析。
+
+    1）最直接的⽅式是⽤ shell 命令组合分析⽇志⽂件。⽐如查看最近 1000 ⾏⽇志中每个 IP 对应的状态码次数：
+
+    tail -1000 /var/log/nginx/access.log | awk ''{print $1, $9}'' | sort | uniq -c
+
+    这⾥ $1 是客户端 IP，$9 是响应状态码（以默认 log_form at 为准），通过 uniq -c 统计频次。
+
+    2）如果需要更复杂的分析，⽐如按状态码分组统计某个 IP 的 404 或 500 情况，可以加条件过滤：
+
+    awk ''$9 == 404 {print $1}'' /var/log/nginx/access.log | sort | uniq -c
+
+    这条命令列出所有产⽣ 404 的 IP 及其出现次数。
+
+    3）⽣产环境建议结合 ELK （Elasticsearch + Logstash + K ibana）或 Prom etheus + G rafana。Nginx
+    配合 nginx-vts-
+
+    m odule 或通过 Filebeat 抓取⽇志，把每条请求打标后上报，就能在可视化⾯板⾥实时看每个 IP 的状态码趋势。
+
+    注意⽇志格式必须明确包含 $status 和 $remote_addr ，⾃定义 log_form at 时别漏掉：
+
+    log_format detailed ''$remote_addr - $remote_user [$time_local] "$request" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''"$http_user_agent" "$http_x_forwarded_for"'';
+
+    这样后续分析才不会压根不经过实际数据⽽搞不定。'
+  reference_context_ids:
+  - 53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f
+  reference_contexts:
+  - '来源：Nginx 面试题速记通关版; page 55
+
+    如何获取 Nginx 中每个 IP 的请求状态码情况？
+
+    要统计 Nginx 中每个 IP 的请求状态码分布，核⼼是解析 Nginx 的访问⽇志。默认⽇志格式包含客户端 IP、请求路径、
+
+    HTTP 状态码等关键字段，只要⽇志记录了这些信息，就可以做聚合分析。
+
+    1）最直接的⽅式是⽤ shell 命令组合分析⽇志⽂件。⽐如查看最近 1000 ⾏⽇志中每个 IP 对应的状态码次数：
+
+    tail -1000 /var/log/nginx/access.log | awk ''{print $1, $9}'' | sort | uniq -c
+
+    这⾥ $1 是客户端 IP，$9 是响应状态码（以默认 log_form at 为准），通过 uniq -c 统计频次。
+
+    2）如果需要更复杂的分析，⽐如按状态码分组统计某个 IP 的 404 或 500 情况，可以加条件过滤：
+
+    awk ''$9 == 404 {print $1}'' /var/log/nginx/access.log | sort | uniq -c
+
+    这条命令列出所有产⽣ 404 的 IP 及其出现次数。
+
+    3）⽣产环境建议结合 ELK （Elasticsearch + Logstash + K ibana）或 Prom etheus + G rafana。Nginx
+    配合 nginx-vts-
+
+    m odule 或通过 Filebeat 抓取⽇志，把每条请求打标后上报，就能在可视化⾯板⾥实时看每个 IP 的状态码趋势。
+
+    注意⽇志格式必须明确包含 $status 和 $remote_addr ，⾃定义 log_form at 时别漏掉：
+
+    log_format detailed ''$remote_addr - $remote_user [$time_local] "$request" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''"$http_user_agent" "$http_x_forwarded_for"'';
+
+    这样后续分析才不会压根不经过实际数据⽽搞不定。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f
+  knowledge_scope: public
 - query_id: nginx-02
   topic: Nginx
   query: Nginx 如何实现反向代理和负载均衡
@@ -220,11 +1532,90 @@ queries:
   difficulty: medium
   expected_technologies: *id009
   relevance:
-    mianshiya-nginx: 2
+    53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f: 2
   expected_knowledge_points:
   - 反向代理
   - 负载均衡
   - upstream
+  reference_answer: '根据 Nginx 面试题速记通关版; page 55：如何获取 Nginx 中每个 IP 的请求状态码情况？
+
+    要统计 Nginx 中每个 IP 的请求状态码分布，核⼼是解析 Nginx 的访问⽇志。默认⽇志格式包含客户端 IP、请求路径、
+
+    HTTP 状态码等关键字段，只要⽇志记录了这些信息，就可以做聚合分析。
+
+    1）最直接的⽅式是⽤ shell 命令组合分析⽇志⽂件。⽐如查看最近 1000 ⾏⽇志中每个 IP 对应的状态码次数：
+
+    tail -1000 /var/log/nginx/access.log | awk ''{print $1, $9}'' | sort | uniq -c
+
+    这⾥ $1 是客户端 IP，$9 是响应状态码（以默认 log_form at 为准），通过 uniq -c 统计频次。
+
+    2）如果需要更复杂的分析，⽐如按状态码分组统计某个 IP 的 404 或 500 情况，可以加条件过滤：
+
+    awk ''$9 == 404 {print $1}'' /var/log/nginx/access.log | sort | uniq -c
+
+    这条命令列出所有产⽣ 404 的 IP 及其出现次数。
+
+    3）⽣产环境建议结合 ELK （Elasticsearch + Logstash + K ibana）或 Prom etheus + G rafana。Nginx
+    配合 nginx-vts-
+
+    m odule 或通过 Filebeat 抓取⽇志，把每条请求打标后上报，就能在可视化⾯板⾥实时看每个 IP 的状态码趋势。
+
+    注意⽇志格式必须明确包含 $status 和 $remote_addr ，⾃定义 log_form at 时别漏掉：
+
+    log_format detailed ''$remote_addr - $remote_user [$time_local] "$request" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''"$http_user_agent" "$http_x_forwarded_for"'';
+
+    这样后续分析才不会压根不经过实际数据⽽搞不定。'
+  reference_context_ids:
+  - 53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f
+  reference_contexts:
+  - '来源：Nginx 面试题速记通关版; page 55
+
+    如何获取 Nginx 中每个 IP 的请求状态码情况？
+
+    要统计 Nginx 中每个 IP 的请求状态码分布，核⼼是解析 Nginx 的访问⽇志。默认⽇志格式包含客户端 IP、请求路径、
+
+    HTTP 状态码等关键字段，只要⽇志记录了这些信息，就可以做聚合分析。
+
+    1）最直接的⽅式是⽤ shell 命令组合分析⽇志⽂件。⽐如查看最近 1000 ⾏⽇志中每个 IP 对应的状态码次数：
+
+    tail -1000 /var/log/nginx/access.log | awk ''{print $1, $9}'' | sort | uniq -c
+
+    这⾥ $1 是客户端 IP，$9 是响应状态码（以默认 log_form at 为准），通过 uniq -c 统计频次。
+
+    2）如果需要更复杂的分析，⽐如按状态码分组统计某个 IP 的 404 或 500 情况，可以加条件过滤：
+
+    awk ''$9 == 404 {print $1}'' /var/log/nginx/access.log | sort | uniq -c
+
+    这条命令列出所有产⽣ 404 的 IP 及其出现次数。
+
+    3）⽣产环境建议结合 ELK （Elasticsearch + Logstash + K ibana）或 Prom etheus + G rafana。Nginx
+    配合 nginx-vts-
+
+    m odule 或通过 Filebeat 抓取⽇志，把每条请求打标后上报，就能在可视化⾯板⾥实时看每个 IP 的状态码趋势。
+
+    注意⽇志格式必须明确包含 $status 和 $remote_addr ，⾃定义 log_form at 时别漏掉：
+
+    log_format detailed ''$remote_addr - $remote_user [$time_local] "$request" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''$status $body_bytes_sent "$http_referer" ''
+
+    ''"$http_user_agent" "$http_x_forwarded_for"'';
+
+    这样后续分析才不会压根不经过实际数据⽽搞不定。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 53a1c9068bf91f1b35c8a9ce6f8de41aa40ced8d6c55fc03974c7f7ee4746a6f
+  knowledge_scope: public
 - query_id: rabbitmq-01
   topic: RabbitMQ
   query: RabbitMQ 如何保证消息可靠投递
@@ -233,12 +1624,120 @@ queries:
   expected_technologies: &id010
   - RabbitMQ
   relevance:
-    mianshiya-rabbitmq: 2
-    mianshiya-message-queue: 1
+    803284c721258f8cf495db1b48f702aaea74c7d2d4c7efd65d861e2840178c0a: 2
   expected_knowledge_points:
   - confirm
   - 持久化
   - ack
+  reference_answer: '根据 RabbitMQ 面试题速记通关版; page 5：RabbitM Q 的消息确认机制是如何⼯作的？
+
+    RabbitM Q 的消息确认机制主要分两块：⽣产者确认和消费者确认，两边配合才能实现端到端的可靠投递。
+
+    ⽣产者发消息到 RabbitM Q 后，Broker 接收到消息并持久化成功，会返回⼀个 ack 确认。如果磁盘写⼊失败或队列
+
+    满，就返回 nack 。⽣产者开启 publisher conﬁrm 模式后，可以异步监听这些响应，决定是否重发。这个机制在
+
+    Spring Boot ⾥配个 spring.rabbitmq.publisher-confirm-type=correlated 就能⽤。
+
+    消费者这边，默认是⾃动确认，只要消息被取⾛，RabbitM Q 就从队列删掉。这很危险，万⼀消费者处理到⼀半宕
+
+    机，消息就丢了。所以必须关掉⾃动确认，改⽤⼿动确认：
+
+    @RabbitListener(queues = "task-queue")
+
+    public void listen(String message, Channel channel,
+
+    @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+
+    try {
+
+    // 处理业务逻辑
+
+    process(message);
+
+    channel.basicAck(deliveryTag, false); // ⼿动 ack
+
+    } catch (Exception e) {
+
+    channel.basicNack(deliveryTag, false, true); // 拒收并重回队列
+
+    }
+
+    }
+
+    1）消息先发到 Exchange
+
+    2）路由到 Queue 存储（持久化可选）
+
+    3）消费者拉取消息但不⾃动确认
+
+    4）消费者处理完成⼿动发送 ack
+
+    5）Broker 收到 ack 才真正删除消息
+
+    整个链路只有所有环节都确认了，才算投递成功。中间任何⼀步失败，消息都不会丢，要么重试要么进死信队列。像
+
+    订单系统、⽀付回调这种不能丢消息的场景，这套机制就是保底⼿段。'
+  reference_context_ids:
+  - 803284c721258f8cf495db1b48f702aaea74c7d2d4c7efd65d861e2840178c0a
+  reference_contexts:
+  - '来源：RabbitMQ 面试题速记通关版; page 5
+
+    RabbitM Q 的消息确认机制是如何⼯作的？
+
+    RabbitM Q 的消息确认机制主要分两块：⽣产者确认和消费者确认，两边配合才能实现端到端的可靠投递。
+
+    ⽣产者发消息到 RabbitM Q 后，Broker 接收到消息并持久化成功，会返回⼀个 ack 确认。如果磁盘写⼊失败或队列
+
+    满，就返回 nack 。⽣产者开启 publisher conﬁrm 模式后，可以异步监听这些响应，决定是否重发。这个机制在
+
+    Spring Boot ⾥配个 spring.rabbitmq.publisher-confirm-type=correlated 就能⽤。
+
+    消费者这边，默认是⾃动确认，只要消息被取⾛，RabbitM Q 就从队列删掉。这很危险，万⼀消费者处理到⼀半宕
+
+    机，消息就丢了。所以必须关掉⾃动确认，改⽤⼿动确认：
+
+    @RabbitListener(queues = "task-queue")
+
+    public void listen(String message, Channel channel,
+
+    @Header(AmqpHeaders.DELIVERY_TAG) long deliveryTag) {
+
+    try {
+
+    // 处理业务逻辑
+
+    process(message);
+
+    channel.basicAck(deliveryTag, false); // ⼿动 ack
+
+    } catch (Exception e) {
+
+    channel.basicNack(deliveryTag, false, true); // 拒收并重回队列
+
+    }
+
+    }
+
+    1）消息先发到 Exchange
+
+    2）路由到 Queue 存储（持久化可选）
+
+    3）消费者拉取消息但不⾃动确认
+
+    4）消费者处理完成⼿动发送 ack
+
+    5）Broker 收到 ack 才真正删除消息
+
+    整个链路只有所有环节都确认了，才算投递成功。中间任何⼀步失败，消息都不会丢，要么重试要么进死信队列。像
+
+    订单系统、⽀付回调这种不能丢消息的场景，这套机制就是保底⼿段。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 803284c721258f8cf495db1b48f702aaea74c7d2d4c7efd65d861e2840178c0a
+  knowledge_scope: public
 - query_id: rabbitmq-02
   topic: RabbitMQ
   query: RabbitMQ 死信队列在什么情况下产生
@@ -246,13 +1745,76 @@ queries:
   difficulty: medium
   expected_technologies: *id010
   relevance:
-    mianshiya-message-queue: 2
-    mianshiya-rabbitmq: 1
-    mianshiya-java-top-200: 1
+    3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a: 2
   expected_knowledge_points:
   - 死信队列
   - TTL
   - 拒绝
+  reference_answer: '根据 消息队列面试题速记通关版; page 6：说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  reference_context_ids:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  reference_contexts:
+  - '来源：消息队列面试题速记通关版; page 6
+
+    说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  knowledge_scope: public
 - query_id: redis-01
   topic: Redis
   query: Redis RDB 和 AOF 持久化有什么区别
@@ -261,11 +1823,104 @@ queries:
   expected_technologies: &id011
   - Redis
   relevance:
-    mianshiya-redis: 2
+    bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561: 2
   expected_knowledge_points:
   - RDB
   - AOF
   - 持久化
+  reference_answer: '根据 Redis 面试题速记通关版; page 24：Redis 的 Lua 脚本功能是什么？如何使⽤？
+
+    Redis 的 Lua 脚本让你能把⼀组操作打包成⼀个原⼦执⾏的脚本，整个过程不会被其他命令打断。这在需要保证多个
+
+    key 操作⼀致性时特别有⽤，⽐如分布式锁、库存扣减这种场景。
+
+    Lua 脚本通过 EVAL 或 EVALSHA 命令执⾏。EVAL 直接传脚本内容，EVALSHA ⽤脚本的 SHA1 值调⽤，避免重
+
+    复传输代码，提升性能。
+
+    脚本⾥可以⽤ KEYS 和 ARGV 传参，Redis 会把这两个表映射成客户端传⼊的键和值。⼀般建议把会被频繁调⽤的
+
+    脚本先加载到 Redis 中，⽤ SCRIPT LOAD 预加载，再⽤ EVALSHA 触发。
+
+    1）写个简单的库存扣减脚本：
+
+    local num = redis.call(''GET'', KEYS[1])
+
+    if not num then return 0 end
+
+    if tonumber(num) >= tonumber(ARGV[1]) then
+
+    return redis.call(''DECRBY'', KEYS[1], ARGV[1])
+
+    else
+
+    return -1
+
+    end
+
+    2）⽤ EVAL 执⾏：
+
+    EVAL " 上述脚本 " 1 stock_key 10
+
+    注意点：脚本得尽量快，别做复杂循环或耗时操作，否则会阻塞主线程。单个脚本执⾏时间最好控制在⼏毫秒内，不
+
+    然会影响其他请求响应。
+
+    像 原⼦性、减少⽹络开销、逻辑复⽤是它的主要优势。但搞不定⻓时间任务，真要处理复杂业务逻辑，还是得靠服务
+
+    端程序。'
+  reference_context_ids:
+  - bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561
+  reference_contexts:
+  - '来源：Redis 面试题速记通关版; page 24
+
+    Redis 的 Lua 脚本功能是什么？如何使⽤？
+
+    Redis 的 Lua 脚本让你能把⼀组操作打包成⼀个原⼦执⾏的脚本，整个过程不会被其他命令打断。这在需要保证多个
+
+    key 操作⼀致性时特别有⽤，⽐如分布式锁、库存扣减这种场景。
+
+    Lua 脚本通过 EVAL 或 EVALSHA 命令执⾏。EVAL 直接传脚本内容，EVALSHA ⽤脚本的 SHA1 值调⽤，避免重
+
+    复传输代码，提升性能。
+
+    脚本⾥可以⽤ KEYS 和 ARGV 传参，Redis 会把这两个表映射成客户端传⼊的键和值。⼀般建议把会被频繁调⽤的
+
+    脚本先加载到 Redis 中，⽤ SCRIPT LOAD 预加载，再⽤ EVALSHA 触发。
+
+    1）写个简单的库存扣减脚本：
+
+    local num = redis.call(''GET'', KEYS[1])
+
+    if not num then return 0 end
+
+    if tonumber(num) >= tonumber(ARGV[1]) then
+
+    return redis.call(''DECRBY'', KEYS[1], ARGV[1])
+
+    else
+
+    return -1
+
+    end
+
+    2）⽤ EVAL 执⾏：
+
+    EVAL " 上述脚本 " 1 stock_key 10
+
+    注意点：脚本得尽量快，别做复杂循环或耗时操作，否则会阻塞主线程。单个脚本执⾏时间最好控制在⼏毫秒内，不
+
+    然会影响其他请求响应。
+
+    像 原⼦性、减少⽹络开销、逻辑复⽤是它的主要优势。但搞不定⻓时间任务，真要处理复杂业务逻辑，还是得靠服务
+
+    端程序。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561
+  knowledge_scope: public
 - query_id: redis-02
   topic: Redis
   query: Redis 缓存雪崩击穿和穿透有什么区别
@@ -273,11 +1928,104 @@ queries:
   difficulty: hard
   expected_technologies: *id011
   relevance:
-    mianshiya-redis: 2
+    bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561: 2
   expected_knowledge_points:
   - 缓存雪崩
   - 缓存击穿
   - 缓存穿透
+  reference_answer: '根据 Redis 面试题速记通关版; page 24：Redis 的 Lua 脚本功能是什么？如何使⽤？
+
+    Redis 的 Lua 脚本让你能把⼀组操作打包成⼀个原⼦执⾏的脚本，整个过程不会被其他命令打断。这在需要保证多个
+
+    key 操作⼀致性时特别有⽤，⽐如分布式锁、库存扣减这种场景。
+
+    Lua 脚本通过 EVAL 或 EVALSHA 命令执⾏。EVAL 直接传脚本内容，EVALSHA ⽤脚本的 SHA1 值调⽤，避免重
+
+    复传输代码，提升性能。
+
+    脚本⾥可以⽤ KEYS 和 ARGV 传参，Redis 会把这两个表映射成客户端传⼊的键和值。⼀般建议把会被频繁调⽤的
+
+    脚本先加载到 Redis 中，⽤ SCRIPT LOAD 预加载，再⽤ EVALSHA 触发。
+
+    1）写个简单的库存扣减脚本：
+
+    local num = redis.call(''GET'', KEYS[1])
+
+    if not num then return 0 end
+
+    if tonumber(num) >= tonumber(ARGV[1]) then
+
+    return redis.call(''DECRBY'', KEYS[1], ARGV[1])
+
+    else
+
+    return -1
+
+    end
+
+    2）⽤ EVAL 执⾏：
+
+    EVAL " 上述脚本 " 1 stock_key 10
+
+    注意点：脚本得尽量快，别做复杂循环或耗时操作，否则会阻塞主线程。单个脚本执⾏时间最好控制在⼏毫秒内，不
+
+    然会影响其他请求响应。
+
+    像 原⼦性、减少⽹络开销、逻辑复⽤是它的主要优势。但搞不定⻓时间任务，真要处理复杂业务逻辑，还是得靠服务
+
+    端程序。'
+  reference_context_ids:
+  - bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561
+  reference_contexts:
+  - '来源：Redis 面试题速记通关版; page 24
+
+    Redis 的 Lua 脚本功能是什么？如何使⽤？
+
+    Redis 的 Lua 脚本让你能把⼀组操作打包成⼀个原⼦执⾏的脚本，整个过程不会被其他命令打断。这在需要保证多个
+
+    key 操作⼀致性时特别有⽤，⽐如分布式锁、库存扣减这种场景。
+
+    Lua 脚本通过 EVAL 或 EVALSHA 命令执⾏。EVAL 直接传脚本内容，EVALSHA ⽤脚本的 SHA1 值调⽤，避免重
+
+    复传输代码，提升性能。
+
+    脚本⾥可以⽤ KEYS 和 ARGV 传参，Redis 会把这两个表映射成客户端传⼊的键和值。⼀般建议把会被频繁调⽤的
+
+    脚本先加载到 Redis 中，⽤ SCRIPT LOAD 预加载，再⽤ EVALSHA 触发。
+
+    1）写个简单的库存扣减脚本：
+
+    local num = redis.call(''GET'', KEYS[1])
+
+    if not num then return 0 end
+
+    if tonumber(num) >= tonumber(ARGV[1]) then
+
+    return redis.call(''DECRBY'', KEYS[1], ARGV[1])
+
+    else
+
+    return -1
+
+    end
+
+    2）⽤ EVAL 执⾏：
+
+    EVAL " 上述脚本 " 1 stock_key 10
+
+    注意点：脚本得尽量快，别做复杂循环或耗时操作，否则会阻塞主线程。单个脚本执⾏时间最好控制在⼏毫秒内，不
+
+    然会影响其他请求响应。
+
+    像 原⼦性、减少⽹络开销、逻辑复⽤是它的主要优势。但搞不定⻓时间任务，真要处理复杂业务逻辑，还是得靠服务
+
+    端程序。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - bf7f0463d3cbbc83414a54421f7176f16760b6caa016c62418e829b57ad79561
+  knowledge_scope: public
 - query_id: spring-01
   topic: Spring
   query: Spring IOC 和 AOP 的原理是什么
@@ -286,11 +2034,80 @@ queries:
   expected_technologies: &id012
   - Spring
   relevance:
-    mianshiya-spring: 2
+    2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075: 2
   expected_knowledge_points:
   - IOC
   - AOP
   - 动态代理
+  reference_answer: '根据 Spring 面试题速记通关版; page 27：Spring 如何解决循环依赖？
+
+    Spring 解决循环依赖主要靠三级缓存和提前暴露对象引⽤的机制，核⼼是把实例化和初始化分开。
+
+    1）当 A 依赖 B，B ⼜依赖 A 时，Spring 在创建 A 的过程中，new 出 A 实例后就⻢上把它放进早期暴露缓存
+
+    （singletonFactories），这个⼯⼚能返回尚未完全初始化的 A 对象。
+
+    2）接着去创建 B，发现需要 A，就会从 singletonFactories 拿到那个“半成品”A 实例。此时 B 能完成注⼊，然后 B
+
+    初始化完毕放⼊⼀级缓存（单例池）。
+
+    3）再回到 A 的初始化，从⼀级缓存拿到完整的 B，继续完成 A 的属性填充和初始化，最后 A 也进⼀级缓存，整个流程
+
+    闭环。
+
+    这⾥的关键是三个缓存层级：
+
+    ⼀级：singletonObjects，放完全初始化好的 Bean
+
+    ⼆级：earlySingletonObjects，放提前暴露的原始对象（⽤于解决普通循环依赖）
+
+    三级：singletonFactories，存放 ObjectFactory，能⽣成早期引⽤
+
+    但要注意，这种机制只能解决单例作⽤域下的 setter 注⼊循环依赖。构造器注⼊的循环依赖 Spring 压根不经过缓
+
+    存，直接抛异常。还有原型（prototype）作⽤域也不⽀持，每次都是新对象，没法缓存。
+
+    代码层⾯不需要额外操作，只要⽤ @ Autowired 注⼊就⾏，框架⾃动处理。'
+  reference_context_ids:
+  - 2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075
+  reference_contexts:
+  - '来源：Spring 面试题速记通关版; page 27
+
+    Spring 如何解决循环依赖？
+
+    Spring 解决循环依赖主要靠三级缓存和提前暴露对象引⽤的机制，核⼼是把实例化和初始化分开。
+
+    1）当 A 依赖 B，B ⼜依赖 A 时，Spring 在创建 A 的过程中，new 出 A 实例后就⻢上把它放进早期暴露缓存
+
+    （singletonFactories），这个⼯⼚能返回尚未完全初始化的 A 对象。
+
+    2）接着去创建 B，发现需要 A，就会从 singletonFactories 拿到那个“半成品”A 实例。此时 B 能完成注⼊，然后 B
+
+    初始化完毕放⼊⼀级缓存（单例池）。
+
+    3）再回到 A 的初始化，从⼀级缓存拿到完整的 B，继续完成 A 的属性填充和初始化，最后 A 也进⼀级缓存，整个流程
+
+    闭环。
+
+    这⾥的关键是三个缓存层级：
+
+    ⼀级：singletonObjects，放完全初始化好的 Bean
+
+    ⼆级：earlySingletonObjects，放提前暴露的原始对象（⽤于解决普通循环依赖）
+
+    三级：singletonFactories，存放 ObjectFactory，能⽣成早期引⽤
+
+    但要注意，这种机制只能解决单例作⽤域下的 setter 注⼊循环依赖。构造器注⼊的循环依赖 Spring 压根不经过缓
+
+    存，直接抛异常。还有原型（prototype）作⽤域也不⽀持，每次都是新对象，没法缓存。
+
+    代码层⾯不需要额外操作，只要⽤ @ Autowired 注⼊就⾏，框架⾃动处理。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075
+  knowledge_scope: public
 - query_id: spring-02
   topic: Spring
   query: Spring 事务失效的常见场景有哪些
@@ -298,11 +2115,80 @@ queries:
   difficulty: hard
   expected_technologies: *id012
   relevance:
-    mianshiya-spring: 2
+    2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075: 2
   expected_knowledge_points:
   - 事务
   - 代理
   - self-invocation
+  reference_answer: '根据 Spring 面试题速记通关版; page 27：Spring 如何解决循环依赖？
+
+    Spring 解决循环依赖主要靠三级缓存和提前暴露对象引⽤的机制，核⼼是把实例化和初始化分开。
+
+    1）当 A 依赖 B，B ⼜依赖 A 时，Spring 在创建 A 的过程中，new 出 A 实例后就⻢上把它放进早期暴露缓存
+
+    （singletonFactories），这个⼯⼚能返回尚未完全初始化的 A 对象。
+
+    2）接着去创建 B，发现需要 A，就会从 singletonFactories 拿到那个“半成品”A 实例。此时 B 能完成注⼊，然后 B
+
+    初始化完毕放⼊⼀级缓存（单例池）。
+
+    3）再回到 A 的初始化，从⼀级缓存拿到完整的 B，继续完成 A 的属性填充和初始化，最后 A 也进⼀级缓存，整个流程
+
+    闭环。
+
+    这⾥的关键是三个缓存层级：
+
+    ⼀级：singletonObjects，放完全初始化好的 Bean
+
+    ⼆级：earlySingletonObjects，放提前暴露的原始对象（⽤于解决普通循环依赖）
+
+    三级：singletonFactories，存放 ObjectFactory，能⽣成早期引⽤
+
+    但要注意，这种机制只能解决单例作⽤域下的 setter 注⼊循环依赖。构造器注⼊的循环依赖 Spring 压根不经过缓
+
+    存，直接抛异常。还有原型（prototype）作⽤域也不⽀持，每次都是新对象，没法缓存。
+
+    代码层⾯不需要额外操作，只要⽤ @ Autowired 注⼊就⾏，框架⾃动处理。'
+  reference_context_ids:
+  - 2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075
+  reference_contexts:
+  - '来源：Spring 面试题速记通关版; page 27
+
+    Spring 如何解决循环依赖？
+
+    Spring 解决循环依赖主要靠三级缓存和提前暴露对象引⽤的机制，核⼼是把实例化和初始化分开。
+
+    1）当 A 依赖 B，B ⼜依赖 A 时，Spring 在创建 A 的过程中，new 出 A 实例后就⻢上把它放进早期暴露缓存
+
+    （singletonFactories），这个⼯⼚能返回尚未完全初始化的 A 对象。
+
+    2）接着去创建 B，发现需要 A，就会从 singletonFactories 拿到那个“半成品”A 实例。此时 B 能完成注⼊，然后 B
+
+    初始化完毕放⼊⼀级缓存（单例池）。
+
+    3）再回到 A 的初始化，从⼀级缓存拿到完整的 B，继续完成 A 的属性填充和初始化，最后 A 也进⼀级缓存，整个流程
+
+    闭环。
+
+    这⾥的关键是三个缓存层级：
+
+    ⼀级：singletonObjects，放完全初始化好的 Bean
+
+    ⼆级：earlySingletonObjects，放提前暴露的原始对象（⽤于解决普通循环依赖）
+
+    三级：singletonFactories，存放 ObjectFactory，能⽣成早期引⽤
+
+    但要注意，这种机制只能解决单例作⽤域下的 setter 注⼊循环依赖。构造器注⼊的循环依赖 Spring 压根不经过缓
+
+    存，直接抛异常。还有原型（prototype）作⽤域也不⽀持，每次都是新对象，没法缓存。
+
+    代码层⾯不需要额外操作，只要⽤ @ Autowired 注⼊就⾏，框架⾃动处理。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2914860d0cee8016a9a925597d83abc8d8930a6dc4c555f4662e5716a505d075
+  knowledge_scope: public
 - query_id: boot-01
   topic: Spring Boot
   query: Spring Boot 自动配置原理是什么
@@ -311,11 +2197,104 @@ queries:
   expected_technologies: &id013
   - Spring Boot
   relevance:
-    mianshiya-spring-boot: 2
+    e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c: 2
   expected_knowledge_points:
   - 自动配置
   - 条件注解
   - starter
+  reference_answer: '根据 Spring Boot 面试题速记通关版; page 8：Spring Boot 2.x 与 1.x 版本有哪些主要的改进和区别？
+
+    Spring Boot 2.x 相⽐ 1.x 不是⼩修⼩补，是⼀次全⾯升级，底层⽀撑和开发体验都变了。
+
+    J DK 版本要求直接跳到 8+，不再⽀持 6 和 7。这意味着你可以放⼼⽤ Lam bda、Stream 这些特性，不⽤再写⼀堆匿
+
+    名内部类。内嵌容器默认版本也升了，Tom cat 8.5+ 成标配，Servlet 规范跟着到了 3.1+。
+
+    ⾃动配置机制更智能了。条件化配置的判断更细，⽐如 @ConditionalOnMissingBean 现在能按类型和名称双重
+
+    判断，避免误覆盖。配置元数据⽀持 IDE 提⽰，application.yml ⾥打 spring. 就能⾃动联想，写配置不再靠
+
+    背。
+
+    W ebFlux 加⼊让响应式编程成为⼀等公⺠。你可以⽤ @Controller + Mono/Flux 写⾮阻塞接⼝，配合 Netty 或
+
+    Servlet 3.1+ 容器跑。这在⾼并发 IO 场景下能显著降低线程开销，像⽹关类服务⽤ W ebFlux 能扛住更多连接。
+
+    Actuator 变得更安全也更实⽤。端点默认只暴露 /health 和 /info ，其他要⼿动开启。HTTP 端点路径从
+
+    /metrics 这种变成 /actuator/metrics ，隔离更清晰。还⽀持 Prom etheus 格式输出，对接 G rafana ⾯板零
+
+    成本。
+
+    依赖管理上，默认⽤ Spring Fram ework 5，Reactor 成核⼼响应式库。如果你⽤ W ebClient 替代 RestTem plate，天
+
+    然⽀持异步⾮阻塞调⽤，和 Spring Cloud G ateway 配合更顺。
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    return route(GET("/users/{id}"), handler::getById);
+
+    }
+
+    这套函数式路由写法，是 W ebFlux 提供的另⼀种选择，适合轻量接⼝场景。'
+  reference_context_ids:
+  - e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c
+  reference_contexts:
+  - '来源：Spring Boot 面试题速记通关版; page 8
+
+    Spring Boot 2.x 与 1.x 版本有哪些主要的改进和区别？
+
+    Spring Boot 2.x 相⽐ 1.x 不是⼩修⼩补，是⼀次全⾯升级，底层⽀撑和开发体验都变了。
+
+    J DK 版本要求直接跳到 8+，不再⽀持 6 和 7。这意味着你可以放⼼⽤ Lam bda、Stream 这些特性，不⽤再写⼀堆匿
+
+    名内部类。内嵌容器默认版本也升了，Tom cat 8.5+ 成标配，Servlet 规范跟着到了 3.1+。
+
+    ⾃动配置机制更智能了。条件化配置的判断更细，⽐如 @ConditionalOnMissingBean 现在能按类型和名称双重
+
+    判断，避免误覆盖。配置元数据⽀持 IDE 提⽰，application.yml ⾥打 spring. 就能⾃动联想，写配置不再靠
+
+    背。
+
+    W ebFlux 加⼊让响应式编程成为⼀等公⺠。你可以⽤ @Controller + Mono/Flux 写⾮阻塞接⼝，配合 Netty 或
+
+    Servlet 3.1+ 容器跑。这在⾼并发 IO 场景下能显著降低线程开销，像⽹关类服务⽤ W ebFlux 能扛住更多连接。
+
+    Actuator 变得更安全也更实⽤。端点默认只暴露 /health 和 /info ，其他要⼿动开启。HTTP 端点路径从
+
+    /metrics 这种变成 /actuator/metrics ，隔离更清晰。还⽀持 Prom etheus 格式输出，对接 G rafana ⾯板零
+
+    成本。
+
+    依赖管理上，默认⽤ Spring Fram ework 5，Reactor 成核⼼响应式库。如果你⽤ W ebClient 替代 RestTem plate，天
+
+    然⽀持异步⾮阻塞调⽤，和 Spring Cloud G ateway 配合更顺。
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    return route(GET("/users/{id}"), handler::getById);
+
+    }
+
+    这套函数式路由写法，是 W ebFlux 提供的另⼀种选择，适合轻量接⼝场景。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c
+  knowledge_scope: public
 - query_id: boot-02
   topic: Spring Boot
   query: Spring Boot 启动流程包含哪些阶段
@@ -323,10 +2302,103 @@ queries:
   difficulty: medium
   expected_technologies: *id013
   relevance:
-    mianshiya-spring-boot: 2
+    e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c: 2
   expected_knowledge_points:
   - 启动流程
   - ApplicationContext
+  reference_answer: '根据 Spring Boot 面试题速记通关版; page 8：Spring Boot 2.x 与 1.x 版本有哪些主要的改进和区别？
+
+    Spring Boot 2.x 相⽐ 1.x 不是⼩修⼩补，是⼀次全⾯升级，底层⽀撑和开发体验都变了。
+
+    J DK 版本要求直接跳到 8+，不再⽀持 6 和 7。这意味着你可以放⼼⽤ Lam bda、Stream 这些特性，不⽤再写⼀堆匿
+
+    名内部类。内嵌容器默认版本也升了，Tom cat 8.5+ 成标配，Servlet 规范跟着到了 3.1+。
+
+    ⾃动配置机制更智能了。条件化配置的判断更细，⽐如 @ConditionalOnMissingBean 现在能按类型和名称双重
+
+    判断，避免误覆盖。配置元数据⽀持 IDE 提⽰，application.yml ⾥打 spring. 就能⾃动联想，写配置不再靠
+
+    背。
+
+    W ebFlux 加⼊让响应式编程成为⼀等公⺠。你可以⽤ @Controller + Mono/Flux 写⾮阻塞接⼝，配合 Netty 或
+
+    Servlet 3.1+ 容器跑。这在⾼并发 IO 场景下能显著降低线程开销，像⽹关类服务⽤ W ebFlux 能扛住更多连接。
+
+    Actuator 变得更安全也更实⽤。端点默认只暴露 /health 和 /info ，其他要⼿动开启。HTTP 端点路径从
+
+    /metrics 这种变成 /actuator/metrics ，隔离更清晰。还⽀持 Prom etheus 格式输出，对接 G rafana ⾯板零
+
+    成本。
+
+    依赖管理上，默认⽤ Spring Fram ework 5，Reactor 成核⼼响应式库。如果你⽤ W ebClient 替代 RestTem plate，天
+
+    然⽀持异步⾮阻塞调⽤，和 Spring Cloud G ateway 配合更顺。
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    return route(GET("/users/{id}"), handler::getById);
+
+    }
+
+    这套函数式路由写法，是 W ebFlux 提供的另⼀种选择，适合轻量接⼝场景。'
+  reference_context_ids:
+  - e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c
+  reference_contexts:
+  - '来源：Spring Boot 面试题速记通关版; page 8
+
+    Spring Boot 2.x 与 1.x 版本有哪些主要的改进和区别？
+
+    Spring Boot 2.x 相⽐ 1.x 不是⼩修⼩补，是⼀次全⾯升级，底层⽀撑和开发体验都变了。
+
+    J DK 版本要求直接跳到 8+，不再⽀持 6 和 7。这意味着你可以放⼼⽤ Lam bda、Stream 这些特性，不⽤再写⼀堆匿
+
+    名内部类。内嵌容器默认版本也升了，Tom cat 8.5+ 成标配，Servlet 规范跟着到了 3.1+。
+
+    ⾃动配置机制更智能了。条件化配置的判断更细，⽐如 @ConditionalOnMissingBean 现在能按类型和名称双重
+
+    判断，避免误覆盖。配置元数据⽀持 IDE 提⽰，application.yml ⾥打 spring. 就能⾃动联想，写配置不再靠
+
+    背。
+
+    W ebFlux 加⼊让响应式编程成为⼀等公⺠。你可以⽤ @Controller + Mono/Flux 写⾮阻塞接⼝，配合 Netty 或
+
+    Servlet 3.1+ 容器跑。这在⾼并发 IO 场景下能显著降低线程开销，像⽹关类服务⽤ W ebFlux 能扛住更多连接。
+
+    Actuator 变得更安全也更实⽤。端点默认只暴露 /health 和 /info ，其他要⼿动开启。HTTP 端点路径从
+
+    /metrics 这种变成 /actuator/metrics ，隔离更清晰。还⽀持 Prom etheus 格式输出，对接 G rafana ⾯板零
+
+    成本。
+
+    依赖管理上，默认⽤ Spring Fram ework 5，Reactor 成核⼼响应式库。如果你⽤ W ebClient 替代 RestTem plate，天
+
+    然⽀持异步⾮阻塞调⽤，和 Spring Cloud G ateway 配合更顺。
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    @Bean
+
+    public RouterFunction<ServerResponse> route(UserHandler handler) {
+
+    return route(GET("/users/{id}"), handler::getById);
+
+    }
+
+    这套函数式路由写法，是 W ebFlux 提供的另⼀种选择，适合轻量接⼝场景。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - e3389d3a85696e2849f177a476b199001b116945add890ced006c1e11263109c
+  knowledge_scope: public
 - query_id: cloud-01
   topic: Spring Cloud
   query: Spring Cloud 常见组件分别解决什么问题
@@ -335,11 +2407,68 @@ queries:
   expected_technologies: &id014
   - Spring Cloud
   relevance:
-    mianshiya-spring-cloud: 2
+    000ecf107ec552f4a4bea4d6fa606dd0f4e604e61ed99973128a8799d0b06204: 2
   expected_knowledge_points:
   - 注册中心
   - 配置中心
   - 网关
+  reference_answer: '根据 Spring Cloud 面试题速记通关版; page 13：什么是灰度发布、⾦丝雀部署以及蓝绿部署？
+
+    灰度发布、⾦丝雀部署和蓝绿部署都是控制流量逐步切换的发布策略，核⼼⽬标是降低上线⻛险。
+
+    灰度发布是个⼤概念，指先让⼀部分⽤户使⽤新版本，反馈没问题再全量推。⽐如你在⽤某个App，突然被选中体
+
+    验“内测版”，其实就是进⼊了灰度名单。这种策略常⻅于互联⽹产品，像微信、淘宝发版都⾛灰度，靠⽤户ID或地域
+
+    分流，后端⼀般⽤Nginx或Spring Cloud G ateway做路由。
+
+    ⾦丝雀部署是灰度的⼀种具体实现，名字来⾃矿⼯带⾦丝雀下矿的传统。它更偏向基础设施层⾯操作，⽐如在
+
+    K ubernetes⾥，你先起⼀个新版本Pod，把1%的流量导过去，观察⽇志和监控指标。没问题就逐步增加⽐例，直到全
+
+    切。这过程可以⽤Istio这样的服务⽹格精细控制。
+
+    蓝绿部署则是准备两套完全⼀样的⽣产环境，蓝⾊是当前线上，绿⾊是新版本。发布时直接把流量从蓝切到绿，回滚
+
+    也是⼀键切回来。好处是切换快、回滚快，但成本⾼，毕竟要维持两套环境。AW S Elastic Beanstalk和阿⾥云EDAS都
+
+    ⽀持这种模式。
+
+    对⽐来看，蓝绿最稳但花钱多，⾦丝雀最灵活但控制复杂，灰度适合⽤户维度的渐进验证。'
+  reference_context_ids:
+  - 000ecf107ec552f4a4bea4d6fa606dd0f4e604e61ed99973128a8799d0b06204
+  reference_contexts:
+  - '来源：Spring Cloud 面试题速记通关版; page 13
+
+    什么是灰度发布、⾦丝雀部署以及蓝绿部署？
+
+    灰度发布、⾦丝雀部署和蓝绿部署都是控制流量逐步切换的发布策略，核⼼⽬标是降低上线⻛险。
+
+    灰度发布是个⼤概念，指先让⼀部分⽤户使⽤新版本，反馈没问题再全量推。⽐如你在⽤某个App，突然被选中体
+
+    验“内测版”，其实就是进⼊了灰度名单。这种策略常⻅于互联⽹产品，像微信、淘宝发版都⾛灰度，靠⽤户ID或地域
+
+    分流，后端⼀般⽤Nginx或Spring Cloud G ateway做路由。
+
+    ⾦丝雀部署是灰度的⼀种具体实现，名字来⾃矿⼯带⾦丝雀下矿的传统。它更偏向基础设施层⾯操作，⽐如在
+
+    K ubernetes⾥，你先起⼀个新版本Pod，把1%的流量导过去，观察⽇志和监控指标。没问题就逐步增加⽐例，直到全
+
+    切。这过程可以⽤Istio这样的服务⽹格精细控制。
+
+    蓝绿部署则是准备两套完全⼀样的⽣产环境，蓝⾊是当前线上，绿⾊是新版本。发布时直接把流量从蓝切到绿，回滚
+
+    也是⼀键切回来。好处是切换快、回滚快，但成本⾼，毕竟要维持两套环境。AW S Elastic Beanstalk和阿⾥云EDAS都
+
+    ⽀持这种模式。
+
+    对⽐来看，蓝绿最稳但花钱多，⾦丝雀最灵活但控制复杂，灰度适合⽤户维度的渐进验证。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 000ecf107ec552f4a4bea4d6fa606dd0f4e604e61ed99973128a8799d0b06204
+  knowledge_scope: public
 - query_id: cloud-02
   topic: Spring Cloud
   query: 微服务熔断降级和限流有什么区别
@@ -347,11 +2476,72 @@ queries:
   difficulty: hard
   expected_technologies: *id014
   relevance:
-    mianshiya-spring-cloud: 2
+    dca569160e7581bafeb036f5aafe79cc5ffb08b11f42c29615aa7a3485e411af: 2
   expected_knowledge_points:
   - 熔断
   - 降级
   - 限流
+  reference_answer: '根据 Spring Cloud 面试题速记通关版; page 2：Consul 是什么？
+
+    Consul 是 HashiCorp 出品的⼀个服务⽹格解决⽅案，主打服务发现、配置管理和服务间安全通信。它不光是个注册中
+
+    ⼼，还能⼲⼀堆脏活累活，⽐如健康检查、多数据中⼼⽀持、ACL 权限控制。
+
+    1）服务发现：每个服务启动后往 Consul 注册⾃⼰，消费者通过服务名查到可⽤实例。⽐如订单服务要调库存服务，
+
+    直接问 Consul 要 inventory-service 的地址列表。
+
+    2）健康检查：Consul 主动探活，挂掉的服务会⾃动从列表剔除。⽀持 HTTP、TCP、脚本等多种探测⽅式，保证流量
+
+    不会打到残⾎节点。
+
+    3）K V 配置存储：可以把配置写进 Consul 的键值对系统，服务监听变更实现动态刷新，类似轻量版的 ZooK eeper。
+
+    4）服务⽹格能⼒：通过边⻋代理（Connect）启⽤ m TLS，服务之间⾃动加密通信，还能基于服务⾝份做访问策略控
+
+    制。
+
+    部署模式上，Consul ⽤ Raft 协议选主，数据强⼀致，通常建议 3 或 5 个节点组成集群。相⽐ Eureka，它更重⼀些，
+
+    但功能也更全；⽐起 Nacos，它在多 DC 场景下更成熟，不过运维复杂度⾼点。
+
+    适合中⼤型系统，尤其是需要跨数据中⼼、强⼀致性、安全通信的场景。⼩项⽬可能有点杀鸡⽤⽜⼑。'
+  reference_context_ids:
+  - dca569160e7581bafeb036f5aafe79cc5ffb08b11f42c29615aa7a3485e411af
+  reference_contexts:
+  - '来源：Spring Cloud 面试题速记通关版; page 2
+
+    Consul 是什么？
+
+    Consul 是 HashiCorp 出品的⼀个服务⽹格解决⽅案，主打服务发现、配置管理和服务间安全通信。它不光是个注册中
+
+    ⼼，还能⼲⼀堆脏活累活，⽐如健康检查、多数据中⼼⽀持、ACL 权限控制。
+
+    1）服务发现：每个服务启动后往 Consul 注册⾃⼰，消费者通过服务名查到可⽤实例。⽐如订单服务要调库存服务，
+
+    直接问 Consul 要 inventory-service 的地址列表。
+
+    2）健康检查：Consul 主动探活，挂掉的服务会⾃动从列表剔除。⽀持 HTTP、TCP、脚本等多种探测⽅式，保证流量
+
+    不会打到残⾎节点。
+
+    3）K V 配置存储：可以把配置写进 Consul 的键值对系统，服务监听变更实现动态刷新，类似轻量版的 ZooK eeper。
+
+    4）服务⽹格能⼒：通过边⻋代理（Connect）启⽤ m TLS，服务之间⾃动加密通信，还能基于服务⾝份做访问策略控
+
+    制。
+
+    部署模式上，Consul ⽤ Raft 协议选主，数据强⼀致，通常建议 3 或 5 个节点组成集群。相⽐ Eureka，它更重⼀些，
+
+    但功能也更全；⽐起 Nacos，它在多 DC 场景下更成熟，不过运维复杂度⾼点。
+
+    适合中⼤型系统，尤其是需要跨数据中⼼、强⼀致性、安全通信的场景。⼩项⽬可能有点杀鸡⽤⽜⼑。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - dca569160e7581bafeb036f5aafe79cc5ffb08b11f42c29615aa7a3485e411af
+  knowledge_scope: public
 - query_id: zk-01
   topic: ZooKeeper
   query: ZooKeeper 的 ZAB 协议如何保证一致性
@@ -360,11 +2550,77 @@ queries:
   expected_technologies: &id015
   - ZooKeeper
   relevance:
-    mianshiya-zookeeper: 2
+    9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b: 2
   expected_knowledge_points:
   - ZAB
   - 崩溃恢复
   - 原子广播
+  reference_answer: '根据 ZooKeeper 面试题速记通关版; page 18：ZooKeeper、Eureka、Nacos 和 Consul
+    有什么区别？你会如何选择？
+
+    服务发现组件选型得看你的系统要什么。⼀致性、可⽤性、部署成本，这三者你得先想清楚。
+
+    ZooKeeper 和 Consul ⾛的是 CP 路线，保证强⼀致性。ZooKeeper ⽤ ZAB 协议，节点间数据必须⼀致，但主挂了要
+
+    重新选主，期间不可⽤。典型⽤法像 HBase、Kafka 拿它做元数据管理。Consul 也是 CP，基于 Raft，健康检查做得
+
+    更细，适合对⼀致性要求⾼的场景，⽐如⾦融交易系统。
+
+    Eureka 是 AP 的代表，牺牲⼀致性换可⽤性。集群间数据可以短暂不⼀致，只要节点活着就能注册和拉取服务列表，
+
+    适合云环境这种⽹络不稳的场景。Netﬂix ⾃家⽤的就是这套，扛住过⾼峰期流量。
+
+    Nacos 其实最灵活，既⽀持 AP 也⽀持 CP。你要强⼀致就切到 CP 模式，⾛类 Raft 协议；要⾼可⽤就⽤ AP，默认就
+
+    是。加上配置中⼼功能，Spring Cloud Alibaba 项⽬基本⾸选它。
+
+    1）如果已有 K8s 或 Istio，Service M esh 层已接管服务发现，这⼏个都可能不需要
+
+    2）如果是传统微服务架构，Nacos 基本能 cover 多数场景
+
+    3）⽼ Hadoop ⽣态项⽬，ZooKeeper 已深度集成，没必要替换
+
+    4）纯 AW S 环境⽤ Eureka 配合 ELB 也很顺
+
+    最终选型别只看理论，压测模拟分区场景，看服务能不能扛住。'
+  reference_context_ids:
+  - 9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b
+  reference_contexts:
+  - '来源：ZooKeeper 面试题速记通关版; page 18
+
+    ZooKeeper、Eureka、Nacos 和 Consul 有什么区别？你会如何选择？
+
+    服务发现组件选型得看你的系统要什么。⼀致性、可⽤性、部署成本，这三者你得先想清楚。
+
+    ZooKeeper 和 Consul ⾛的是 CP 路线，保证强⼀致性。ZooKeeper ⽤ ZAB 协议，节点间数据必须⼀致，但主挂了要
+
+    重新选主，期间不可⽤。典型⽤法像 HBase、Kafka 拿它做元数据管理。Consul 也是 CP，基于 Raft，健康检查做得
+
+    更细，适合对⼀致性要求⾼的场景，⽐如⾦融交易系统。
+
+    Eureka 是 AP 的代表，牺牲⼀致性换可⽤性。集群间数据可以短暂不⼀致，只要节点活着就能注册和拉取服务列表，
+
+    适合云环境这种⽹络不稳的场景。Netﬂix ⾃家⽤的就是这套，扛住过⾼峰期流量。
+
+    Nacos 其实最灵活，既⽀持 AP 也⽀持 CP。你要强⼀致就切到 CP 模式，⾛类 Raft 协议；要⾼可⽤就⽤ AP，默认就
+
+    是。加上配置中⼼功能，Spring Cloud Alibaba 项⽬基本⾸选它。
+
+    1）如果已有 K8s 或 Istio，Service M esh 层已接管服务发现，这⼏个都可能不需要
+
+    2）如果是传统微服务架构，Nacos 基本能 cover 多数场景
+
+    3）⽼ Hadoop ⽣态项⽬，ZooKeeper 已深度集成，没必要替换
+
+    4）纯 AW S 环境⽤ Eureka 配合 ELB 也很顺
+
+    最终选型别只看理论，压测模拟分区场景，看服务能不能扛住。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b
+  knowledge_scope: public
 - query_id: zk-02
   topic: ZooKeeper
   query: ZooKeeper 临时节点和永久节点有什么区别
@@ -372,11 +2628,77 @@ queries:
   difficulty: medium
   expected_technologies: *id015
   relevance:
-    mianshiya-zookeeper: 2
+    9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b: 2
   expected_knowledge_points:
   - 临时节点
   - 永久节点
   - session
+  reference_answer: '根据 ZooKeeper 面试题速记通关版; page 18：ZooKeeper、Eureka、Nacos 和 Consul
+    有什么区别？你会如何选择？
+
+    服务发现组件选型得看你的系统要什么。⼀致性、可⽤性、部署成本，这三者你得先想清楚。
+
+    ZooKeeper 和 Consul ⾛的是 CP 路线，保证强⼀致性。ZooKeeper ⽤ ZAB 协议，节点间数据必须⼀致，但主挂了要
+
+    重新选主，期间不可⽤。典型⽤法像 HBase、Kafka 拿它做元数据管理。Consul 也是 CP，基于 Raft，健康检查做得
+
+    更细，适合对⼀致性要求⾼的场景，⽐如⾦融交易系统。
+
+    Eureka 是 AP 的代表，牺牲⼀致性换可⽤性。集群间数据可以短暂不⼀致，只要节点活着就能注册和拉取服务列表，
+
+    适合云环境这种⽹络不稳的场景。Netﬂix ⾃家⽤的就是这套，扛住过⾼峰期流量。
+
+    Nacos 其实最灵活，既⽀持 AP 也⽀持 CP。你要强⼀致就切到 CP 模式，⾛类 Raft 协议；要⾼可⽤就⽤ AP，默认就
+
+    是。加上配置中⼼功能，Spring Cloud Alibaba 项⽬基本⾸选它。
+
+    1）如果已有 K8s 或 Istio，Service M esh 层已接管服务发现，这⼏个都可能不需要
+
+    2）如果是传统微服务架构，Nacos 基本能 cover 多数场景
+
+    3）⽼ Hadoop ⽣态项⽬，ZooKeeper 已深度集成，没必要替换
+
+    4）纯 AW S 环境⽤ Eureka 配合 ELB 也很顺
+
+    最终选型别只看理论，压测模拟分区场景，看服务能不能扛住。'
+  reference_context_ids:
+  - 9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b
+  reference_contexts:
+  - '来源：ZooKeeper 面试题速记通关版; page 18
+
+    ZooKeeper、Eureka、Nacos 和 Consul 有什么区别？你会如何选择？
+
+    服务发现组件选型得看你的系统要什么。⼀致性、可⽤性、部署成本，这三者你得先想清楚。
+
+    ZooKeeper 和 Consul ⾛的是 CP 路线，保证强⼀致性。ZooKeeper ⽤ ZAB 协议，节点间数据必须⼀致，但主挂了要
+
+    重新选主，期间不可⽤。典型⽤法像 HBase、Kafka 拿它做元数据管理。Consul 也是 CP，基于 Raft，健康检查做得
+
+    更细，适合对⼀致性要求⾼的场景，⽐如⾦融交易系统。
+
+    Eureka 是 AP 的代表，牺牲⼀致性换可⽤性。集群间数据可以短暂不⼀致，只要节点活着就能注册和拉取服务列表，
+
+    适合云环境这种⽹络不稳的场景。Netﬂix ⾃家⽤的就是这套，扛住过⾼峰期流量。
+
+    Nacos 其实最灵活，既⽀持 AP 也⽀持 CP。你要强⼀致就切到 CP 模式，⾛类 Raft 协议；要⾼可⽤就⽤ AP，默认就
+
+    是。加上配置中⼼功能，Spring Cloud Alibaba 项⽬基本⾸选它。
+
+    1）如果已有 K8s 或 Istio，Service M esh 层已接管服务发现，这⼏个都可能不需要
+
+    2）如果是传统微服务架构，Nacos 基本能 cover 多数场景
+
+    3）⽼ Hadoop ⽣态项⽬，ZooKeeper 已深度集成，没必要替换
+
+    4）纯 AW S 环境⽤ Eureka 配合 ELB 也很顺
+
+    最终选型别只看理论，压测模拟分区场景，看服务能不能扛住。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 9d12c5c551547e3b1617e3574375de1b41112fa1226fd03732bd7344f119b53b
+  knowledge_scope: public
 - query_id: os-01
   topic: 操作系统
   query: 进程和线程有什么区别
@@ -385,11 +2707,72 @@ queries:
   expected_technologies: &id016
   - 操作系统
   relevance:
-    mianshiya-operating-system: 2
+    c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f: 2
   expected_knowledge_points:
   - 进程
   - 线程
   - 资源
+  reference_answer: '根据 操作系统面试题速记通关版; page 11：进程的调度算法你知道吗？
+
+    进程调度算法其实是操作系统做任务分配的核⼼逻辑，关键在于怎么平衡响应时间和吞吐量。
+
+    1）先来先服务（FCFS）就是排队等，谁先到就先跑。优点是简单直观，但短任务可能被⻓任务卡住，平均等待时间
+
+    容易变差。
+
+    2）短作业优先（SJ F）挑预计运⾏时间最短的先执⾏，能最⼩化平均等待时间。但实现难点在怎么预估时间，⽽且⻓
+
+    任务可能⼀直被挤，出现“饥饿”。
+
+    3）时间⽚轮转（RR）给每个进程分⼀个固定时间⽚，轮流执⾏。⽐如 10m s 轮⼀次，保证所有任务都能及时响应，适
+
+    合交互式系统。时间⽚太⼩切换开销⼤，太⼤⼜退化成 FCFS。
+
+    4）多级反馈队列（M LFQ）算是综合⽅案，把多个优先级队列串起来。新进程进⾼优先级队列，⽤完时间⽚没跑完就
+
+    降级。低优先级队列的时间⽚更⼤，既能照顾响应速度，⼜能处理⻓任务。
+
+    Linux 实际⽤的是 完全公平调度器（CFS），它不靠静态优先级，⽽是跟踪每个进程的运⾏时间，总让运⾏时间最少的
+
+    那个跑，相当于动态加权的轮转。
+
+    实时场景会⽤ SCHED_FIFO 或 SCHED_RR，⽐如⾳视频处理要求严格时序，就不能被普通任务打断。'
+  reference_context_ids:
+  - c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f
+  reference_contexts:
+  - '来源：操作系统面试题速记通关版; page 11
+
+    进程的调度算法你知道吗？
+
+    进程调度算法其实是操作系统做任务分配的核⼼逻辑，关键在于怎么平衡响应时间和吞吐量。
+
+    1）先来先服务（FCFS）就是排队等，谁先到就先跑。优点是简单直观，但短任务可能被⻓任务卡住，平均等待时间
+
+    容易变差。
+
+    2）短作业优先（SJ F）挑预计运⾏时间最短的先执⾏，能最⼩化平均等待时间。但实现难点在怎么预估时间，⽽且⻓
+
+    任务可能⼀直被挤，出现“饥饿”。
+
+    3）时间⽚轮转（RR）给每个进程分⼀个固定时间⽚，轮流执⾏。⽐如 10m s 轮⼀次，保证所有任务都能及时响应，适
+
+    合交互式系统。时间⽚太⼩切换开销⼤，太⼤⼜退化成 FCFS。
+
+    4）多级反馈队列（M LFQ）算是综合⽅案，把多个优先级队列串起来。新进程进⾼优先级队列，⽤完时间⽚没跑完就
+
+    降级。低优先级队列的时间⽚更⼤，既能照顾响应速度，⼜能处理⻓任务。
+
+    Linux 实际⽤的是 完全公平调度器（CFS），它不靠静态优先级，⽽是跟踪每个进程的运⾏时间，总让运⾏时间最少的
+
+    那个跑，相当于动态加权的轮转。
+
+    实时场景会⽤ SCHED_FIFO 或 SCHED_RR，⽐如⾳视频处理要求严格时序，就不能被普通任务打断。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f
+  knowledge_scope: public
 - query_id: os-02
   topic: 操作系统
   query: 操作系统为什么需要虚拟内存
@@ -397,11 +2780,72 @@ queries:
   difficulty: medium
   expected_technologies: *id016
   relevance:
-    mianshiya-operating-system: 2
+    c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f: 2
   expected_knowledge_points:
   - 虚拟内存
   - 地址空间
   - 物理内存
+  reference_answer: '根据 操作系统面试题速记通关版; page 11：进程的调度算法你知道吗？
+
+    进程调度算法其实是操作系统做任务分配的核⼼逻辑，关键在于怎么平衡响应时间和吞吐量。
+
+    1）先来先服务（FCFS）就是排队等，谁先到就先跑。优点是简单直观，但短任务可能被⻓任务卡住，平均等待时间
+
+    容易变差。
+
+    2）短作业优先（SJ F）挑预计运⾏时间最短的先执⾏，能最⼩化平均等待时间。但实现难点在怎么预估时间，⽽且⻓
+
+    任务可能⼀直被挤，出现“饥饿”。
+
+    3）时间⽚轮转（RR）给每个进程分⼀个固定时间⽚，轮流执⾏。⽐如 10m s 轮⼀次，保证所有任务都能及时响应，适
+
+    合交互式系统。时间⽚太⼩切换开销⼤，太⼤⼜退化成 FCFS。
+
+    4）多级反馈队列（M LFQ）算是综合⽅案，把多个优先级队列串起来。新进程进⾼优先级队列，⽤完时间⽚没跑完就
+
+    降级。低优先级队列的时间⽚更⼤，既能照顾响应速度，⼜能处理⻓任务。
+
+    Linux 实际⽤的是 完全公平调度器（CFS），它不靠静态优先级，⽽是跟踪每个进程的运⾏时间，总让运⾏时间最少的
+
+    那个跑，相当于动态加权的轮转。
+
+    实时场景会⽤ SCHED_FIFO 或 SCHED_RR，⽐如⾳视频处理要求严格时序，就不能被普通任务打断。'
+  reference_context_ids:
+  - c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f
+  reference_contexts:
+  - '来源：操作系统面试题速记通关版; page 11
+
+    进程的调度算法你知道吗？
+
+    进程调度算法其实是操作系统做任务分配的核⼼逻辑，关键在于怎么平衡响应时间和吞吐量。
+
+    1）先来先服务（FCFS）就是排队等，谁先到就先跑。优点是简单直观，但短任务可能被⻓任务卡住，平均等待时间
+
+    容易变差。
+
+    2）短作业优先（SJ F）挑预计运⾏时间最短的先执⾏，能最⼩化平均等待时间。但实现难点在怎么预估时间，⽽且⻓
+
+    任务可能⼀直被挤，出现“饥饿”。
+
+    3）时间⽚轮转（RR）给每个进程分⼀个固定时间⽚，轮流执⾏。⽐如 10m s 轮⼀次，保证所有任务都能及时响应，适
+
+    合交互式系统。时间⽚太⼩切换开销⼤，太⼤⼜退化成 FCFS。
+
+    4）多级反馈队列（M LFQ）算是综合⽅案，把多个优先级队列串起来。新进程进⾼优先级队列，⽤完时间⽚没跑完就
+
+    降级。低优先级队列的时间⽚更⼤，既能照顾响应速度，⼜能处理⻓任务。
+
+    Linux 实际⽤的是 完全公平调度器（CFS），它不靠静态优先级，⽽是跟踪每个进程的运⾏时间，总让运⾏时间最少的
+
+    那个跑，相当于动态加权的轮转。
+
+    实时场景会⽤ SCHED_FIFO 或 SCHED_RR，⽐如⾳视频处理要求严格时序，就不能被普通任务打断。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - c69103a54e0f689bd61c30de4babac7de78b88485b2777d814a6f19c0fc8fd9f
+  knowledge_scope: public
 - query_id: mq-01
   topic: 消息队列
   query: 为什么使用消息队列，它解决了哪些问题
@@ -410,11 +2854,76 @@ queries:
   expected_technologies: &id017
   - 消息队列
   relevance:
-    mianshiya-message-queue: 2
+    3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a: 2
   expected_knowledge_points:
   - 异步
   - 解耦
   - 削峰
+  reference_answer: '根据 消息队列面试题速记通关版; page 6：说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  reference_context_ids:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  reference_contexts:
+  - '来源：消息队列面试题速记通关版; page 6
+
+    说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  knowledge_scope: public
 - query_id: mq-02
   topic: 消息队列
   query: 消息队列如何处理重复消费和消息丢失
@@ -422,12 +2931,76 @@ queries:
   difficulty: hard
   expected_technologies: *id017
   relevance:
-    mianshiya-message-queue: 2
-    mianshiya-rabbitmq: 1
+    3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a: 2
   expected_knowledge_points:
   - 幂等
   - 重试
   - 可靠性
+  reference_answer: '根据 消息队列面试题速记通关版; page 6：说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  reference_context_ids:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  reference_contexts:
+  - '来源：消息队列面试题速记通关版; page 6
+
+    说说 RabbitMQ 的⼯作模式？
+
+    RabbitM Q 的⼯作模式本质上是消息从⽣产者到消费者之间的流转⽅式，不同的交换机类型决定了路由规则。
+
+    1）最简单的是直连模式，⽤ Direct Exchange ，消息的 routing key 必须和队列绑定的 key 完全匹配。⽐如订单
+
+    服务发消息到 order.create ，消费端只绑这个 key 就能收到。
+
+    2）发布订阅模式⽤ Fanout Exchange ，它会把消息⼴播给所有绑定的队列，不看 routing key。像⽇志收集场
+
+    景，多个系统都需要⼀份⽇志，就可以⽤这个模式。
+
+    3）主题模式使⽤ Topic Exchange ，⽀持通配符匹配 routing key。⽐如 logs.user.create 和
+
+    logs.order.update 都能被 logs.*.create 或 logs.# 这样的 binding key 捕获。Kafka ⾥类似的逻辑得⾃
+
+    ⼰做分发，⽽ RabbitM Q 原⽣⽀持。
+
+    4）还有个 Headers Exchange ，按键值对匹配，基本没⼈⽤，性能差，实⽤性低。
+
+    重点是交换机和队列的绑定关系由消费者决定，不是⽣产者。⽣产者只管发给哪个 exchange，后⾯怎么路由是
+
+    Broker 根据绑定规则处理的。
+
+    实际⽤得最多的是 direct 和 topic。Spring Boot ⾥配个 @RabbitListener(queues = "xxx") 就⾃动完成队列
+
+    声明和绑定，底层其实靠的是 AM QP 协议在维持这套模型。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 3abdc4613ce0c4b7612f3b663c4ea6d527d07d1a87d994ea3333668d279caf6a
+  knowledge_scope: public
 - query_id: network-01
   topic: 计算机网络
   query: TCP 三次握手和四次挥手的过程是什么
@@ -436,11 +3009,138 @@ queries:
   expected_technologies: &id018
   - 计算机网络
   relevance:
-    mianshiya-computer-network: 2
+    fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f: 2
   expected_knowledge_points:
   - TCP
   - 三次握手
   - 四次挥手
+  reference_answer: '根据 计算机网络面试题速记通关版; page 11：到底什么是 TCP 连接？
+
+    TCP 连接本质上是通信双⽅维护的⼀对状态，不是物理线路。建⽴连接靠三次握⼿，客户端和服务器交换各⾃的初始
+
+    序列号（ISN），确认彼此的收发能⼒。
+
+    1）第⼀次：客户端发 SYN=1, seq=x 给服务器
+
+    2）第⼆次：服务器回 SYN=1, ack=x+1, seq=y
+
+    3）第三次：客户端再发 ACK=1, ack=y+1
+
+    握⼿完成后，双⽅内核⾥的 TCP 状态机都进⼊ ESTABLISHED，开始传输数据。断开连接则是四次挥⼿，因为 TCP 是
+
+    双⼯的，读写通道要分别关闭。
+
+    很多⼈以为连接是“通路”，其实它只是操作系统⾥两个 socket 对象在内核中保存的状态信息，⽐如缓冲区、窗⼝⼤
+
+    ⼩、序列号等。⽹络中断或超时，状态不⼀致，连接就失效了。
+
+    像 Nginx、Redis 这类⾼并发服务，最怕 TIM E_W AIT 太多或者⽂件描述符耗尽，本质都是连接资源没释放。所以得调
+
+    优内核参数，⽐如开启 SO_REUSEADDR 或调整 tcp_tw_reuse 。
+
+    状态同步 和 可靠传输 才是 TCP 连接的核⼼⽬标，它通过序列号、确认应答、超时重传来保证数据不丢、不乱序。连
+
+    接本⾝，不过是实现这个⽬标的上下⽂容器。
+
+    服务端是如何解析 HTTP 请求的数据？（考察 HTTP 请求格式的了解程度）
+
+    HTTP 请求不是凭空就能处理的，服务端得先把它拆开看明⽩。整个过程其实分⼏步⾛，每⼀步都对应着 HTTP 协议本
+
+    ⾝的结构。
+
+    请求⼀进来，TCP 层先把数据收上来，应⽤层⽐如 Tom cat 或 Netty 开始按 HTTP 报⽂格式解析。第⼀⾏是请求⾏，
+
+    包含⽅法、路径和协议版本，⽐如 GET /api/user?id=123 HTTP/1.1 。这⼀⾏决定了你要⼲啥、去哪。
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    务器靠这些判断怎么处理请求，⽐如是不是 J SON 数据、有没有登录。
+
+    如果请求带了 body，⽐如 POST 提交表单或 J SON，服务端会根据 Content-Length 或 Transfer-Encoding
+
+    知道 body 有多⻓。Content-Length 直接告诉你字节数，⼀⼝⽓读完就⾏。如果是 chunked 编码，就⼀段段收，
+
+    直到收到结束标记。
+
+    body 的内容还得看 Content-Type 。如果是 application/x-www-form-urlencoded ，那就按 key=value
+    解
+
+    码；如果是 application/json ，就得⽤ J ackson 或 G son 做反序列化。
+
+    整个流程压根不经过业务逻辑，全是容器或框架底层搞定的。你写 Controller 的时候已经拿到解析好的参数了，但底
+
+    层其实⾛了⼀整套状态机在拆包。'
+  reference_context_ids:
+  - fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f
+  reference_contexts:
+  - '来源：计算机网络面试题速记通关版; page 11
+
+    到底什么是 TCP 连接？
+
+    TCP 连接本质上是通信双⽅维护的⼀对状态，不是物理线路。建⽴连接靠三次握⼿，客户端和服务器交换各⾃的初始
+
+    序列号（ISN），确认彼此的收发能⼒。
+
+    1）第⼀次：客户端发 SYN=1, seq=x 给服务器
+
+    2）第⼆次：服务器回 SYN=1, ack=x+1, seq=y
+
+    3）第三次：客户端再发 ACK=1, ack=y+1
+
+    握⼿完成后，双⽅内核⾥的 TCP 状态机都进⼊ ESTABLISHED，开始传输数据。断开连接则是四次挥⼿，因为 TCP 是
+
+    双⼯的，读写通道要分别关闭。
+
+    很多⼈以为连接是“通路”，其实它只是操作系统⾥两个 socket 对象在内核中保存的状态信息，⽐如缓冲区、窗⼝⼤
+
+    ⼩、序列号等。⽹络中断或超时，状态不⼀致，连接就失效了。
+
+    像 Nginx、Redis 这类⾼并发服务，最怕 TIM E_W AIT 太多或者⽂件描述符耗尽，本质都是连接资源没释放。所以得调
+
+    优内核参数，⽐如开启 SO_REUSEADDR 或调整 tcp_tw_reuse 。
+
+    状态同步 和 可靠传输 才是 TCP 连接的核⼼⽬标，它通过序列号、确认应答、超时重传来保证数据不丢、不乱序。连
+
+    接本⾝，不过是实现这个⽬标的上下⽂容器。
+
+    服务端是如何解析 HTTP 请求的数据？（考察 HTTP 请求格式的了解程度）
+
+    HTTP 请求不是凭空就能处理的，服务端得先把它拆开看明⽩。整个过程其实分⼏步⾛，每⼀步都对应着 HTTP 协议本
+
+    ⾝的结构。
+
+    请求⼀进来，TCP 层先把数据收上来，应⽤层⽐如 Tom cat 或 Netty 开始按 HTTP 报⽂格式解析。第⼀⾏是请求⾏，
+
+    包含⽅法、路径和协议版本，⽐如 GET /api/user?id=123 HTTP/1.1 。这⼀⾏决定了你要⼲啥、去哪。
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    务器靠这些判断怎么处理请求，⽐如是不是 J SON 数据、有没有登录。
+
+    如果请求带了 body，⽐如 POST 提交表单或 J SON，服务端会根据 Content-Length 或 Transfer-Encoding
+
+    知道 body 有多⻓。Content-Length 直接告诉你字节数，⼀⼝⽓读完就⾏。如果是 chunked 编码，就⼀段段收，
+
+    直到收到结束标记。
+
+    body 的内容还得看 Content-Type 。如果是 application/x-www-form-urlencoded ，那就按 key=value
+    解
+
+    码；如果是 application/json ，就得⽤ J ackson 或 G son 做反序列化。
+
+    整个流程压根不经过业务逻辑，全是容器或框架底层搞定的。你写 Controller 的时候已经拿到解析好的参数了，但底
+
+    层其实⾛了⼀整套状态机在拆包。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f
+  knowledge_scope: public
 - query_id: network-02
   topic: 计算机网络
   query: HTTP 和 HTTPS 有什么区别，TLS 握手如何工作
@@ -448,11 +3148,138 @@ queries:
   difficulty: hard
   expected_technologies: *id018
   relevance:
-    mianshiya-computer-network: 2
+    fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f: 2
   expected_knowledge_points:
   - HTTP
   - HTTPS
   - TLS
+  reference_answer: '根据 计算机网络面试题速记通关版; page 11：到底什么是 TCP 连接？
+
+    TCP 连接本质上是通信双⽅维护的⼀对状态，不是物理线路。建⽴连接靠三次握⼿，客户端和服务器交换各⾃的初始
+
+    序列号（ISN），确认彼此的收发能⼒。
+
+    1）第⼀次：客户端发 SYN=1, seq=x 给服务器
+
+    2）第⼆次：服务器回 SYN=1, ack=x+1, seq=y
+
+    3）第三次：客户端再发 ACK=1, ack=y+1
+
+    握⼿完成后，双⽅内核⾥的 TCP 状态机都进⼊ ESTABLISHED，开始传输数据。断开连接则是四次挥⼿，因为 TCP 是
+
+    双⼯的，读写通道要分别关闭。
+
+    很多⼈以为连接是“通路”，其实它只是操作系统⾥两个 socket 对象在内核中保存的状态信息，⽐如缓冲区、窗⼝⼤
+
+    ⼩、序列号等。⽹络中断或超时，状态不⼀致，连接就失效了。
+
+    像 Nginx、Redis 这类⾼并发服务，最怕 TIM E_W AIT 太多或者⽂件描述符耗尽，本质都是连接资源没释放。所以得调
+
+    优内核参数，⽐如开启 SO_REUSEADDR 或调整 tcp_tw_reuse 。
+
+    状态同步 和 可靠传输 才是 TCP 连接的核⼼⽬标，它通过序列号、确认应答、超时重传来保证数据不丢、不乱序。连
+
+    接本⾝，不过是实现这个⽬标的上下⽂容器。
+
+    服务端是如何解析 HTTP 请求的数据？（考察 HTTP 请求格式的了解程度）
+
+    HTTP 请求不是凭空就能处理的，服务端得先把它拆开看明⽩。整个过程其实分⼏步⾛，每⼀步都对应着 HTTP 协议本
+
+    ⾝的结构。
+
+    请求⼀进来，TCP 层先把数据收上来，应⽤层⽐如 Tom cat 或 Netty 开始按 HTTP 报⽂格式解析。第⼀⾏是请求⾏，
+
+    包含⽅法、路径和协议版本，⽐如 GET /api/user?id=123 HTTP/1.1 。这⼀⾏决定了你要⼲啥、去哪。
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    务器靠这些判断怎么处理请求，⽐如是不是 J SON 数据、有没有登录。
+
+    如果请求带了 body，⽐如 POST 提交表单或 J SON，服务端会根据 Content-Length 或 Transfer-Encoding
+
+    知道 body 有多⻓。Content-Length 直接告诉你字节数，⼀⼝⽓读完就⾏。如果是 chunked 编码，就⼀段段收，
+
+    直到收到结束标记。
+
+    body 的内容还得看 Content-Type 。如果是 application/x-www-form-urlencoded ，那就按 key=value
+    解
+
+    码；如果是 application/json ，就得⽤ J ackson 或 G son 做反序列化。
+
+    整个流程压根不经过业务逻辑，全是容器或框架底层搞定的。你写 Controller 的时候已经拿到解析好的参数了，但底
+
+    层其实⾛了⼀整套状态机在拆包。'
+  reference_context_ids:
+  - fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f
+  reference_contexts:
+  - '来源：计算机网络面试题速记通关版; page 11
+
+    到底什么是 TCP 连接？
+
+    TCP 连接本质上是通信双⽅维护的⼀对状态，不是物理线路。建⽴连接靠三次握⼿，客户端和服务器交换各⾃的初始
+
+    序列号（ISN），确认彼此的收发能⼒。
+
+    1）第⼀次：客户端发 SYN=1, seq=x 给服务器
+
+    2）第⼆次：服务器回 SYN=1, ack=x+1, seq=y
+
+    3）第三次：客户端再发 ACK=1, ack=y+1
+
+    握⼿完成后，双⽅内核⾥的 TCP 状态机都进⼊ ESTABLISHED，开始传输数据。断开连接则是四次挥⼿，因为 TCP 是
+
+    双⼯的，读写通道要分别关闭。
+
+    很多⼈以为连接是“通路”，其实它只是操作系统⾥两个 socket 对象在内核中保存的状态信息，⽐如缓冲区、窗⼝⼤
+
+    ⼩、序列号等。⽹络中断或超时，状态不⼀致，连接就失效了。
+
+    像 Nginx、Redis 这类⾼并发服务，最怕 TIM E_W AIT 太多或者⽂件描述符耗尽，本质都是连接资源没释放。所以得调
+
+    优内核参数，⽐如开启 SO_REUSEADDR 或调整 tcp_tw_reuse 。
+
+    状态同步 和 可靠传输 才是 TCP 连接的核⼼⽬标，它通过序列号、确认应答、超时重传来保证数据不丢、不乱序。连
+
+    接本⾝，不过是实现这个⽬标的上下⽂容器。
+
+    服务端是如何解析 HTTP 请求的数据？（考察 HTTP 请求格式的了解程度）
+
+    HTTP 请求不是凭空就能处理的，服务端得先把它拆开看明⽩。整个过程其实分⼏步⾛，每⼀步都对应着 HTTP 协议本
+
+    ⾝的结构。
+
+    请求⼀进来，TCP 层先把数据收上来，应⽤层⽐如 Tom cat 或 Netty 开始按 HTTP 报⽂格式解析。第⼀⾏是请求⾏，
+
+    包含⽅法、路径和协议版本，⽐如 GET /api/user?id=123 HTTP/1.1 。这⼀⾏决定了你要⼲啥、去哪。
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    接下来是请求头，⼀堆键值对，每⼀⾏⼀个字段。像 Host 、Content-Type 、Authorization 都在这⼉。服
+
+    务器靠这些判断怎么处理请求，⽐如是不是 J SON 数据、有没有登录。
+
+    如果请求带了 body，⽐如 POST 提交表单或 J SON，服务端会根据 Content-Length 或 Transfer-Encoding
+
+    知道 body 有多⻓。Content-Length 直接告诉你字节数，⼀⼝⽓读完就⾏。如果是 chunked 编码，就⼀段段收，
+
+    直到收到结束标记。
+
+    body 的内容还得看 Content-Type 。如果是 application/x-www-form-urlencoded ，那就按 key=value
+    解
+
+    码；如果是 application/json ，就得⽤ J ackson 或 G son 做反序列化。
+
+    整个流程压根不经过业务逻辑，全是容器或框架底层搞定的。你写 Controller 的时候已经拿到解析好的参数了，但底
+
+    层其实⾛了⼀整套状态机在拆包。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - fd5bcf5fe5e717202f085a79b9ab667d627c2f4ffeede6f5fe4266f460f2006f
+  knowledge_scope: public
 - query_id: pattern-01
   topic: 设计模式
   query: 单例模式有哪些实现方式，如何保证线程安全
@@ -461,12 +3288,180 @@ queries:
   expected_technologies: &id019
   - 设计模式
   relevance:
-    mianshiya-design-patterns: 2
-    mianshiya-java-top-200: 1
+    2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523: 2
   expected_knowledge_points:
   - 单例模式
   - 双重检查
   - 线程安全
+  reference_answer: '根据 设计模式面试题速记通关版; page 16：什么是桥接模式？⼀般⽤在什么场景？
+
+    桥接模式的关键是把抽象和实现解耦，让它们能独⽴变化。⽐如你有个图形类，既要⽀持不同形状（圆形、⽅形），⼜
+
+    要⽀持不同渲染⽅式（W indows、Linux）。如果⽤继承硬写，组合爆炸，8个类都搞不定。
+
+    1） 把变化维度拆开。形状作为抽象层，渲染作为实现层，两者通过组合连接。 2） 抽象层持有⼀个实现层的接⼝引
+
+    ⽤，运⾏时动态绑定具体实现。 3） 新增形状或新渲染器，都不⽤动对⽅代码，符合开闭原则。
+
+    典型场景是跨平台 G U I 库。Swing ⾥的 Component 和 LookAndFeel 就是桥接⸺同⼀个按钮，在 W indows 和
+
+    m acOS 上外观不同，但⾏为⼀致。还有 J DBC 驱动，Connection 接⼝是抽象，M ySQL、Oracle 驱动是具体实
+
+    现，切换数据库不改业务代码。
+
+    interface Renderer {
+
+    void render(String shape);
+
+    }
+
+    class WindowsRenderer implements Renderer {
+
+    public void render(String shape) {
+
+    System.out.println("Draw " + shape + " on Windows");
+
+    }
+
+    }
+
+    abstract class Shape {
+
+    protected Renderer renderer;
+
+    public Shape(Renderer renderer) {
+
+    this.renderer = renderer;
+
+    }
+
+    abstract void draw();
+
+    }
+
+    class Circle extends Shape {
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    实际调⽤时，new Circle(new W indowsRenderer())，就能画出⼀个 W indows ⻛格的圆。换 M ac 渲染器，只要换参
+
+    数，形状类完全不动。'
+  reference_context_ids:
+  - 2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523
+  reference_contexts:
+  - '来源：设计模式面试题速记通关版; page 16
+
+    什么是桥接模式？⼀般⽤在什么场景？
+
+    桥接模式的关键是把抽象和实现解耦，让它们能独⽴变化。⽐如你有个图形类，既要⽀持不同形状（圆形、⽅形），⼜
+
+    要⽀持不同渲染⽅式（W indows、Linux）。如果⽤继承硬写，组合爆炸，8个类都搞不定。
+
+    1） 把变化维度拆开。形状作为抽象层，渲染作为实现层，两者通过组合连接。 2） 抽象层持有⼀个实现层的接⼝引
+
+    ⽤，运⾏时动态绑定具体实现。 3） 新增形状或新渲染器，都不⽤动对⽅代码，符合开闭原则。
+
+    典型场景是跨平台 G U I 库。Swing ⾥的 Component 和 LookAndFeel 就是桥接⸺同⼀个按钮，在 W indows 和
+
+    m acOS 上外观不同，但⾏为⼀致。还有 J DBC 驱动，Connection 接⼝是抽象，M ySQL、Oracle 驱动是具体实
+
+    现，切换数据库不改业务代码。
+
+    interface Renderer {
+
+    void render(String shape);
+
+    }
+
+    class WindowsRenderer implements Renderer {
+
+    public void render(String shape) {
+
+    System.out.println("Draw " + shape + " on Windows");
+
+    }
+
+    }
+
+    abstract class Shape {
+
+    protected Renderer renderer;
+
+    public Shape(Renderer renderer) {
+
+    this.renderer = renderer;
+
+    }
+
+    abstract void draw();
+
+    }
+
+    class Circle extends Shape {
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    实际调⽤时，new Circle(new W indowsRenderer())，就能画出⼀个 W indows ⻛格的圆。换 M ac 渲染器，只要换参
+
+    数，形状类完全不动。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523
+  knowledge_scope: public
 - query_id: pattern-02
   topic: 设计模式
   query: 策略模式适合什么场景
@@ -474,7 +3469,176 @@ queries:
   difficulty: medium
   expected_technologies: *id019
   relevance:
-    mianshiya-design-patterns: 2
+    2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523: 2
   expected_knowledge_points:
   - 策略模式
   - 算法替换
+  reference_answer: '根据 设计模式面试题速记通关版; page 16：什么是桥接模式？⼀般⽤在什么场景？
+
+    桥接模式的关键是把抽象和实现解耦，让它们能独⽴变化。⽐如你有个图形类，既要⽀持不同形状（圆形、⽅形），⼜
+
+    要⽀持不同渲染⽅式（W indows、Linux）。如果⽤继承硬写，组合爆炸，8个类都搞不定。
+
+    1） 把变化维度拆开。形状作为抽象层，渲染作为实现层，两者通过组合连接。 2） 抽象层持有⼀个实现层的接⼝引
+
+    ⽤，运⾏时动态绑定具体实现。 3） 新增形状或新渲染器，都不⽤动对⽅代码，符合开闭原则。
+
+    典型场景是跨平台 G U I 库。Swing ⾥的 Component 和 LookAndFeel 就是桥接⸺同⼀个按钮，在 W indows 和
+
+    m acOS 上外观不同，但⾏为⼀致。还有 J DBC 驱动，Connection 接⼝是抽象，M ySQL、Oracle 驱动是具体实
+
+    现，切换数据库不改业务代码。
+
+    interface Renderer {
+
+    void render(String shape);
+
+    }
+
+    class WindowsRenderer implements Renderer {
+
+    public void render(String shape) {
+
+    System.out.println("Draw " + shape + " on Windows");
+
+    }
+
+    }
+
+    abstract class Shape {
+
+    protected Renderer renderer;
+
+    public Shape(Renderer renderer) {
+
+    this.renderer = renderer;
+
+    }
+
+    abstract void draw();
+
+    }
+
+    class Circle extends Shape {
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    实际调⽤时，new Circle(new W indowsRenderer())，就能画出⼀个 W indows ⻛格的圆。换 M ac 渲染器，只要换参
+
+    数，形状类完全不动。'
+  reference_context_ids:
+  - 2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523
+  reference_contexts:
+  - '来源：设计模式面试题速记通关版; page 16
+
+    什么是桥接模式？⼀般⽤在什么场景？
+
+    桥接模式的关键是把抽象和实现解耦，让它们能独⽴变化。⽐如你有个图形类，既要⽀持不同形状（圆形、⽅形），⼜
+
+    要⽀持不同渲染⽅式（W indows、Linux）。如果⽤继承硬写，组合爆炸，8个类都搞不定。
+
+    1） 把变化维度拆开。形状作为抽象层，渲染作为实现层，两者通过组合连接。 2） 抽象层持有⼀个实现层的接⼝引
+
+    ⽤，运⾏时动态绑定具体实现。 3） 新增形状或新渲染器，都不⽤动对⽅代码，符合开闭原则。
+
+    典型场景是跨平台 G U I 库。Swing ⾥的 Component 和 LookAndFeel 就是桥接⸺同⼀个按钮，在 W indows 和
+
+    m acOS 上外观不同，但⾏为⼀致。还有 J DBC 驱动，Connection 接⼝是抽象，M ySQL、Oracle 驱动是具体实
+
+    现，切换数据库不改业务代码。
+
+    interface Renderer {
+
+    void render(String shape);
+
+    }
+
+    class WindowsRenderer implements Renderer {
+
+    public void render(String shape) {
+
+    System.out.println("Draw " + shape + " on Windows");
+
+    }
+
+    }
+
+    abstract class Shape {
+
+    protected Renderer renderer;
+
+    public Shape(Renderer renderer) {
+
+    this.renderer = renderer;
+
+    }
+
+    abstract void draw();
+
+    }
+
+    class Circle extends Shape {
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    public Circle(Renderer renderer) {
+
+    super(renderer);
+
+    }
+
+    void draw() {
+
+    renderer.render("Circle");
+
+    }
+
+    }
+
+    实际调⽤时，new Circle(new W indowsRenderer())，就能画出⼀个 W indows ⻛格的圆。换 M ac 渲染器，只要换参
+
+    数，形状类完全不动。'
+  expected_route: public_milvus_search
+  expected_tools:
+  - public_milvus_search
+  expected_citations:
+  - 2d6ab6de66091ed98c1de154a2ce6eb8644df1ccbd531a8b33a3c46bc84f4523
+  knowledge_scope: public

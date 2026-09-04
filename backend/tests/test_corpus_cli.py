@@ -96,3 +96,20 @@ def test_cli_blocked_operation_returns_nonzero_json(tmp_path, capsys):
     payload = json.loads(capsys.readouterr().err)
     assert exit_code == 1
     assert payload["failure_type"] == "PublicationError"
+
+
+def test_cli_returns_failure_when_requested_ragas_gate_is_unavailable(tmp_path, capsys, monkeypatch):
+    def unavailable_ragas(*args, **kwargs):
+        return {
+            "ragas": {"status": "unavailable", "metrics": {}},
+            "gates": {"passed": False, "failed_metrics": {"faithfulness": {"actual": "unavailable"}}},
+        }
+
+    monkeypatch.setattr("app.corpus.cli.CorpusPipeline.evaluate_full", unavailable_ragas)
+    exit_code = main([
+        "--runtime-root", str(tmp_path / "runtime"), "--store", "memory", "evaluate",
+        "golden.yaml", "candidate-v1", "--include-generation", "--ragas",
+    ])
+    payload = json.loads(capsys.readouterr().out)
+    assert exit_code == 1
+    assert payload["ragas"]["status"] == "unavailable"

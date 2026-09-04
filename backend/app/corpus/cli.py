@@ -7,7 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from app.corpus.config import CorpusConfig
-from app.corpus.evaluation import EvaluationReport, compare_reports
+from app.corpus.evaluation import (
+    EvaluationReport,
+    build_evaluation_payload,
+    compare_reports,
+    compare_evaluation_payloads,
+    enforce_gate,
+    load_golden_dataset,
+    migrate_legacy_benchmark,
+    write_evaluation_files,
+)
 from app.corpus.pipeline import CorpusPipeline
 from app.corpus.storage import InMemoryCorpusStore, MilvusCorpusStore
 
@@ -25,6 +34,20 @@ def _parser() -> argparse.ArgumentParser:
     evaluate = subparsers.add_parser("evaluate", help="运行检索基准")
     evaluate.add_argument("benchmark")
     evaluate.add_argument("corpus_version")
+    evaluate.add_argument("--deterministic-only", action="store_true")
+    evaluate.add_argument("--ragas", action="store_true")
+    evaluate.add_argument("--include-generation", action="store_true")
+    evaluate.add_argument("--include-agent", action="store_true")
+    evaluate.add_argument("--override-reason", help="允许门禁未达标时继续发布的审计理由")
+    evaluate.add_argument("--override-by", help="执行覆盖的维护者身份")
+    evaluate.add_argument("--output")
+    validate = subparsers.add_parser("validate-golden", help="validate a 100-sample Golden Dataset")
+    validate.add_argument("golden")
+    migrate = subparsers.add_parser("migrate-golden", help="enrich a historical benchmark without changing its source")
+    migrate.add_argument("benchmark")
+    migrate.add_argument("output")
+    eval_report = subparsers.add_parser("eval-report", help="show an evaluation report")
+    eval_report.add_argument("report")
     inspect = subparsers.add_parser("inspect", help="查看版本治理状态")
     inspect.add_argument("corpus_version", nargs="?")
     approve = subparsers.add_parser("approve", help="记录人工审核")
@@ -91,6 +114,17 @@ def main(argv: list[str] | None = None) -> int:
         if args.runtime_root:
             values = {**config.__dict__, "runtime_root": Path(args.runtime_root)}
             config = CorpusConfig(**values)
+        if args.command == "validate-golden":
+            dataset = load_golden_dataset(args.golden)
+            print(_json({"valid": True, "benchmark_version": dataset.benchmark_version, "sample_count": len(dataset.queries), "content_hash": dataset.content_hash}))
+            return 0
+        if args.command == "migrate-golden":
+            migrated = migrate_legacy_benchmark(args.benchmark, output=args.output)
+            print(_json({"migrated": True, "output": str(Path(args.output).resolve()), "sample_count": len(migrated.queries), "benchmark_version": migrated.benchmark_version}))
+            return 0
+        if args.command == "eval-report":
+            print(_json(json.loads(Path(args.report).read_text(encoding="utf-8"))))
+            return 0
         store = InMemoryCorpusStore() if args.store == "memory" else MilvusCorpusStore()
         pipeline = CorpusPipeline(config, store=store)
         if args.command == "preview":
@@ -98,7 +132,24 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "ingest":
             payload = _batch_payload(pipeline.ingest(args.manifest))
         elif args.command == "evaluate":
-            payload = pipeline.evaluate(args.benchmark, args.corpus_version)
+            if args.ragas and not args.include_generation:
+                raise ValueError("--ragas requires --include-generation so RAGAS receives real generated content")
+            if args.deterministic_only and (args.ragas or args.include_generation or args.include_agent):
+                raise ValueError("--deterministic-only cannot be combined with generation, Agent, or RAGAS stages")
+            payload = pipeline.evaluate_full(
+                args.benchmark, args.corpus_version,
+                status="published",
+                include_generation=args.include_generation,
+                include_agent=args.include_agent,
+                include_ragas=args.ragas,
+                output=args.output,
+                override_reason=args.override_reason,
+                override_by=args.override_by,
+            )
+            print(_json(payload))
+            if (payload.get("gates") or {}).get("passed") is False:
+                return 1
+            return 0
         elif args.command == "inspect":
             payload = pipeline.inspect(args.corpus_version)
         elif args.command == "approve":
@@ -115,9 +166,9 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "stats":
             payload = pipeline.statistics()
         elif args.command == "compare":
-            current = _load_evaluation_report(args.current)
-            candidate = _load_evaluation_report(args.candidate)
-            payload = compare_reports(current, candidate)
+            current_raw = json.loads(Path(args.current).read_text(encoding="utf-8"))
+            candidate_raw = json.loads(Path(args.candidate).read_text(encoding="utf-8"))
+            payload = compare_evaluation_payloads(current_raw, candidate_raw)
         else:  # pragma: no cover
             parser.error("unknown command")
         print(_json(payload))

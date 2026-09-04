@@ -46,6 +46,7 @@ class AgenticRAGState(TypedDict, total=False):
     route: str
     route_reason: str
     tool_calls: list[str]
+    trace_events: list[dict[str, Any]]
     fallback_reason: str | None
     done: bool
     started_at: float
@@ -255,6 +256,14 @@ async def _retrieve(state: AgenticRAGState) -> dict[str, Any]:
         return {"done": True, "fallback_reason": "policy_blocked_tool"}
     query = state.get("query") or state["topic"]
     rows: list[dict[str, Any]] = []
+    started = time.perf_counter()
+    # Persist only an argument summary. The original user query can contain
+    # personal material and is already represented by the Golden sample ID in
+    # offline evaluation, not by an Agent trace event.
+    event_base = {
+        "name": str(tool),
+        "arguments": {"query_length": len(query), "role": str(state.get("role") or "")[:40]},
+    }
     try:
         if tool == "public_milvus_search":
             from app.services.knowledge_service import get_public_vector_store
@@ -293,8 +302,12 @@ async def _retrieve(state: AgenticRAGState) -> dict[str, Any]:
         else:
             return {"done": True, "fallback_reason": "unknown_tool"}
     except Exception as exc:
-        return {"tool_calls": [*state.get("tool_calls", []), tool], "tool_call_count": state.get("tool_call_count", 0) + 1, "round": state.get("round", 0) + 1, "fallback_reason": f"{tool}_{type(exc).__name__}"}
-    return {"evidence": [*state.get("evidence", []), *rows], "candidate_count": state.get("candidate_count", 0) + len(rows), "tool_calls": [*state.get("tool_calls", []), tool], "tool_call_count": state.get("tool_call_count", 0) + 1, "round": state.get("round", 0) + 1}
+        event = {**event_base, "duration_ms": (time.perf_counter() - started) * 1000,
+                 "status": "failed", "error_type": type(exc).__name__}
+        return {"tool_calls": [*state.get("tool_calls", []), tool], "trace_events": [*state.get("trace_events", []), event], "tool_call_count": state.get("tool_call_count", 0) + 1, "round": state.get("round", 0) + 1, "fallback_reason": f"{tool}_{type(exc).__name__}"}
+    event = {**event_base, "duration_ms": (time.perf_counter() - started) * 1000,
+             "status": "success", "result_count": len(rows)}
+    return {"evidence": [*state.get("evidence", []), *rows], "candidate_count": state.get("candidate_count", 0) + len(rows), "tool_calls": [*state.get("tool_calls", []), tool], "trace_events": [*state.get("trace_events", []), event], "tool_call_count": state.get("tool_call_count", 0) + 1, "round": state.get("round", 0) + 1}
 
 
 def _grade(state: AgenticRAGState) -> dict[str, Any]:
@@ -440,6 +453,9 @@ async def run_agentic_rag(topic: str, role: str, difficulty: str, *, user_id: in
         "topic": topic, "query": _select_retrieval_query(topic, expanded), "role": role, "difficulty": difficulty,
         "user_id": user_id, "document_id": document_id, "policy": policy,
         "allowed_tools": list(policy.allowed_tools), "round": 0, "tool_call_count": 0,
-        "evidence": [], "tool_calls": [], "expanded_queries": expanded, "started_at": time.perf_counter(),
+        "evidence": [], "tool_calls": [], "trace_events": [], "expanded_queries": expanded, "started_at": time.perf_counter(),
     }
-    return await build_agentic_rag_graph().ainvoke(initial)
+    result = await build_agentic_rag_graph().ainvoke(initial)
+    result["total_latency_ms"] = (time.perf_counter() - initial["started_at"]) * 1000
+    result["completed"] = bool(result.get("done"))
+    return result
