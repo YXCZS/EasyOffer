@@ -17,15 +17,13 @@ from app.corpus.evaluation import GoldenDataset, RagasEvaluationReport, RagasMet
 logger = logging.getLogger(__name__)
 
 
-def _import_ragas_components() -> tuple[Any, Any, Any, Any, Any, Any]:
-    """Import RAGAS while tolerating optional Vertex AI integrations.
+def _ensure_ragas_vertex_compat() -> None:
+    """Provide compatibility shims for optional legacy Vertex imports.
 
-    RAGAS 0.4.x imports the legacy ``langchain_community`` Vertex modules at
-    package import time, although EasyOffer uses the OpenAI-compatible
-    DashScope client and never instantiates Vertex AI.  Newer
-    langchain-community releases removed those modules.  Registering tiny
-    marker classes keeps the optional evaluator importable without adding a
-    Vertex dependency or changing the production runtime.
+    RAGAS 0.4.x imports these names while EasyOffer uses only the
+    OpenAI-compatible DashScope provider.  Keeping the shim in one helper is
+    important because both metric discovery and client construction import
+    RAGAS independently.
     """
     import sys
     import types
@@ -44,20 +42,38 @@ def _import_ragas_components() -> tuple[Any, Any, Any, Any, Any, Any]:
         module = types.ModuleType("langchain_community.llms")
         module.VertexAI = type("VertexAI", (), {})
         sys.modules[module.__name__] = module
+
+
+def _import_ragas_components() -> tuple[Any, Any, Any, Any, Any, Any]:
+    """Import RAGAS while tolerating optional Vertex AI integrations.
+
+    RAGAS 0.4.x imports the legacy ``langchain_community`` Vertex modules at
+    package import time, although EasyOffer uses the OpenAI-compatible
+    DashScope client and never instantiates Vertex AI.  Newer
+    langchain-community releases removed those modules.  Registering tiny
+    marker classes keeps the optional evaluator importable without adding a
+    Vertex dependency or changing the production runtime.
+    """
+    _ensure_ragas_vertex_compat()
     from ragas import EvaluationDataset, SingleTurnSample
     from ragas.metrics.collections import AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
     return EvaluationDataset, SingleTurnSample, AnswerRelevancy, ContextPrecision, ContextRecall, Faithfulness
 
 
-def build_dashscope_components(*, api_key: str | None = None, model: str = "qwen-plus",
-    embedding_model: str = "text-embedding-v4", base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1",
+def build_dashscope_components(*, api_key: str | None = None, model: str | None = None,
+    embedding_model: str | None = None, base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1",
                                timeout: float = 180.0, max_retries: int = 1) -> tuple[Any, Any]:
     """Build modern RAGAS clients over DashScope's OpenAI-compatible API."""
     from app.core.config import get_settings
     settings = get_settings()
+    model = model or settings.ragas_llm_model
+    embedding_model = embedding_model or settings.embedding_model
+    if not str(model).strip():
+        raise RuntimeError("ragas_llm_model_missing")
     key = api_key or settings.dashscope_api_key or settings.embedding_api_key
     if not key:
         raise RuntimeError("dashscope_api_key_missing")
+    _ensure_ragas_vertex_compat()
     from openai import AsyncOpenAI
     from ragas.embeddings.base import embedding_factory
     from ragas.llms import llm_factory

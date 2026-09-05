@@ -149,6 +149,9 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-v4"
     embedding_dimensions: int | None = None
     embedding_batch_size: int = 10
+    # Offline RAGAS judge model. Keep this separate from the production
+    # DeepSeek quiz model so evaluation can use a free DashScope quota model.
+    ragas_llm_model: str = "qwen3.7-flash"
     knowledge_max_file_bytes: int = 20 * 1024 * 1024
     knowledge_max_documents: int = 50
     knowledge_max_chunks: int = 5000

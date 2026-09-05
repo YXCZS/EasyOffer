@@ -25,3 +25,11 @@ def test_milvus_env_file_path_is_stable():
     # Explicit values always win over the file, while the model config points
     # at backend/.env independent of the process working directory.
     assert Settings.model_config["env_file"].endswith("backend\\.env") or Settings.model_config["env_file"].endswith("backend/.env")
+
+
+def test_ragas_model_defaults_to_low_cost_dashscope_snapshot_and_is_overridable():
+    default = Settings(_env_file=None)
+    assert default.ragas_llm_model == "qwen3.7-flash"
+
+    overridden = Settings(_env_file=None, ragas_llm_model="qwen3.7-flash")
+    assert overridden.ragas_llm_model == "qwen3.7-flash"

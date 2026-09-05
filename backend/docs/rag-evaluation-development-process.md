@@ -34,7 +34,7 @@ Golden Dataset v2
 
 检索上下文 + 真实生成响应
         |
-        +--> DashScope qwen-plus / text-embedding-v4
+        +--> DashScope qwen3.7-flash / text-embedding-v4
                 |
                 +--> RAGAS Collections API 四项指标
 
@@ -143,7 +143,7 @@ RAGAS 被放在独立的 `eval` 可选依赖组中，使用 RAGAS 0.4.x Collecti
 
 评估模型使用 DashScope OpenAI-compatible 接口：
 
-- LLM：`qwen-plus`；
+- LLM：默认 `qwen3.7-flash`（通过 `RAGAS_LLM_MODEL` 可切换）；
 - Embedding：`text-embedding-v4`。
 
 实现位置：`backend/app/corpus/ragas_evaluation.py`。

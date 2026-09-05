@@ -27,7 +27,7 @@ from app.corpus.evaluation import (
     QueryEvaluation,
     RetrievalObservation,
 )
-from app.corpus.ragas_evaluation import evaluate_ragas, evaluate_ragas_from_observations
+from app.corpus.ragas_evaluation import build_dashscope_components, evaluate_ragas, evaluate_ragas_from_observations
 from app.corpus.evaluation_runner import OfflineEvaluationRunner, ProductionEvaluationAdapter
 from app.corpus.config import CorpusConfig
 from app.corpus.pipeline import CorpusPipeline
@@ -89,6 +89,12 @@ def test_ragas_unavailable_is_explicit(monkeypatch):
     result = asyncio.run(evaluate_ragas(dataset, [{"sample_id": "q-0", "user_input": "x"}], evaluator=fake))
     assert result.status == "partial"
     assert result.samples[0].status == "failed"
+
+
+def test_dashscope_components_use_configured_flash_model_without_provider_call():
+    llm, embeddings = build_dashscope_components(api_key="test-only-placeholder")
+    assert llm.model_name == "qwen3.7-flash"
+    assert embeddings.model_name == "text-embedding-v4"
 
 
 def test_ragas_results_are_joined_by_sample_id_and_proxy_is_excluded():
