@@ -207,6 +207,10 @@ export function retryQuizGenerationTask(taskId: string) {
   return request<QuizGenerationTaskSnapshot>(`/quiz/generation-tasks/${encodeURIComponent(taskId)}/retry`, 'POST')
 }
 
+export function cancelQuizGenerationTask(taskId: string) {
+  return request<QuizGenerationTaskSnapshot>(`/quiz/generation-tasks/${encodeURIComponent(taskId)}/cancel`, 'POST')
+}
+
 export function generateReport(quiz: Quiz, answerRecords: AnswerRecord[]) {
   return request<Report>('/report/generate', 'POST', {
     quiz_id: quiz.quiz_id,

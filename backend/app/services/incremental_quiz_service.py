@@ -64,6 +64,12 @@ async def _retry_task(connection: Any, task_id: str, user_id: int | None, guest_
     return await generation_repository.retry_task(connection, task_id, user_id, guest_token_hash)
 
 
+async def _cancel_task(connection: Any, task_id: str, user_id: int | None, guest_token_hash: str | None):
+    if guest_token_hash is None:
+        return await generation_repository.cancel_task(connection, task_id, user_id)
+    return await generation_repository.cancel_task(connection, task_id, user_id, guest_token_hash)
+
+
 async def _mark_failed(connection: Any, task_id: str, user_id: int | None, message: str, guest_token_hash: str | None):
     if guest_token_hash is None:
         return await generation_repository.mark_failed(connection, task_id, user_id, message)
@@ -556,6 +562,10 @@ class IncrementalQuizService:
 
     async def retry(self, connection: Any, task_id: str, user_id: int | None, guest_token_hash: str | None = None) -> QuizGenerationTaskSnapshot | None:
         row = await _retry_task(connection, task_id, user_id, guest_token_hash)
+        return _snapshot(row) if row else None
+
+    async def cancel(self, connection: Any, task_id: str, user_id: int | None, guest_token_hash: str | None = None) -> QuizGenerationTaskSnapshot | None:
+        row = await _cancel_task(connection, task_id, user_id, guest_token_hash)
         return _snapshot(row) if row else None
 
     async def _mark_failed(self, pool: Any, task_id: str, user_id: int | None, message: str, guest_token_hash: str | None = None) -> None:

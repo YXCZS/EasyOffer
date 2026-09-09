@@ -2,7 +2,7 @@ import { Button, Text, View } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useEffect, useRef, useState } from 'react'
 import PracticeRhythm from '../../components/PracticeRhythm'
-import { createQuizGenerationTask, getQuizGenerationTask, QuizGenerationTaskSnapshot, retryQuizGenerationTask } from '../../services/api'
+import { cancelQuizGenerationTask, createQuizGenerationTask, getQuizGenerationTask, QuizGenerationTaskSnapshot, retryQuizGenerationTask } from '../../services/api'
 import { restoreSession, useSession } from '../../store/session'
 import { advanceMotionStage } from '../../utils/motion'
 import './index.scss'
@@ -18,6 +18,7 @@ export default function QuizGeneratingPage() {
   const [generatedCount, setGeneratedCount] = useState(0)
   const [totalCount, setTotalCount] = useState(6)
   const [sourceHint, setSourceHint] = useState('')
+  const [cancelling, setCancelling] = useState(false)
   const started = useRef(false)
   const taskIdRef = useRef<string | null>(null)
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -161,6 +162,21 @@ export default function QuizGeneratingPage() {
     }
   }
 
+  async function cancelGeneration() {
+    const taskId = taskIdRef.current
+    setCancelling(true)
+    stopPolling()
+    try {
+      if (taskId) await cancelQuizGenerationTask(taskId)
+    } catch (_) {
+      // The local session must still be left if the task already ended.
+    } finally {
+      useSession.getState().reset()
+      await Taro.switchTab({ url: '/pages/index/index' })
+      setCancelling(false)
+    }
+  }
+
   useEffect(() => {
     try {
       restoreSession()
@@ -195,6 +211,7 @@ export default function QuizGeneratingPage() {
         <View className='generating-rhythm'><PracticeRhythm steps={stages} currentStep={stage} completed={stage === 3} summary={generatedCount > 0 ? `已生成 ${generatedCount}/${totalCount} 道题` : '首题准备进度'} /></View>
         <View className='progress-track'><View className='progress-fill' style={{ width: `${progress}%` }} /></View>
         <Text className='generating-hint'>{generatedCount > 0 ? '正在后台准备下一题' : '通常只需等待第一道题生成'}</Text>
+        <Button className='generating-cancel' disabled={cancelling} onClick={() => void cancelGeneration()}>{cancelling ? '正在取消...' : '取消生成'}</Button>
       </>}
     </View>
   </View>

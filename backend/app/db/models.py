@@ -101,7 +101,7 @@ class QuizGenerationTask(Base):
     user_id: Mapped[int | None] = mapped_column(BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE", onupdate="CASCADE"))
     guest_token_hash: Mapped[str | None] = mapped_column(CHAR(64))
     request_json: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
-    status: Mapped[str] = mapped_column(Enum("queued", "generating", "completed", "failed", "expired", name="quiz_generation_status"), nullable=False, server_default="queued")
+    status: Mapped[str] = mapped_column(Enum("queued", "generating", "completed", "failed", "expired", "cancelled", name="quiz_generation_status"), nullable=False, server_default="queued")
     generated_count: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False, server_default="0")
     total_count: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False, server_default="6")
     questions_json: Mapped[list[Any]] = mapped_column(JSON, nullable=False)
@@ -181,4 +181,3 @@ class QuizVisualAsset(Base):
     retry_count: Mapped[int] = mapped_column(INTEGER(unsigned=True), nullable=False, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"))
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, server_default=text("CURRENT_TIMESTAMP"), server_onupdate=text("CURRENT_TIMESTAMP"))
-

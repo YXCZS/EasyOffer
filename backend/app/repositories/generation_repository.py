@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS quiz_generation_tasks (
   user_id BIGINT UNSIGNED NULL,
   guest_token_hash CHAR(64) NULL,
   request_json JSON NOT NULL,
-  status ENUM('queued','generating','completed','failed','expired') NOT NULL DEFAULT 'queued',
+  status ENUM('queued','generating','completed','failed','expired','cancelled') NOT NULL DEFAULT 'queued',
   generated_count INT UNSIGNED NOT NULL DEFAULT 0,
   total_count INT UNSIGNED NOT NULL DEFAULT 6,
   questions_json JSON NOT NULL,
@@ -66,6 +66,15 @@ async def ensure_generation_table(pool: Any) -> None:
                 await cursor.execute("ALTER TABLE quiz_generation_tasks ADD KEY idx_quiz_generation_guest_status (guest_token_hash, status, updated_at)")
             except Exception as exc:
                 if "duplicate" not in str(exc).lower():
+                    raise
+            try:
+                await cursor.execute(
+                    "ALTER TABLE quiz_generation_tasks MODIFY COLUMN status "
+                    "ENUM('queued','generating','completed','failed','expired','cancelled') "
+                    "NOT NULL DEFAULT 'queued'"
+                )
+            except Exception as exc:
+                if "duplicate" not in str(exc).lower() and "same" not in str(exc).lower():
                     raise
         await connection.commit()
 
@@ -254,6 +263,21 @@ async def retry_task(connection: Any, task_id: str, user_id: int | None, guest_t
     async with connection.cursor() as cursor:
         await cursor.execute(
             "UPDATE quiz_generation_tasks SET status='queued', error_message=NULL, updated_at=CURRENT_TIMESTAMP WHERE task_id=%s AND " + owner_sql + " AND status='failed'",
+            (task_id, *owner_args),
+        )
+        changed = cursor.rowcount
+    await connection.commit()
+    return await get_task(connection, task_id, user_id, guest_token_hash) if changed else None
+
+
+async def cancel_task(connection: Any, task_id: str, user_id: int | None, guest_token_hash: str | None = None) -> dict[str, Any] | None:
+    """Stop a queued/running generation task without deleting its snapshot."""
+    owner_sql, owner_args = _owner_clause(user_id, guest_token_hash)
+    async with connection.cursor() as cursor:
+        await cursor.execute(
+            "UPDATE quiz_generation_tasks SET status='cancelled', error_message=NULL, "
+            "updated_at=CURRENT_TIMESTAMP WHERE task_id=%s AND " + owner_sql +
+            " AND status IN ('queued','generating')",
             (task_id, *owner_args),
         )
         changed = cursor.rowcount

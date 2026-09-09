@@ -140,3 +140,35 @@ async def retry_generation_task(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="任务不存在或不可重试")
     _schedule(http_request.app, service, task_id, user_id, guest_hash)
     return ApiResponse(data=snapshot)
+
+
+@router.post("/{task_id}/cancel", response_model=ApiResponse[QuizGenerationTaskSnapshot])
+async def cancel_generation_task(
+    task_id: str,
+    http_request: Request,
+    user: dict | None = Depends(get_optional_user),
+    guest_token: str | None = Header(default=None, alias="X-Guest-Token"),
+    connection: Any = Depends(get_db),
+    service: IncrementalQuizService = Depends(get_incremental_quiz_service),
+) -> ApiResponse[QuizGenerationTaskSnapshot]:
+    user_id = _user_id(user)
+    guest_hash = _guest_hash(user, guest_token)
+    # Read first so repeated taps are idempotent and guest quota is released
+    # only when this request actually transitions an active task.
+    before = await service.snapshot(require_connection(connection), task_id, user_id, guest_hash)
+    if before is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="generation task not found")
+    if before.status not in ("queued", "generating"):
+        return ApiResponse(data=before)
+    handle = _task_handles(http_request.app).get(task_id)
+    if handle and not handle.done():
+        handle.cancel()
+    snapshot = await service.cancel(require_connection(connection), task_id, user_id, guest_hash)
+    if snapshot is None:
+        latest = await service.snapshot(require_connection(connection), task_id, user_id, guest_hash)
+        if latest is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="generation task not found")
+        return ApiResponse(data=latest)
+    if guest_hash:
+        await generation_repository.release_guest_task(connection, guest_hash)
+    return ApiResponse(data=snapshot)

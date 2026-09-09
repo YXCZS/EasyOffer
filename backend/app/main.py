@@ -14,7 +14,7 @@ from app.api.v1.routes.generation import router as generation_router
 from app.core.errors import register_exception_handlers
 from app.core.config import get_settings
 from app.core.db import create_pool
-from app.repositories.generation_repository import recover_interrupted_tasks
+from app.repositories.generation_repository import ensure_generation_table, recover_interrupted_tasks
 
 
 @asynccontextmanager
@@ -23,6 +23,10 @@ async def lifespan(app: FastAPI):
         app.state.db_pool = await create_pool(get_settings())
         app.state.db_engine = getattr(app.state.db_pool, "engine", None)
         app.state.db_session_factory = getattr(app.state.db_pool, "session_factory", None)
+        # Keep the task status schema compatible with the running application.
+        # This is intentionally idempotent so an existing installation picks up
+        # newly supported terminal states such as `cancelled` on restart.
+        await ensure_generation_table(app.state.db_pool)
         async with app.state.db_pool.acquire() as connection:
             await recover_interrupted_tasks(connection)
     except Exception:

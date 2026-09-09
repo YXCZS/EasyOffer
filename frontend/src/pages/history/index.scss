@@ -3,6 +3,10 @@
 .eyebrow { display: block; color: var(--brand); font-size: 13px; letter-spacing: 1px; }
 .page-title { display: block; margin-top: 3px; font-size: 25px; font-weight: 700; }
 .history-error { display: block; color: var(--coral); margin-bottom: 12px; font-size: 13px; }
+.history-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; color: var(--muted); font-size: 13px; }
+.history-total { flex: 1; }
+.page-size-picker { display: flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 11px; color: var(--ink-soft); background: #fff; border: 1px solid var(--line); border-radius: 9px; }
+.picker-chevron { width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg) translateY(-2px); }
 .empty-state { display: flex; flex-direction: column; gap: 12px; padding: 40px 20px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-lg); color: var(--muted); box-shadow: var(--shadow-card); text-align: center; font-size: 16px; line-height: 1.6; }
 .empty-state .primary-button { width: 100%; }
 .empty-title { color: var(--ink); font-size: 20px; font-weight: 700; }
@@ -13,3 +17,7 @@
 .history-meta { color: var(--muted); font-size: 14px; }
 .history-score { margin-left: 12px; color: var(--mint); font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .history-arrow { margin-left: 12px; color: var(--subtle); }
+.history-pagination { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 18px; }
+.pagination-button { width: auto; min-width: 76px; height: 36px; padding: 0 12px; color: var(--brand); background: #fff; border: 1px solid var(--line); border-radius: 9px; font-size: 13px; line-height: 36px; }
+.pagination-button[disabled] { color: var(--subtle); background: #f5f7fa; }
+.pagination-label { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }

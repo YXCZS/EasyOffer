@@ -13,7 +13,7 @@ from app.corpus.models import ParsedDocument, SourceEntry
 from app.corpus.chunking import build_child_chunks, build_parent_units
 from app.corpus.config import CorpusConfig
 from app.corpus.models import ParsedBlock
-from app.corpus.visual import VisualAnalysisError, enrich_document_visuals, extract_docx_images, validate_table_analysis, validate_visual_payload
+from app.corpus.visual import VisualAnalysisError, classify_image_mode, enrich_document_visuals, extract_docx_images, validate_table_analysis, validate_visual_payload
 from tests.corpus_fixtures import write_blank_pdf, write_text_pdf
 
 
@@ -224,6 +224,58 @@ def test_visual_feature_flag_keeps_media_block_without_provider(tmp_path, monkey
     result = asyncio.run(enrich_document_visuals(parsed, image, document_id="visual-fixture", media_root=tmp_path / "assets"))
     assert result.blocks[0].metadata["visual_status"] == "skipped"
     assert result.metadata["visual_assets"] == 1
+
+
+def test_image_routing_prefers_structured_metadata_over_filename(tmp_path):
+    image = tmp_path / "image1.png"
+    image.write_bytes(b"image")
+    assert classify_image_mode(image, block_kind="chart", metadata={"mineru_type": "chart"}) == "visual"
+    assert classify_image_mode(image, source_type="scanned_pdf_page") == "ocr"
+    assert classify_image_mode(image, metadata={"caption": "系统架构图"}) == "visual"
+    assert classify_image_mode(image) == "ocr"
+
+
+def test_visual_enrichment_records_route_reason_and_does_not_mix_same_basename(tmp_path, monkeypatch):
+    first = tmp_path / "a" / "image1.png"
+    second = tmp_path / "b" / "image1.png"
+    first.parent.mkdir()
+    second.parent.mkdir()
+    first.write_bytes(b"one")
+    second.write_bytes(b"two")
+    parsed = ParsedDocument(
+        source=_source(first, "pdf"),
+        text="",
+        blocks=[
+            ParsedBlock("chart", "chart", media_path=str(first), metadata={"mineru_type": "chart"}),
+            ParsedBlock("scan", "image", media_path=str(second), metadata={"source_type": "scanned_pdf_page"}),
+        ],
+    )
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "document_visual_enabled", False)
+    result = asyncio.run(enrich_document_visuals(parsed, first, document_id="route-fixture", media_root=tmp_path / "assets"))
+    by_path = {Path(block.media_path).resolve(): block for block in result.blocks}
+    assert by_path[first.resolve()].metadata["visual_route"] == "visual"
+    assert by_path[second.resolve()].metadata["visual_route"] == "ocr"
+
+
+def test_docx_media_uses_unique_basename_context(tmp_path, monkeypatch):
+    docx = tmp_path / "sample.docx"
+    with ZipFile(docx, "w", ZIP_DEFLATED) as archive:
+        archive.writestr("word/media/image1.png", b"image")
+    mineru_asset = tmp_path / "mineru" / "image1.png"
+    mineru_asset.parent.mkdir()
+    mineru_asset.write_bytes(b"image")
+    parsed = ParsedDocument(
+        source=_source(docx, "docx"),
+        text="",
+        blocks=[ParsedBlock("架构图", "chart", media_path=str(mineru_asset), metadata={"mineru_type": "figure"})],
+    )
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "document_visual_enabled", False)
+    result = asyncio.run(enrich_document_visuals(parsed, docx, document_id="docx-route", media_root=tmp_path / "assets"))
+    media_block = next(block for block in result.blocks if block.media_path and "word-media" in block.media_path)
+    assert media_block.metadata["visual_route"] == "visual"
+    assert media_block.metadata["visual_route_reason"] == "structured_node:figure"
 
 
 def test_qwen_vl_client_validates_openai_compatible_json(monkeypatch):

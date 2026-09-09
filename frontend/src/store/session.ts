@@ -36,7 +36,7 @@ export interface PracticeSession {
   documentId?: string
   documentName?: string
   generationTaskId?: string
-  generationStatus?: 'queued' | 'generating' | 'completed' | 'failed' | 'expired'
+  generationStatus?: 'queued' | 'generating' | 'completed' | 'failed' | 'expired' | 'cancelled'
   generationVersion?: number
   progressVersion?: number
   formalProgressSynced?: boolean

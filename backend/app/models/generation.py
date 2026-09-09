@@ -6,7 +6,7 @@ from app.models.common import StrictModel
 from app.models.progress import AnswerRecord
 from app.models.quiz import Difficulty, Question, Quiz, Role
 
-GenerationTaskStatus = Literal["queued", "generating", "completed", "failed", "expired"]
+GenerationTaskStatus = Literal["queued", "generating", "completed", "failed", "expired", "cancelled"]
 
 
 class QuizGenerationTaskCreateRequest(StrictModel):

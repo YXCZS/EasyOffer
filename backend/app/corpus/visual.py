@@ -305,9 +305,69 @@ def extract_docx_images(path: str | Path, output_dir: str | Path) -> list[Path]:
     return result
 
 
-def _image_mode(path: Path) -> str:
+_VISUAL_HINTS = (
+    "流程图", "架构图", "时序图", "关系图", "类图", "状态图", "拓扑图",
+    "图表", "柱状图", "折线图", "饼图", "散点图", "复杂表格", "表格",
+    "chart", "diagram", "flowchart", "figure", "table", "graph",
+)
+
+
+def _path_key(path: str | Path) -> str:
+    try:
+        return str(Path(path).resolve()).lower()
+    except (OSError, RuntimeError):
+        return str(path).lower()
+
+
+def _classify_image_mode(
+    path: Path,
+    *,
+    block_kind: str = "",
+    metadata: dict[str, Any] | None = None,
+    ocr_text: str = "",
+    source_type: str = "",
+) -> tuple[str, str]:
+    """Prefer MinerU structure/context; use filename only as a legacy fallback."""
+    metadata = metadata or {}
+    kind = str(block_kind or "").lower().strip()
+    mineru_type = str(metadata.get("mineru_type") or metadata.get("type") or "").lower().strip()
+    source = str(source_type or metadata.get("source_type") or "").lower().strip()
+    context = " ".join(
+        str(metadata.get(key) or "")
+        for key in ("caption", "title", "image_caption", "chart_caption", "table_caption", "mineru_content")
+    )
+    context = f"{context} {ocr_text}".lower()
+    if source == "scanned_pdf_page":
+        return "ocr", "scanned_pdf_page"
+    if kind in {"chart", "table"} or mineru_type in {"chart", "figure", "table"}:
+        return "visual", f"structured_node:{mineru_type or kind}"
+    if any(hint in context for hint in _VISUAL_HINTS):
+        return "visual", "caption_or_context_hint"
     name = path.stem.lower()
-    return "visual" if any(token in name for token in ("chart", "flow", "table", "figure", "diagram")) else "ocr"
+    if any(token in name for token in ("chart", "flow", "table", "figure", "diagram")):
+        return "visual", "filename_fallback"
+    return "ocr", "default_ocr"
+
+
+def classify_image_mode(
+    path: Path,
+    *,
+    block_kind: str = "",
+    metadata: dict[str, Any] | None = None,
+    ocr_text: str = "",
+    source_type: str = "",
+) -> str:
+    return _classify_image_mode(
+        path,
+        block_kind=block_kind,
+        metadata=metadata,
+        ocr_text=ocr_text,
+        source_type=source_type,
+    )[0]
+
+
+def _image_mode(path: Path, **kwargs: Any) -> str:
+    return classify_image_mode(path, **kwargs)
 
 
 def _decorative_reason(path: Path) -> str | None:
@@ -334,19 +394,34 @@ async def enrich_document_visuals(
     """Attach image blocks while isolating provider failures from text ingestion."""
     settings = get_settings()
     image_context: dict[str, dict[str, Any]] = {}
+    image_context_by_name: dict[str, dict[str, Any] | None] = {}
+    # MinerU stores DOCX media under the artifact directory while the DOCX
+    # extractor writes the same members under a per-document media directory.
+    # Keep exact-path matching as the primary key and add a basename fallback
+    # only when that basename is unique within this document.
+    for block in parsed.blocks:
+        if not block.media_path:
+            continue
+        details = {
+            "ocr_text": block.text,
+            "bbox": block.bbox,
+            "block_kind": block.kind,
+            "page": block.page_start,
+            "metadata": dict(block.metadata),
+            "source_type": block.metadata.get("source_type", ""),
+        }
+        image_context[_path_key(block.media_path)] = details
+        basename = Path(block.media_path).name.lower()
+        if basename in image_context_by_name:
+            image_context_by_name[basename] = None
+        else:
+            image_context_by_name[basename] = details
     if parsed.source.content_type == "docx":
         images = extract_docx_images(path, Path(media_root) / document_id / "word-media")
     elif parsed.source.content_type == "image":
         images = [Path(path)]
     else:
         images = [Path(block.media_path) for block in parsed.blocks if block.media_path and Path(block.media_path).exists()]
-        for block in parsed.blocks:
-            if block.media_path:
-                image_context[Path(block.media_path).name] = {
-                    "ocr_text": block.text,
-                    "bbox": block.bbox,
-                    "page": block.page_start,
-                }
     images = images[: max(0, int(settings.document_visual_max_images))]
     if not images:
         return parsed
@@ -361,6 +436,16 @@ async def enrich_document_visuals(
             "visual_type": "unknown",
             "source_document_id": document_id,
         }
+        details = image_context.get(_path_key(image_path)) or image_context_by_name.get(image_path.name.lower()) or {}
+        mode, route_reason = _classify_image_mode(
+            image_path,
+            block_kind=str(details.get("block_kind") or ""),
+            metadata=details.get("metadata") or {},
+            ocr_text=str(details.get("ocr_text") or ""),
+            source_type=str(details.get("source_type") or ""),
+        )
+        metadata["visual_route"] = mode
+        metadata["visual_route_reason"] = route_reason
         decorative_reason = _decorative_reason(image_path)
         if decorative_reason:
             metadata["visual_skip_reason"] = decorative_reason
@@ -372,13 +457,12 @@ async def enrich_document_visuals(
             content = image_path.read_bytes()
             async with semaphore:
                 context = " > ".join(parsed.blocks[-1].section_path) if parsed.blocks else ""
-                details = image_context.get(image_path.name, {})
                 if details.get("ocr_text"):
                     context += f" OCR文本：{str(details['ocr_text'])[:2000]}"
                 if details.get("bbox"):
                     context += f" bbox：{details['bbox']}"
-                analysis = await client.analyze(content, mode=_image_mode(image_path), context=context)
-            if _image_mode(image_path) == "visual" and not validate_table_analysis(analysis, ocr_text=str(image_context.get(image_path.name, {}).get("ocr_text") or "")):
+                analysis = await client.analyze(content, mode=mode, context=context)
+            if mode == "visual" and not validate_table_analysis(analysis, ocr_text=str(details.get("ocr_text") or "")):
                 raise VisualAnalysisError("visual_analysis_invalid")
             metadata.update(analysis.as_dict())
             metadata["visual_status"] = analysis.status
@@ -434,4 +518,4 @@ async def enrich_document_visuals(
     return replace(parsed, blocks=enriched, text=parsed.text + "\n\n" + "\n\n".join(block.text for block in blocks), metadata=metadata, warnings=list(dict.fromkeys(warnings)))
 
 
-__all__ = ["OCRProvider", "QwenVLClient", "VisualAnalysis", "VisualAnalysisError", "extract_docx_images", "enrich_document_visuals", "validate_visual_payload"]
+__all__ = ["OCRProvider", "QwenVLClient", "VisualAnalysis", "VisualAnalysisError", "classify_image_mode", "extract_docx_images", "enrich_document_visuals", "validate_visual_payload"]
