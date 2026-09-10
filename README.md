@@ -68,25 +68,25 @@ EasyOffer 是面向中文程序员求职者的技术面试刷题微信小程序�
 ```mermaid
 flowchart TB
     subgraph Client[微信小程序]
-      UI[答题首页 / 生成页 / 答题页 / 报告 / 我的 / 知识库]
-      Store[Taro + React + Zustand]
+      UI["答题首页 / 生成页 / 答题页<br/>报告 / 我的 / 知识库"]
+      Store["Taro + React<br/>Zustand"]
       UI --> Store
     end
 
     API[FastAPI API 层]
-    Service[业务服务层\nQuiz / Generation / Progress / Report / Knowledge]
+    Service["业务服务层<br/>Quiz / Generation / Progress<br/>Report / Knowledge"]
     Repo[Repository 数据访问层]
-    MySQL[(MySQL\n用户、题组、任务、进度、报告、文档)]
-    Agent[LangGraph Agentic RAG]
-    LLM[DeepSeek\n题目与报告生成]
-    Milvus[(Milvus Standalone\nDense + BM25 + RRF)]
-    Rerank[DashScope\nEmbedding / Text Rerank]
-    Tavily[Tavily Search / Extract]
-    MinerU[MinerU\n结构化文档解析]
-    Visual[DashScope Qwen-VL\n可选 OCR / 视觉理解]
-    COS[(腾讯云 COS\n可选题解图片和头像)]
+    MySQL[("MySQL<br/>用户 / 题组 / 任务<br/>进度 / 报告 / 文档")]
+    Agent["LangGraph<br/>Agentic RAG"]
+    LLM["DeepSeek<br/>题目与报告生成"]
+    Milvus[("Milvus Standalone<br/>Dense + BM25 + RRF")]
+    Rerank["DashScope<br/>Embedding / Text Rerank"]
+    Tavily["Tavily<br/>Search / Extract"]
+    MinerU["MinerU<br/>结构化文档解析"]
+    Visual["DashScope Qwen-VL<br/>可选 OCR / 视觉理解"]
+    COS[("腾讯云 COS<br/>可选题解图片和头像")]
 
-    Client -->|HTTP JSON\nJWT / Guest Token| API
+    Client -->|"HTTP JSON<br/>JWT / Guest Token"| API
     API --> Service
     Service --> Repo --> MySQL
     Service --> Agent
@@ -117,19 +117,19 @@ sequenceDiagram
     participant M as DeepSeek
     participant DB as MySQL
 
-    U->>W: 输入主题、岗位、难度
-    W->>A: POST /api/v1/quiz/generation-tasks
-    A->>T: 创建 queued 任务并返回 task_id
-    A-->>W: running / generated_count=0
-    T->>R: 范围判断后选择 Milvus、个人库或 Tavily
-    R-->>T: 证据、来源和路由审计信息
+    U->>W: 输入主题、岗位和难度
+    W->>A: 创建增量出题任务
+    A->>T: 创建 queued 任务<br/>返回 task_id
+    A-->>W: running<br/>generated_count = 0
+    T->>R: 判断主题范围<br/>选择知识库或 Tavily
+    R-->>T: 返回证据、来源<br/>和路由审计信息
     loop 逐题生成 1..6
-      T->>M: 生成一题并校验题型、答案、重复度
-      T->>DB: 追加题目并更新 generated_count/version
-      W->>A: GET /generation-tasks/{id}
+      T->>M: 生成一题<br/>校验题型、答案和重复度
+      T->>DB: 追加题目<br/>更新数量和版本号
+      W->>A: 轮询任务进度
       A-->>W: 新题目快照
       alt generated_count >= 1
-        W->>U: 进入答题页，立即展示可用题目
+        W->>U: 进入答题页<br/>立即展示可用题目
       end
     end
     T->>DB: 保存完整题组和进度
@@ -142,15 +142,15 @@ flowchart LR
     A[答题页展示当前题] --> B[用户提交答案]
     B --> C{是否正确}
     C -->|是/否| D[即时展示解析]
-    D --> E[PUT 进度\n当前位置 + 答案 + version]
+    D --> E["PUT 进度<br/>当前位置 + 答案<br/>version"]
     E --> F{还有已生成题目?}
     F -->|有| A
-    F -->|没有但任务仍在生成| G[等待页并继续轮询]
+    F -->|任务仍在生成| G["等待页<br/>继续轮询"]
     G --> A
     F -->|已答完| H[报告生成页]
     H --> I[后端确定性评分]
-    I --> J[DeepSeek 总结薄弱点和建议]
-    J --> K[报告页 + 可选题解配图]
+    I --> J["DeepSeek 总结<br/>薄弱点和建议"]
+    J --> K["报告页<br/>可选题解配图"]
     A --> L[返回]
     L --> M[保存进度并回首页]
     M --> N[未完成练习模块]
@@ -161,28 +161,28 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-    S[上传文件 / 公共语料清单] --> V[格式、大小、MIME、魔数、可读性检查]
+    S["上传文件<br/>或公共语料清单"] --> V["文件预检<br/>格式 / 大小 / MIME<br/>魔数 / 可读性"]
     V --> D{文件类型}
-    D -->|PDF| P[PDF 预检：文本密度、图片对象、加密状态]
+    D -->|PDF| P["PDF 预检<br/>文本密度 / 图片对象<br/>加密状态"]
     P --> P1{页面画像}
-    P1 -->|文本 PDF| MU[MinerU 结构化解析]
+    P1 -->|文本 PDF| MU["MinerU<br/>结构化解析"]
     P1 -->|扫描 PDF| IMG[按页渲染图片]
-    P1 -->|混合 PDF| MIX[文本页走解析，扫描页走图片链路]
-    IMG --> OCR[OCR / 可选视觉理解]
+    P1 -->|混合 PDF| MIX["按页面分流<br/>文本页走解析<br/>扫描页走图片链路"]
+    IMG --> OCR["OCR<br/>可选视觉理解"]
     MIX --> OCR
     OCR --> MU
-    D -->|DOC / DOCX / Markdown| MU
+    D -->|"DOC / DOCX<br/>Markdown"| MU
     D -->|图片| OCR
-    MU --> N[统一 ParsedDocument / ParsedBlock]
-    N --> C[清洗：页眉页脚、空白、乱码、低质量块]
-    C --> PA[Parent：按标题、段落、表格、代码、公式、图片保留结构]
-    PA --> CH[Child：RecursiveCharacterTextSplitter / 表格行切分 + overlap]
-    CH --> DD[SHA-256 精确去重 + SimHash 近重复去重]
+    MU --> N["统一结构模型<br/>ParsedDocument<br/>ParsedBlock"]
+    N --> C["内容清洗<br/>页眉页脚 / 空白 / 乱码<br/>低质量块"]
+    C --> PA["Parent 结构保留<br/>标题 / 段落 / 表格<br/>代码 / 公式 / 图片"]
+    PA --> CH["Child 分块<br/>RecursiveCharacterTextSplitter<br/>表格行切分 + overlap"]
+    CH --> DD["内容去重<br/>SHA-256 精确去重<br/>SimHash 近重复去重"]
     DD --> E[Embedding]
-    E --> MV[Milvus 写入候选版本\nstatus=unpublished]
-    MV --> Q[质量检查与 Golden Dataset 检索评测]
+    E --> MV["Milvus 写入候选版本<br/>status = unpublished"]
+    MV --> Q["质量检查<br/>Golden Dataset 检索评测"]
     Q --> H[人工审核记录]
-    H --> PUB[publish：新版本 published，旧版本 inactive]
+    H --> PUB["发布版本<br/>新版本：published<br/>旧版本：inactive"]
 ```
 
 说明：MinerU 的 JSON/Markdown 结果会先转换为项目内部的 `ParsedDocument`、`ParsedBlock`，统一字段后才能复用后续清洗、结构恢复、分块和存储逻辑。视觉理解链路是可选能力，开关由 `DOCUMENT_VISUAL_ENABLED` 控制；关闭或调用失败时保留可追溯的降级块，不阻塞文本知识库构建。
