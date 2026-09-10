@@ -1,0 +1,30 @@
+# knowledge-ingestion Specification
+
+## Purpose
+TBD - created by archiving change add-document-ocr-and-visual-understanding. Update Purpose after archive.
+
+## Requirements
+
+### Requirement: 知识库摄取必须生成可追溯的结构化证据
+
+知识库摄取 SHALL 按文件真实类型和内容形态选择解析分支，再依次执行清洗、Parent/Child 切分、去重、质量检查和索引。所有进入向量库的文本 MUST 保留文档、版本、页码和结构来源。
+
+#### Scenario: 文本型 PDF
+- **WHEN** PDF 具有可靠文字层
+- **THEN** 系统使用结构化文档解析提取文字、页码、标题、段落和表格，不将全文拼接成无结构纯文本
+
+#### Scenario: 扫描型 PDF
+- **WHEN** PDF 被判定为扫描型
+- **THEN** 系统逐页转成图片执行 OCR，必要时对复杂版面调用视觉模型，再进入统一结构和切分流程
+
+#### Scenario: Word 文档
+- **WHEN** Word 包含正文、标题、列表、表格、页眉页脚和内嵌图片
+- **THEN** 系统保留正文结构，并将内嵌图片独立送入 OCR 或视觉理解分支
+
+#### Scenario: 图片文件
+- **WHEN** 上传文件为文字截图、票据、扫描件、图表或流程图
+- **THEN** 系统分别选择 OCR 或视觉模型，并将结果与图片来源、页码/序号关联
+
+#### Scenario: 增强步骤失败
+- **WHEN** OCR 或视觉增强失败但仍有可用正文或图注
+- **THEN** 系统保留可用内容，记录 degraded 和失败原因，不写入无法追溯的事实

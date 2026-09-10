@@ -27,15 +27,18 @@ def test_personal_evidence_requires_explicit_document_id(monkeypatch):
     assert context.evidence[0].source_id == "doc-a"
 
 
-def test_web_evidence_is_used_when_personal_retrieval_fails(monkeypatch):
-    class BrokenStore:
-        def search(self, query, k):
-            raise RuntimeError("milvus unavailable")
-
+def test_web_evidence_is_used_for_new_topic_without_personal_retrieval(monkeypatch):
     async def web(*args):
         return ResearchContext(status="success", sources=[ResearchSource(source_id="web-1", url="https://example.com", excerpt="current facts", retrieved_at="now")])
 
-    monkeypatch.setattr("app.services.knowledge_service.get_vector_store", lambda user_id: BrokenStore())
+    settings = __import__("app.core.config", fromlist=["get_settings"]).get_settings()
+    monkeypatch.setattr(settings, "agentic_rag_graph_enabled", False)
+    monkeypatch.setattr(settings, "agentic_rag_enabled", True)
+    monkeypatch.setattr(settings, "deepseek_api_key", None)
+    monkeypatch.setattr(
+        "app.services.knowledge_service.get_vector_store",
+        lambda user_id: (_ for _ in ()).throw(AssertionError("ordinary topics must not query personal knowledge")),
+    )
     monkeypatch.setattr("app.research.tavily_agent.TavilyResearchAgent.research", web)
     context = asyncio.run(build_evidence_context("Harness Engineering", "backend", "hard", user_id=7))
     assert context.used_personal_kb is False

@@ -87,7 +87,9 @@ EasyOffer 的目标不是做通用知识问答，而是为程序员技术面试�
 
 ### 2.3 图片目前的实际处理
 
-MinerU 下载的图片资源会保存到 artifact 目录，结构块保留图片路径、说明和可提取文本。图片不会被当作普通正文直接丢弃，但当前项目没有对图片本身生成视觉 Embedding，也没有用视觉模型理解图片内容。图片视觉向量化属于未实现能力。
+MinerU 下载的图片资源会保存到 artifact 目录，结构块保留图片路径、说明和可提取文本。启用 `DOCUMENT_VISUAL_ENABLED` 后，系统会筛选高价值技术图片，并使用 DashScope Qwen-VL 对图片、图表、流程图和复杂表格进行结构化视觉理解；输出的描述、关系和表格信息会转换为 `embedding_text`，继续进入现有 BM25、Dense、RRF 和 Rerank 文本检索链路。
+
+当前实现不是对图片像素直接生成多模态向量：Milvus 中保存的仍是视觉模型输出文本的 Embedding。图片原生视觉 Embedding 和图文联合向量检索仍属于未实现能力。
 
 ### 2.4 安全处理
 
@@ -617,7 +619,7 @@ MinerU 结构解析
 
 ## 21. 审核记录
 
-审核日期：2026-09-04。
+审核日期：2026-09-10。
 
 核对范围：`backend/app/corpus/`、`backend/app/services/`、`backend/app/research/`、`backend/app/core/config.py`、`backend/tests/` 以及 Milvus Standalone 运行态。
 
@@ -630,4 +632,4 @@ python -m pytest -q
 
 专项测试覆盖 MinerU 结构化解析、切分、去重、Milvus 检索、Agentic RAG 路由和评测模块，也已完成公共知识库主题抽查。
 
-审核结论：本文档只把当前源码、配置和测试可以证明的功能写成当前实现；所有尚未接入的 RAGAS、LLM-as-a-Judge、视觉 Embedding 和默认语义切分均明确标注为未实现。
+审核结论：当前项目已接入可选文档视觉理解链路和 RAGAS 离线评估，并保留确定性检索评测、题目/报告业务评测与 Agent 四层评测。尚未接入的是图片原生视觉 Embedding、图文联合向量检索和默认语义切分；这些能力不得描述为当前已实现。
