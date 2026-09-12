@@ -84,8 +84,8 @@ flowchart TB
     Milvus[("Milvus Standalone<br/>Dense + BM25 + RRF")]
     Rerank["DashScope<br/>Embedding / Text Rerank"]
     Tavily["Tavily<br/>Search / Extract"]
-    MinerU["MinerU<br/>结构化文档解析"]
-    Visual["DashScope Qwen-VL<br/>可选 OCR / 视觉理解"]
+    MinerU["MinerU<br/>结构化解析 + OCR"]
+    Visual["DashScope Qwen-VL<br/>复杂图片视觉理解"]
     COS[("腾讯云 COS<br/>可选题解图片和头像")]
 
     Client -->|"HTTP JSON<br/>JWT / Guest Token"| API
@@ -98,7 +98,7 @@ flowchart TB
     Milvus --> Rerank
     Service --> LLM
     Service --> MinerU
-    MinerU --> Visual
+    MinerU -->|"复杂表格 / 流程图 / 架构图"| Visual
     Visual --> COS
     Service --> COS
 ```
@@ -169,13 +169,17 @@ flowchart TB
     P --> P1{页面画像}
     P1 -->|文本 PDF| MU["MinerU<br/>结构化解析"]
     P1 -->|扫描 PDF| IMG[按页渲染图片]
-    P1 -->|混合 PDF| MIX["按页面分流<br/>文本页走解析<br/>扫描页走图片链路"]
-    IMG --> OCR["OCR<br/>可选视觉理解"]
-    MIX --> OCR
-    OCR --> MU
+    P1 -->|混合 PDF| MIX["按页面分流<br/>文本页走解析<br/>扫描页走 OCR 链路"]
+    IMG --> MUOCR["MinerU<br/>OCR + 结构化解析<br/>is_ocr = true"]
+    MIX --> MUOCR
+    MUOCR --> VR
     D -->|"DOC / DOCX<br/>Markdown"| MU
-    D -->|图片| OCR
-    MU --> N["统一结构模型<br/>ParsedDocument<br/>ParsedBlock"]
+    D -->|图片| IMGFILE["图片内容预检"]
+    IMGFILE --> VR
+    MU --> VR["图片/图表节点路由"]
+    VR -->|"复杂表格 / 流程图 / 架构图<br/>且视觉能力已启用"| QV["DashScope Qwen-VL<br/>视觉理解"]
+    VR -->|"普通文本、无视觉节点<br/>或视觉能力关闭"| N
+    QV --> N["统一结构模型<br/>ParsedDocument<br/>ParsedBlock"]
     N --> C["内容清洗<br/>页眉页脚 / 空白 / 乱码<br/>低质量块"]
     C --> PA["Parent 结构保留<br/>标题 / 段落 / 表格<br/>代码 / 公式 / 图片"]
     PA --> CH["Child 分块<br/>RecursiveCharacterTextSplitter<br/>表格行切分 + overlap"]
@@ -187,7 +191,7 @@ flowchart TB
     H --> PUB["发布版本<br/>新版本：published<br/>旧版本：inactive"]
 ```
 
-说明：MinerU 的 JSON/Markdown 结果会先转换为项目内部的 `ParsedDocument`、`ParsedBlock`，统一字段后才能复用后续清洗、结构恢复、分块和存储逻辑。视觉理解链路是可选能力，开关由 `DOCUMENT_VISUAL_ENABLED` 控制；关闭或调用失败时保留可追溯的降级块，不阻塞文本知识库构建。
+说明：PDF 上传后先由本地预检判断页面是否缺少文本层；扫描页和混合 PDF 的扫描页会把 `is_ocr=true` 传给 MinerU，由 MinerU 完成 OCR 并输出结构化结果。MinerU 的 JSON/Markdown 结果随后转换为项目内部的 `ParsedDocument`、`ParsedBlock`，统一字段后才能复用后续清洗、结构恢复、分块和存储逻辑。对于复杂表格、流程图、架构图等视觉内容，系统再按节点类型和上下文调用 DashScope Qwen-VL 做视觉理解；该增强链路由 `DOCUMENT_VISUAL_ENABLED` 控制，关闭或调用失败时保留可追溯的降级块，不阻塞文本知识库构建。
 
 ## RAG 关键实现
 
